@@ -8,12 +8,12 @@ import org.joda.time.DateTime
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class LogEntry(fields: Map[String, String], attributes: Map[String, String] = Map()) {
-  lazy val timestamp: DateTime = JposSanity.parseTimestamp(at)
+case class LogEntry(fields: Map[String, String]) {
+  lazy val timestamp: DateTime = JposTimestamp.parse(at)
 
-  def realm: String = attributes.getOrElse("realm", "")
+  def realm: String = fields.getOrElse("realm", "")
 
-  def at: String = attributes.getOrElse("at", "")
+  def at: String = fields.getOrElse("at", "")
 
   def mti: String = field("0")
 
@@ -45,7 +45,6 @@ object LogEntry {
 
   def fromLines(lines: Iterable[String]): LogEntry = {
     val fields = new mutable.ListMap[String, String]
-    var rootAttributes = Map[String, String]()
     val path = new ListBuffer[String]()
 
     def pathTo(last: String) = (path.toSeq :+ last) mkString "."
@@ -65,10 +64,10 @@ object LogEntry {
       } else if (line.contains("</isomsg>") && path.nonEmpty) {
         path.remove(path.size - 1)
       } else if (line.contains("<log ")) {
-        rootAttributes = attributes
+        attributes.foreach(fields += _)
       }
     }
-    LogEntry(fields.toMap, rootAttributes)
+    LogEntry(fields.toMap)
   }
 
   def extractAttributes(line: String): Map[String, String] = {

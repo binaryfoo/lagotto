@@ -5,7 +5,7 @@ import io.github.binaryfoo.isotools.Iso8583._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class MsgPair(request: LogEntry, response: LogEntry) {
+case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced {
 
   val Request = """(req|request)\.(.*)""".r
   val Response = """(resp|response)\.(.*)""".r
@@ -23,9 +23,40 @@ case class MsgPair(request: LogEntry, response: LogEntry) {
 
   def rtt: Long = response.timestamp.getMillis - request.timestamp.getMillis
 
+  def mti: String = this("mti")
+
+  override def toString: String = s"Pair(req=${request.fields.mkString("{", ",", "}")},resp=${response.fields.mkString("{", ",", "}")})"
 }
 
 object MsgPair {
+
+  def coalesce(seq: Iterable[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = {
+    val coalesced = new ListBuffer[Coalesced]()
+    val group = new ListBuffer[MsgPair]()
+    var groupKey = ""
+
+    def addEntry() {
+      if (group.nonEmpty) {
+        coalesced += group.head
+        if (group.size > 1) {
+          coalesced += Group(group.size - 1, groupKey)
+        }
+      }
+    }
+
+    for (pair <- seq) {
+      val key = selector(pair)
+      if (key != groupKey) {
+        addEntry()
+        group.clear()
+      }
+      group += pair
+      groupKey = key
+    }
+    addEntry()
+
+    coalesced
+  }
 
   def pair(list: Iterable[LogEntry]): Iterable[MsgPair] = {
     val pending = new mutable.ListMap[String, LogEntry]
@@ -47,3 +78,7 @@ object MsgPair {
   }
 
 }
+
+sealed trait Coalesced
+
+case class Group(size: Int, key: String) extends Coalesced
