@@ -10,8 +10,9 @@ object JposTimestamp {
 
   def parse(s: String): DateTime = {
     val dot = s.lastIndexOf('.')
-    val millis = s.substring(dot + 1).toInt
-    READ_WORKAROUND_FORMAT.parseDateTime(s.substring(4, dot).replace("EST ", "")).withMillisOfSecond(millis)
+    val millis = if (dot == -1) 0 else s.substring(dot + 1).toInt
+    val end = if (dot == -1) s.length else dot
+    READ_WORKAROUND_FORMAT.parseDateTime(s.substring(4, end).replace("EST ", "")).withMillisOfSecond(millis)
   }
 
   def format(d: DateTime): String = d.toString(FORMAT) + "." + (d.getMillis % 1000)

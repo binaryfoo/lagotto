@@ -10,6 +10,7 @@ class JposTimestampTest extends FlatSpec with Matchers {
     JposTimestamp.parse("Mon Nov 24 16:59:03 EST 2014.292") shouldEqual new DateTime(2014, 11, 24, 16, 59, 3, 292)
     JposTimestamp.parse("Sun Nov 23 00:59:03 EST 2014.29") shouldEqual new DateTime(2014, 11, 23, 0, 59, 3, 29)
     JposTimestamp.parse("Tue Nov 25 23:00:00 EST 2014.2") shouldEqual new DateTime(2014, 11, 25, 23, 0, 0, 2)
+    JposTimestamp.parse("Mon Nov 24 13:10:55 EST 2014") shouldEqual new DateTime(2014, 11, 24, 13, 10, 55, 0)
   }
 
   it should "be writable" in {

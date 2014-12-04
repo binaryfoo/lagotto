@@ -8,7 +8,7 @@ import org.joda.time.DateTime
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class LogEntry(fields: Map[String, String]) {
+case class LogEntry(fields: Map[String, String]) extends ConvertibleToMap {
   lazy val timestamp: DateTime = JposTimestamp.parse(at)
 
   def realm: String = fields.getOrElse("realm", "")
