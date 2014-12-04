@@ -12,7 +12,7 @@ object Csv {
 
   implicit class IterableOfConvertibleToMap(val v: Iterable[ConvertibleToMap]) extends AnyVal {
     
-    def toCsv(ids: String*): String = toCsv(List(ids : _*))
+    def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
     def toCsv(ids: Iterable[String]): String = v.map(_.toMap(ids).toCsv).mkString("\n")
     

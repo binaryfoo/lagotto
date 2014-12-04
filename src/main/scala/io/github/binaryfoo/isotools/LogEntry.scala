@@ -82,7 +82,7 @@ object LogEntry {
   }
 
   def apply(fields: (String, String)*): LogEntry = {
-    new LogEntry(Map(fields : _*))
+    new LogEntry(fields.toMap)
   }
 
   def coalesce(seq: Iterable[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
