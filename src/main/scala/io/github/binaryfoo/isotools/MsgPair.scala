@@ -5,6 +5,9 @@ import io.github.binaryfoo.isotools.Iso8583._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
+/**
+ * A single request paired with its response. Eg an auth (0200) and reply (0210).
+ */
 case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced {
 
   val Request = """(req|request)\.(.*)""".r
@@ -24,6 +27,10 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced {
   def rtt: Long = response.timestamp.getMillis - request.timestamp.getMillis
 
   def mti: String = this("mti")
+
+  def toMap(ids: String*): Map[String, String] = toMap(List(ids : _*))
+
+  def toMap(ids: Iterable[String]): Map[String, String] = ids.map(id => id -> apply(id)).toMap
 
   override def toString: String = s"Pair(req=${request.fields.mkString("{", ",", "}")},resp=${response.fields.mkString("{", ",", "}")})"
 }
