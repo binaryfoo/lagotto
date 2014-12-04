@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<logger class="org.jpos.util.DailyLogListener">
+<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
+  <receive>
+    <isomsg direction="incoming">
+      <!-- org.jpos.iso.packager.XMLPackager -->
+      <field id="0" value="0800"/>
+      <field id="7" value="1124000003"/>
+      <field id="11" value="28928"/>
+      <field id="24" value="831"/>
+    </isomsg>
+  </receive>
+</log>
+<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
+   maxSize (50000000) threshold reached
+</log>
+</logger>
