@@ -8,7 +8,7 @@ import org.joda.time.DateTime
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class LogEntry(fields: Map[String, String]) extends ConvertibleToMap {
+case class LogEntry(fields: Map[String, String]) extends Coalesced with ConvertibleToMap {
   lazy val timestamp: DateTime = JposTimestamp.parse(at)
 
   def realm: String = fields.getOrElse("realm", "")
@@ -84,4 +84,6 @@ object LogEntry {
   def apply(fields: (String, String)*): LogEntry = {
     new LogEntry(Map(fields : _*))
   }
+
+  def coalesce(seq: Iterable[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 }

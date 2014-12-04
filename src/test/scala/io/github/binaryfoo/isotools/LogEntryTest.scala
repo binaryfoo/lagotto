@@ -60,4 +60,13 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry("42") shouldEqual null
     entry("rubbish") shouldEqual null
   }
+
+  "A trio of entries" should "be coalescable" in {
+    val one = LogEntry("11" -> "1", "53" -> "2")
+    val four = LogEntry("11" -> "4", "53" -> "1")
+    val entries = List(one, LogEntry("11" -> "2", "53" -> "2"), LogEntry("11" -> "3", "53" -> "2"), four)
+    val coalesced = LogEntry.coalesce(entries, _("53"))
+
+    coalesced shouldEqual List(one, Group(2, "2"), four)
+  }
 }

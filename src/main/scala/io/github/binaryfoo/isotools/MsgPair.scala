@@ -33,33 +33,7 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
 
 object MsgPair {
 
-  def coalesce(seq: Iterable[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = {
-    val coalesced = new ListBuffer[Coalesced]()
-    val group = new ListBuffer[MsgPair]()
-    var groupKey = ""
-
-    def addEntry() {
-      if (group.nonEmpty) {
-        coalesced += group.head
-        if (group.size > 1) {
-          coalesced += Group(group.size - 1, groupKey)
-        }
-      }
-    }
-
-    for (pair <- seq) {
-      val key = selector(pair)
-      if (key != groupKey) {
-        addEntry()
-        group.clear()
-      }
-      group += pair
-      groupKey = key
-    }
-    addEntry()
-
-    coalesced
-  }
+  def coalesce(seq: Iterable[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
   def pair(list: Iterable[LogEntry]): Iterable[MsgPair] = {
     val pending = new mutable.ListMap[String, LogEntry]
@@ -81,7 +55,3 @@ object MsgPair {
   }
 
 }
-
-sealed trait Coalesced
-
-case class Group(size: Int, key: String) extends Coalesced
