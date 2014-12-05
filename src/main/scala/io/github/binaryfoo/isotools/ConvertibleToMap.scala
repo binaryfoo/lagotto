@@ -1,12 +1,14 @@
 package io.github.binaryfoo.isotools
 
+import scala.collection.immutable.ListMap
+
 trait ConvertibleToMap {
 
   def apply(id: String): String
 
   def toMap(ids: String*): Map[String, String] = toMap(ids.toIterable)
 
-  def toMap(ids: Iterable[String]): Map[String, String] = ids.map(id => id -> apply(id)).toMap
+  def toMap(ids: Iterable[String]): Map[String, String] = ListMap[String,String](ids.map(id => id -> apply(id)).toSeq :_*)
 
   def toCsv(ids: String*): String = toCsv(ids.toIterable)
 

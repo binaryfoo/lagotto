@@ -61,6 +61,13 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry("rubbish") shouldEqual null
   }
 
+  "A single entry" should "be convertible to a .csv row" in {
+    for (i <- 0 to 100) {
+      val entry = LogEntry.fromLines(lines)
+      entry.toCsv("time", "48.2.13", "11", "7") shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"
+    }
+  }
+
   "A trio of entries" should "be coalescable" in {
     val one = LogEntry("11" -> "1", "53" -> "2")
     val four = LogEntry("11" -> "4", "53" -> "1")

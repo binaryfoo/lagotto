@@ -44,7 +44,7 @@ class MsgPairTest extends FlatSpec with Matchers {
     pair("timestamp") shouldEqual "2014-11-24 00:00:03.292"
   }
 
-  def pair(requestFields: (String, String)*) = MsgPair(LogEntry(requestFields : _*), LogEntry())
+  def pair(requestFields: (String, String)*): MsgPair = MsgPair(LogEntry(requestFields : _*), LogEntry())
 
   "A sequence of msgs" should "be coalesceable by mti" in {
     val now = new DateTime()

@@ -2,10 +2,19 @@ package io.github.binaryfoo.isotools
 
 import java.io.File
 
+import io.github.binaryfoo.isotools.examples.RoundTripTimes._
+
 import scala.collection.mutable.ListBuffer
 import scala.io.{Source, BufferedSource}
 
 object LogReader {
+
+  def readFilesOrStdIn(args: Iterable[String]): Iterable[LogEntry] = {
+    if (args.isEmpty)
+      LogReader.read(new BufferedSource(System.in))
+    else
+      LogReader.read(args.map(new File(_)))
+  }
 
   def read(files: Iterable[File]): Iterable[LogEntry] = {
     var joined: Iterable[LogEntry] = List()

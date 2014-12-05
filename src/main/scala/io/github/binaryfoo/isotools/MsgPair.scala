@@ -57,4 +57,8 @@ object MsgPair {
   implicit class RichEntryIterable(val v: Iterable[LogEntry]) extends AnyVal {
     def pair(): Iterable[MsgPair] = MsgPair.pair(v)
   }
+
+  implicit class RichMsgPairIterable(val v: Iterable[MsgPair]) extends AnyVal {
+    def coalesce(selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(v, selector)
+  }
 }
