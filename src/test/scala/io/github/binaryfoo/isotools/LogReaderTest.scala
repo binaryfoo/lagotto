@@ -2,7 +2,7 @@ package io.github.binaryfoo.isotools
 
 import org.scalatest.{Matchers, FlatSpec}
 import io.github.binaryfoo.isotools.Csv.IterableOfMapToCsv
-import io.github.binaryfoo.isotools.Csv.IterableOfConvertibleToMap
+import io.github.binaryfoo.isotools.ConvertibleToMap.IterableOfConvertibleToMap
 
 import scala.io.Source
 

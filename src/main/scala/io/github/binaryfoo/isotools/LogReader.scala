@@ -7,7 +7,15 @@ import scala.io.{Source, BufferedSource}
 
 object LogReader {
 
-  def read(file: File): Iterable[LogEntry] = read(Source.fromFile(file))
+  def read(files: Iterable[File]): Iterable[LogEntry] = {
+    var joined: Iterable[LogEntry] = List()
+    for (f <- files) {
+      joined = joined ++ read(Source.fromFile(f))
+    }
+    joined
+  }
+
+  def read(file: File*): Iterable[LogEntry] = read(file.toIterable)
 
   def read(source: BufferedSource): Iterable[LogEntry] = {
     val entries = new ListBuffer[LogEntry]

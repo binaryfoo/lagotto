@@ -54,4 +54,7 @@ object MsgPair {
     matches
   }
 
+  implicit class RichEntryIterable(val v: Iterable[LogEntry]) extends AnyVal {
+    def pair(): Iterable[MsgPair] = MsgPair.pair(v)
+  }
 }
