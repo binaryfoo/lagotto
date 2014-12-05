@@ -30,14 +30,14 @@ object LogReader {
     val entries = new ListBuffer[LogEntry]
     var record: ListBuffer[String] = null
     for (line <- source.getLines()) {
-      if (line startsWith "<log ") {
+      if (line contains "<log ") {
         record = new ListBuffer[String]
       }
 
       if (record != null)
         record += line
 
-      if (line startsWith "</log>") {
+      if (line contains "</log>") {
         entries += LogEntry.fromLines(record)
         record = null
       }
