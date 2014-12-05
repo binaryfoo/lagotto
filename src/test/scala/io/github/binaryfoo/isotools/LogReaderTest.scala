@@ -1,5 +1,7 @@
 package io.github.binaryfoo.isotools
 
+import java.io.File
+
 import org.scalatest.{Matchers, FlatSpec}
 import io.github.binaryfoo.isotools.Csv.IterableOfMapToCsv
 import io.github.binaryfoo.isotools.ConvertibleToMap.IterableOfConvertibleToMap
@@ -59,5 +61,15 @@ class LogReaderTest extends FlatSpec with Matchers {
         |00:00:03.292,0200,1,10001,00,1700""".stripMargin
   }
 
+  "Reading 2 files" should "read records in order" in {
+    val entries = LogReader.read(List("src/test/resources/a-bunch.xml", "src/test/resources/a-second-bunch.xml").map(new File(_)))
+    val csv = entries.toCsv("time", "48.1")
+    csv shouldEqual """00:00:03.292,a-bunch.xml #1
+                      |00:00:04.292,a-bunch.xml #2
+                      |00:00:04.892,a-bunch.xml #3
+                      |00:00:04.992,a-bunch.xml #4
+                      |00:00:03.292,a-second-bunch.xml #1
+                      |00:00:04.100,a-second-bunch.xml #2""".stripMargin
+  }
 
 }

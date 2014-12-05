@@ -12,7 +12,7 @@ class MsgPairTest extends FlatSpec with Matchers {
     val request = LogEntry("0" -> "0800", "11" -> "1")
     val response = LogEntry("0" -> "0810", "11" -> "000001")
 
-    val pairs: Iterable[MsgPair] = MsgPair.pair(List(request, response))
+    val pairs = MsgPair.pair(Stream(request, response))
 
     pairs should have size 1
     assert(pairs.head.request === request)
@@ -55,7 +55,7 @@ class MsgPairTest extends FlatSpec with Matchers {
     val key1 = pair("at" -> now.plusMillis(300).asJposAt, "0" -> "0820")
     val auth4 = pair("at" -> now.plusMillis(400).asJposAt, "0" -> "0200")
 
-    val seq = List(auth1, auth2, auth3, key1, auth4)
+    val seq = Stream(auth1, auth2, auth3, key1, auth4)
     val coalesced = MsgPair.coalesce(seq, _.mti)
 
     coalesced shouldEqual List(auth1, Group(2, "0200"), key1, auth4)
@@ -65,14 +65,14 @@ class MsgPairTest extends FlatSpec with Matchers {
     val one = pair("53" -> "1")
     val two = pair("53" -> "2")
 
-    MsgPair.coalesce(List(one, two), _("53")) shouldEqual List(one, two)
+    MsgPair.coalesce(Stream(one, two), _("53")) shouldEqual List(one, two)
   }
 
   it should "coalesce two messages with same value in 53" in {
     val one = pair("53" -> "1")
     val two = pair("53" -> "1")
 
-    MsgPair.coalesce(List(one, two), _("53")) shouldEqual List(one, Group(1, "1"))
+    MsgPair.coalesce(Stream(one, two), _("53")) shouldEqual List(one, Group(1, "1"))
   }
 
   "A single pair" should "be reduceable to a map" in {

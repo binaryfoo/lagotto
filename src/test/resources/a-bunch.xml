@@ -6,6 +6,9 @@
                 <field id="0" value="0200"/>
                 <field id="4" value="10001"/>
                 <field id="11" value="1"/>
+                <isomsg id="48">
+                    <field id="1" value="a-bunch.xml #1"/>
+                </isomsg>
             </isomsg>
         </send>
     </log>
@@ -15,6 +18,9 @@
                 <field id="0" value="0200"/>
                 <field id="4" value="5000"/>
                 <field id="11" value="2"/>
+                <isomsg id="48">
+                    <field id="1" value="a-bunch.xml #2"/>
+                </isomsg>
             </isomsg>
         </send>
     </log>
@@ -24,6 +30,9 @@
                 <field id="0" value="0210"/>
                 <field id="39" value="01"/>
                 <field id="11" value="2"/>
+                <isomsg id="48">
+                    <field id="1" value="a-bunch.xml #3"/>
+                </isomsg>
             </isomsg>
         </send>
     </log>
@@ -33,6 +42,9 @@
                 <field id="0" value="0210"/>
                 <field id="39" value="00"/>
                 <field id="11" value="1"/>
+                <isomsg id="48">
+                    <field id="1" value="a-bunch.xml #4"/>
+                </isomsg>
             </isomsg>
         </send>
     </log>

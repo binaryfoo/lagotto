@@ -33,32 +33,38 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
 
 object MsgPair {
 
-  def coalesce(seq: Iterable[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
+  def coalesce(seq: Stream[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
-  def pair(list: Iterable[LogEntry]): Iterable[MsgPair] = {
+  def pair(list: Stream[LogEntry]): Stream[MsgPair] = {
     val pending = new mutable.ListMap[String, LogEntry]
-    val matches = new ListBuffer[MsgPair]()
 
-    for (e <- list) {
-      val mti = e.mti
-      if (mti != null) {
-        val key = normaliseToRequestMTI(mti) + "-" + e("11").toInt
-        pending.get(key) match {
-          case Some(other) =>
-            matches += (if (isResponseMTI(mti)) new MsgPair(other, e) else new MsgPair(e, other))
-            pending.remove(key)
-          case None => pending.put(key, e)
-        }
+    def pairNext(s: Stream[LogEntry]): Stream[MsgPair] = {
+      s match {
+        case e #:: tail =>
+          val mti = e.mti
+          if (mti != null) {
+            val key = normaliseToRequestMTI(mti) + "-" + e("11").toInt
+            pending.get(key) match {
+              case Some(other) =>
+                val m = if (isResponseMTI(mti)) new MsgPair(other, e) else new MsgPair(e, other)
+                pending.remove(key)
+                return m #:: pairNext(tail)
+              case None => pending.put(key, e)
+            }
+          }
+          pairNext(tail)
+        case _ => Stream.empty
       }
     }
-    matches
+
+    pairNext(list)
   }
 
-  implicit class RichEntryIterable(val v: Iterable[LogEntry]) extends AnyVal {
-    def pair(): Iterable[MsgPair] = MsgPair.pair(v)
+  implicit class RichEntryIterable(val v: Stream[LogEntry]) extends AnyVal {
+    def pair(): Stream[MsgPair] = MsgPair.pair(v)
   }
 
-  implicit class RichMsgPairIterable(val v: Iterable[MsgPair]) extends AnyVal {
-    def coalesce(selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(v, selector)
+  implicit class RichMsgPairIterable(val v: Stream[MsgPair]) extends AnyVal {
+    def coalesce(selector: MsgPair => String): Stream[Coalesced] = Collapser.coalesce(v, selector)
   }
 }

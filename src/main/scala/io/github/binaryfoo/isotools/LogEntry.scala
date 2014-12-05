@@ -85,5 +85,5 @@ object LogEntry {
     new LogEntry(fields.toMap)
   }
 
-  def coalesce(seq: Iterable[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
+  def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 }

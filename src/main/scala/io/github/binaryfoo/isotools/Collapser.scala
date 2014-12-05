@@ -4,32 +4,40 @@ import scala.collection.mutable.ListBuffer
 
 object Collapser {
 
-  def coalesce[T <: Coalesced with ConvertibleToMap](seq: Iterable[T], selector: T => String): Iterable[Coalesced] = {
-    val coalesced = new ListBuffer[Coalesced]()
-    val group = new ListBuffer[T]()
-    var groupKey = ""
+  def coalesce[T <: Coalesced with ConvertibleToMap](seq: Stream[T], selector: T => String): Stream[Coalesced] = {
 
-    def addEntry() {
-      if (group.nonEmpty) {
-        coalesced += group.head
-        if (group.size > 1) {
-          coalesced += Group(group.size - 1, groupKey)
+    case class CurrentGroup(key: String, members: ListBuffer[T]) {
+
+      def toStream: Stream[Coalesced] = {
+        members.size match {
+          case 0 => Stream.empty
+          case 1 => members.head #:: Stream.empty
+          case _ => members.head #:: Group(members.size - 1, key) #:: Stream.empty[Coalesced]
         }
       }
-    }
 
-    for (pair <- seq) {
-      val key = selector(pair)
-      if (key != groupKey) {
-        addEntry()
-        group.clear()
+      def +=(member: T) = {
+        members += member
+        this
       }
-      group += pair
-      groupKey = key
-    }
-    addEntry()
 
-    coalesced
+    }
+
+    def group(s: Stream[T], current: CurrentGroup): Stream[Coalesced] = {
+      s match {
+        case pair #:: tail =>
+          val key = selector(pair)
+          if (key != current.key) {
+            current.toStream #::: group(tail, CurrentGroup(key, ListBuffer(pair)))
+          } else {
+            group(tail, current += pair)
+          }
+        case _ =>
+          current.toStream #::: Stream.empty
+      }
+    }
+
+    group(seq, CurrentGroup(null, ListBuffer()))
   }
 
 }
