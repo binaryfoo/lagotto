@@ -8,7 +8,8 @@ import org.joda.time.DateTime
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class LogEntry(fields: Map[String, String]) extends Coalesced with ConvertibleToMap {
+case class LogEntry(fields: Map[String, String], lines: Seq[String] = Seq()) extends Coalesced with ConvertibleToMap {
+
   lazy val timestamp: DateTime = JposTimestamp.parse(at)
 
   def realm: String = fields.getOrElse("realm", "")
@@ -67,7 +68,7 @@ object LogEntry {
         attributes.foreach(fields += _)
       }
     }
-    LogEntry(fields.toMap)
+    LogEntry(fields.toMap, lines.toSeq)
   }
 
   def extractAttributes(line: String): Map[String, String] = {

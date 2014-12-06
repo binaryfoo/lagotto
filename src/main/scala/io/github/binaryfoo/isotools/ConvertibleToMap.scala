@@ -6,6 +6,8 @@ trait ConvertibleToMap {
 
   def apply(id: String): String
 
+  def lines: Seq[String]
+
   def toMap(ids: String*): Map[String, String] = toMap(ids.toIterable)
 
   def toMap(ids: Iterable[String]): Map[String, String] = ListMap[String,String](ids.map(id => id -> apply(id)).toSeq :_*)
