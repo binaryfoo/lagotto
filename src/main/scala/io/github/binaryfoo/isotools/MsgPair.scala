@@ -1,9 +1,9 @@
 package io.github.binaryfoo.isotools
 
 import io.github.binaryfoo.isotools.Iso8583._
+import org.joda.time.DateTime
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 /**
  * A single request paired with its response. Eg an auth (0200) and reply (0210).
@@ -25,6 +25,8 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
   }
 
   def rtt: Long = response.timestamp.getMillis - request.timestamp.getMillis
+
+  def timestamp: DateTime = request.timestamp
 
   def mti: String = this("mti")
 
