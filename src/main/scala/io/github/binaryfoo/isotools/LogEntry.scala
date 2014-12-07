@@ -5,9 +5,8 @@ import java.util.regex.Pattern
 import org.joda.time.DateTime
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
-case class LogEntry(fields: Map[String, String], lines: Seq[String] = Seq(), source: SourceRef = null) extends Coalesced with ConvertibleToMap {
+case class LogEntry(fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with ConvertibleToMap {
 
   lazy val timestamp: DateTime = JposTimestamp.parse(at)
 
@@ -44,31 +43,41 @@ object LogEntry {
 
   val ID_VAL_PATTERN = Pattern.compile("(\\w+)=\"([^\"]*)\"")
 
-  def fromLines(lines: Iterable[String], source: SourceRef = null): LogEntry = {
+  def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
     val fields = new mutable.ListMap[String, String]
-    val path = new ListBuffer[String]()
+    var path = ""
 
-    def pathTo(last: String) = (path.toSeq :+ last) mkString "."
+    def pathTo(id: String) = if (path.isEmpty) id else path + "." + id
+
+    def pushPath(id: String) = {
+      if (path.isEmpty)
+        path = id
+      else
+        path += "." + id
+    }
+
+    def popPath() = {
+      val dot = path.lastIndexOf('.')
+      if (dot == -1)
+        path = ""
+      else
+        path = path.substring(0, dot)
+    }
 
     for (line <- lines) {
-      val attributes = extractAttributes(line)
       if (line.contains("<field")) {
-        val id = attributes("id")
-        if (id == null)
-          throw new IllegalArgumentException(s"Missing id in field $line")
-        val value = attributes("value")
-        if (value == null)
-          throw new IllegalArgumentException(s"Missing value in field $line")
+        val (id, value) = extractIdAndValue(line)
         fields.put(pathTo(id), value)
-      } else if (line.contains("<isomsg ") || line.contains("<isomsg>")) {
-        attributes.get("id").map(path += _)
+      } else if (line.contains("<isomsg id")) {
+        val (_, id) = extractId(line)
+        pushPath(id)
       } else if (line.contains("</isomsg>") && path.nonEmpty) {
-        path.remove(path.size - 1)
+        popPath()
       } else if (line.contains("<log ")) {
-        attributes.foreach(fields += _)
+        extractAttributes(line).foreach(fields += _)
       }
     }
-    LogEntry(fields.toMap, lines.toSeq, source)
+    LogEntry(fields.toMap, lines.mkString("\n"), source)
   }
 
   def extractAttributes(line: String): Map[String, String] = {
@@ -82,8 +91,34 @@ object LogEntry {
     attrs.toMap
   }
 
+  def extractIdAndValue(line: String): (String, String) = {
+    val (idEnd: Int, id: String) = extractId(line)
+
+    val valueIndex = line.indexOf("value=\"", idEnd)
+    if (valueIndex == -1) {
+      throw new IllegalArgumentException(s"Missing value in $line")
+    }
+    val valueStart = valueIndex + 7
+    val valueEnd = line.indexOf('"', valueStart)
+    val value = line.substring(valueStart, valueEnd)
+
+    (id, value)
+  }
+
+  def extractId(line: String): (Int, String) = {
+    val idIndex = line.indexOf("id=\"")
+    if (idIndex == -1) {
+      throw new IllegalArgumentException(s"Missing id in $line")
+    }
+    val idStart = idIndex + 4
+    val idEnd = line.indexOf('"', idStart)
+    val id = line.substring(idStart, idEnd)
+
+    (idEnd, id)
+  }
+
   def apply(fields: (String, String)*): LogEntry = {
-    new LogEntry(fields.toMap)
+    LogEntry(fields.toMap)
   }
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)

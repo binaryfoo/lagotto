@@ -76,4 +76,15 @@ class LogEntryTest extends FlatSpec with Matchers {
 
     coalesced shouldEqual List(one, Group(2, "2"), four)
   }
+
+  "Attributes" should "be extracted" in {
+    val attributes = LogEntry.extractAttributes("""<field id="7" value="1124000003"/>""")
+    attributes should contain ("id" -> "7")
+    attributes should contain ("value" -> "1124000003")
+  }
+
+  "Id and value" should "be extracted" in {
+    val attributes = LogEntry.extractIdAndValue("""<field id="7" value="1124000003"/>""")
+    attributes shouldEqual  ("7", "1124000003")
+  }
 }

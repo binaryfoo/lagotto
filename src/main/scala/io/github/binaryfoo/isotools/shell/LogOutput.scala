@@ -9,7 +9,7 @@ trait OutputFormat {
 
 object FullText extends OutputFormat {
   override def header(): Option[String] = None
-  override def apply(e: ConvertibleToMap): String = e.lines.mkString("\n")
+  override def apply(e: ConvertibleToMap): String = e.lines
 }
 
 trait Delimited extends OutputFormat {

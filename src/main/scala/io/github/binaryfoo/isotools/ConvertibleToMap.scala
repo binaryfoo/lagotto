@@ -6,7 +6,7 @@ trait ConvertibleToMap {
 
   def apply(id: String): String
 
-  def lines: Seq[String]
+  def lines: String
 
   def toMap(ids: String*): Map[String, String] = toMap(ids.toIterable)
 

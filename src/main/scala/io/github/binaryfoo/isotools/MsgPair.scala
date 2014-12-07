@@ -32,7 +32,7 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
 
   override def toString: String = s"Pair(req=${request.fields.mkString("{", ",", "}")},resp=${response.fields.mkString("{", ",", "}")})"
 
-  override lazy val lines: Seq[String] = Seq("<pair>") ++ request.lines ++ response.lines ++ Seq("</pair>")
+  override lazy val lines: String = "<pair>\n" + request.lines + "\n" + response.lines + "\n</pair>"
 }
 
 object MsgPair {

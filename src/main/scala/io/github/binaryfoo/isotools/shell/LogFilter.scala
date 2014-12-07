@@ -8,11 +8,11 @@ trait LogFilter extends Function[ConvertibleToMap, Boolean] {
 }
 
 case class GrepFilter(pattern: String) extends LogFilter {
-  override def apply(entry: ConvertibleToMap): Boolean = entry.lines.exists(_.contains(pattern) )
+  override def apply(entry: ConvertibleToMap): Boolean = entry.lines.contains(pattern)
 }
 
 case class NegativeGrepFilter(pattern: String) extends LogFilter {
-  override def apply(entry: ConvertibleToMap): Boolean = !entry.lines.exists(_.contains(pattern))
+  override def apply(entry: ConvertibleToMap): Boolean = !entry.lines.contains(pattern)
 }
 
 case class FieldFilter(field: String, desired: String, op: MatchOp) extends LogFilter {
