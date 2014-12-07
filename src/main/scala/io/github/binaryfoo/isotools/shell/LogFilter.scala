@@ -13,12 +13,10 @@ case class GrepFilter(pattern: String) extends LogFilter {
 
 case class FieldFilter(field: String, desired: String, op: MatchOp) extends LogFilter {
   override def apply(entry: ConvertibleToMap): Boolean = {
-    val actual = entry(field)
-    actual != null && op(actual, desired)
+    op(entry(field), desired)
   }
 }
 
 object FieldFilter {
   type MatchOp = (String, String) => Boolean
-//  def equals(String, String)
 }

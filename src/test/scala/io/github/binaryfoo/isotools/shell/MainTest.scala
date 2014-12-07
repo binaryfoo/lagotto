@@ -69,6 +69,14 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "negate filter with !in -f 24!=831 option" in {
+    val output = run("-f", "24!=831", "src/test/resources/a-pair.xml")
+    output shouldEqual """<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
+                         |   maxSize (50000000) threshold reached
+                         |</log>
+                         |""".stripMargin
+  }
+
   it should "print full text by default" in {
     val output = run("src/test/resources/a-pair.xml")
     output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">

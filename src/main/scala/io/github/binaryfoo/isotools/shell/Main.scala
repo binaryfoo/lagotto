@@ -68,19 +68,25 @@ object Main extends App {
   }
 
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
-    val LogFilterPattern = "([^=><~]+)([=><~])(.+)".r
+    def deNull(s: String): String = if (s == null) "" else s
+
+    val LogFilterPattern = "([^=><~!]+)(!?)([=><~])(.+)".r
     val arity = 2
     val reads = { (s: String) =>
       s match {
-        case LogFilterPattern(key, operator, value) =>
+        case LogFilterPattern(key, negation, operator, value) =>
           val op: MatchOp = operator match {
             case "=" => _ == _
             case ">" => _.toInt >= _.toInt
             case "<" => _.toInt <= _.toInt
-            case "~" => _.toLowerCase contains _.toLowerCase
+            case "~" => deNull(_).toLowerCase contains _.toLowerCase
             case _ => throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
           }
-          FieldFilter(key, value, op)
+          if (negation == "!") {
+            FieldFilter(key, value, (a, b) => !op(a, b))
+          } else {
+            FieldFilter(key, value, op)
+          }
         case _ =>
           throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
       }
