@@ -7,7 +7,7 @@ import org.joda.time.DateTime
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class LogEntry(fields: Map[String, String], lines: Seq[String] = Seq()) extends Coalesced with ConvertibleToMap {
+case class LogEntry(fields: Map[String, String], lines: Seq[String] = Seq(), source: SourceRef = null) extends Coalesced with ConvertibleToMap {
 
   lazy val timestamp: DateTime = JposTimestamp.parse(at)
 
@@ -31,6 +31,7 @@ case class LogEntry(fields: Map[String, String], lines: Seq[String] = Seq()) ext
         case "timestamp" => timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
         case "time" => timestamp.toString("HH:mm:ss.SSS")
         case "date" => timestamp.toString("yyyy-MM-dd")
+        case "file" if source != null => source.toString
         case _ => null
       }
     } else {
@@ -43,7 +44,7 @@ object LogEntry {
 
   val ID_VAL_PATTERN = Pattern.compile("(\\w+)=\"([^\"]*)\"")
 
-  def fromLines(lines: Iterable[String]): LogEntry = {
+  def fromLines(lines: Iterable[String], source: SourceRef = null): LogEntry = {
     val fields = new mutable.ListMap[String, String]
     val path = new ListBuffer[String]()
 
@@ -67,7 +68,7 @@ object LogEntry {
         attributes.foreach(fields += _)
       }
     }
-    LogEntry(fields.toMap, lines.toSeq)
+    LogEntry(fields.toMap, lines.toSeq, source)
   }
 
   def extractAttributes(line: String): Map[String, String] = {
@@ -86,4 +87,8 @@ object LogEntry {
   }
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
+}
+
+case class SourceRef(file: String, line: Int) {
+  override def toString: String = s"$file:$line"
 }

@@ -14,19 +14,21 @@ object LogReader {
       LogReader.read(args.map(new File(_)))
   }
 
+  def read(file: File*): Stream[LogEntry] = read(file.toIterable)
+
   def read(files: Iterable[File]): Stream[LogEntry] = {
     var joined: Stream[LogEntry] = Stream.empty
     for (f <- files.toList) {
-      joined = joined #::: read(Source.fromFile(f))
+      joined = joined #::: read(Source.fromFile(f), f.getName)
     }
     joined
   }
 
-  def read(file: File*): Stream[LogEntry] = read(file.toIterable)
-
-  def read(source: BufferedSource): Stream[LogEntry] = {
+  def read(source: BufferedSource, sourceName: String = ""): Stream[LogEntry] = {
 
     val lines = source.getLines()
+    var startLineNumber = 0
+    var lineNumber = 0
 
     def readNext(): Stream[LogEntry] = {
 
@@ -34,7 +36,10 @@ object LogReader {
       var entry: LogEntry = null
 
       for (line <- lines) {
+        lineNumber += 1
+
         if (line contains "<log ") {
+          startLineNumber = lineNumber
           record = new ListBuffer[String]
         }
 
@@ -42,7 +47,7 @@ object LogReader {
           record += line
 
         if (line contains "</log>") {
-          entry = LogEntry.fromLines(record)
+          entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
           return entry #:: readNext()
         }
       }
