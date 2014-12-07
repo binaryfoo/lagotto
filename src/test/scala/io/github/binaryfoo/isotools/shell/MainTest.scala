@@ -148,6 +148,38 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "include N messages preceding a match with -B N option" in {
+    val output = run("-B", "1", "--csv", "48.1", "--no-header", "--grep", "#3", "src/test/resources/a-bunch.xml")
+    output shouldEqual
+      """a-bunch.xml #2
+        |a-bunch.xml #3
+        |""".stripMargin
+  }
+
+  it should "include N messages following a match with -A N option" in {
+    val output = run("-A", "1", "--csv", "48.1", "--no-header", "--grep", "#2", "src/test/resources/a-bunch.xml")
+    output shouldEqual
+      """a-bunch.xml #2
+        |a-bunch.xml #3
+        |""".stripMargin
+  }
+
+  it should "include N messages before and after a match with -C N option" in {
+    val output = run("-C", "1", "--csv", "48.1", "--no-header", "--grep", "#3", "src/test/resources/a-bunch.xml")
+    output shouldEqual
+      """a-bunch.xml #2
+        |a-bunch.xml #3
+        |a-bunch.xml #4
+        |""".stripMargin
+  }
+
+  it should "include records matching all -f filters" in {
+    val output = run("-f", "48.1~bunch", "-f", "at~.892", "--csv", "48.1", "--no-header", "src/test/resources/a-bunch.xml")
+    output shouldEqual
+      """a-bunch.xml #3
+        |""".stripMargin
+  }
+
   it should "print wrap pairs in <pair></pair> with --pair" in {
     val output = run("--pair","src/test/resources/a-pair.xml")
     output shouldEqual """<pair>

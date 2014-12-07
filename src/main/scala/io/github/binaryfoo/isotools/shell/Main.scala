@@ -43,12 +43,24 @@ object Main extends App {
     opt[Unit]("no-header") action {(_, c) =>
       c.copy(header = false)
     } text "Don't print the tsv/csv header row"
+
+    opt[Int]('B', "before-context") action {(n,c) =>
+      c.copy(beforeContext = n)
+    } text "Like -B in grep"
+
+    opt[Int]('A', "after-context") action {(n,c) =>
+      c.copy(afterContext = n)
+    } text "Like -A in grep"
+
+    opt[Int]('C', "context") action {(n,c) =>
+      c.copy(beforeContext = n, afterContext = n)
+    } text "Like -C in grep"
   }
 
   parser.parse(args, Config()).map { config =>
     val logEntries = LogReader.readFilesOrStdIn(config.input)
 
-    val entries: Stream[ConvertibleToMap] = if (config.pair)
+    var entries: Stream[ConvertibleToMap] = if (config.pair)
       logEntries.pair()
     else
       logEntries
@@ -57,16 +69,38 @@ object Main extends App {
       config.format.header().map(println(_))
     }
 
+    if (config.filters.nonEmpty) {
+      entries = entries.applyFilters(config.filters, config.beforeContext, config.afterContext)
+    }
+
     entries
-      .applyFilters(config.filters)
       .map(e => config.format(e))
       .foreach(e => println(e))
   }
 
   implicit class RichLogEntries(val v: Stream[ConvertibleToMap]) extends AnyVal {
-    def applyFilters(filters: Seq[LogFilter]): Stream[ConvertibleToMap] = {
-      filters.foldLeft(v) { (s, filter) =>
-        s.filter(filter(_))
+    import scala.collection.JavaConversions._
+
+    def applyFilters(filters: Seq[LogFilter], beforeContext: Int, afterContext: Int): Stream[ConvertibleToMap] = {
+      val shouldInclude = (m: ConvertibleToMap) => filters.forall(_(m))
+      if (beforeContext == 0 && afterContext == 0) {
+        // premature optimization for this case?
+        v.filter(shouldInclude)
+      } else {
+        val preceding = new BoundedQueue[ConvertibleToMap](beforeContext)
+        var aftersNeeded = 0
+        v.flatMap { item =>
+          if (shouldInclude(item)) {
+            aftersNeeded = afterContext
+            preceding.toList :+ item
+          } else if (aftersNeeded > 0) {
+            aftersNeeded -= 1
+            List(item)
+          } else {
+            preceding.add(item)
+            List.empty
+          }
+        }
       }
     }
   }

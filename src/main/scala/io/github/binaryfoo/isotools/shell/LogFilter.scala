@@ -3,7 +3,7 @@ package io.github.binaryfoo.isotools.shell
 import io.github.binaryfoo.isotools.ConvertibleToMap
 import io.github.binaryfoo.isotools.shell.FieldFilter.MatchOp
 
-trait LogFilter {
+trait LogFilter extends Function[ConvertibleToMap, Boolean] {
   def apply(entry: ConvertibleToMap): Boolean
 }
 
