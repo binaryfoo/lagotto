@@ -18,7 +18,11 @@ object Main extends App {
 
     opt[String]('g', "grep") unbounded() action { (expr, c) =>
       c.copy(filters = c.filters :+ GrepFilter(expr))
-    }
+    } text "Filter by messages including text"
+
+    opt[String]("grep!") unbounded() action { (expr, c) =>
+      c.copy(filters = c.filters :+ NegativeGrepFilter(expr))
+    } text "Exclude messages containing text"
 
     opt[LogFilter]('f', "field") unbounded() action { case (filter, c) =>
       c.copy(filters = c.filters :+ filter)

@@ -77,6 +77,44 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "match anywhere in the message with -grep option" in {
+    val output = run("--grep", "threshold", "src/test/resources/a-pair.xml")
+    output shouldEqual """<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
+                         |   maxSize (50000000) threshold reached
+                         |</log>
+                         |""".stripMargin
+  }
+
+  it should "negate --grep with --grep! option" in {
+    val output = run("--grep!", "threshold", "src/test/resources/a-pair.xml")
+    output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
+                         |  <send>
+                         |    <isomsg direction="outgoing">
+                         |      <!-- org.jpos.iso.packager.XMLPackager -->
+                         |      <field id="0" value="0800"/>
+                         |      <field id="7" value="1124000003"/>
+                         |      <field id="11" value="28928"/>
+                         |      <field id="24" value="831"/>
+                         |    </isomsg>
+                         |  </send>
+                         |</log>
+                         |<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:04 EST 2014.100" lifespan="1000ms">
+                         |  <receive>
+                         |    <isomsg direction="incoming">
+                         |      <!-- org.jpos.iso.packager.XMLPackager -->
+                         |      <field id="0" value="0810"/>
+                         |      <field id="7" value="1124000003"/>
+                         |      <field id="11" value="28928"/>
+                         |      <field id="24" value="831"/>
+                         |      <isomsg id="48">
+                         |        <field id="1" value="subfield 48.1"/>
+                         |      </isomsg>
+                         |    </isomsg>
+                         |  </receive>
+                         |</log>
+                         |""".stripMargin
+  }
+
   it should "print full text by default" in {
     val output = run("src/test/resources/a-pair.xml")
     output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
