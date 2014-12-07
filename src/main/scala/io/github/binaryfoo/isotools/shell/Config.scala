@@ -6,4 +6,6 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    pair: Boolean = false,
                    header: Boolean = true,
                    beforeContext: Int = 0,
-                   afterContext: Int = 0)
+                   afterContext: Int = 0,
+                   sortBy: String = null,
+                   sortDescending: Boolean = false)

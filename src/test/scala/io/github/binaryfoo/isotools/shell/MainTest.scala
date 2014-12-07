@@ -48,6 +48,22 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "sort by --sort option" in {
+    val output = run("--sort", "time", "--pair", "--csv", "time,mti,11,rtt", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time,mti,11,rtt
+                         |00:00:03.292,0200,1,1700
+                         |00:00:04.292,0200,2,600
+                         |""".stripMargin
+  }
+
+  it should "reverse sort with --sort-desc option" in {
+    val output = run("--sort-desc", "11", "--pair", "--csv", "time,mti,11,rtt", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time,mti,11,rtt
+                         |00:00:04.292,0200,2,600
+                         |00:00:03.292,0200,1,1700
+                         |""".stripMargin
+  }
+
   it should "filter using greater than operator with -f rtt>1000 option" in {
     val output = run("--pair", "-f", "rtt>1000", "--csv", "time,mti,11,rtt", "src/test/resources/a-bunch.xml")
     output shouldEqual """time,mti,11,rtt
@@ -168,6 +184,16 @@ class MainTest extends FlatSpec with Matchers {
     val output = run("-C", "1", "--csv", "48.1", "--no-header", "--grep", "#3", "src/test/resources/a-bunch.xml")
     output shouldEqual
       """a-bunch.xml #2
+        |a-bunch.xml #3
+        |a-bunch.xml #4
+        |""".stripMargin
+  }
+
+  it should "includes preceding context only once with -B N option" in {
+    val output = run("-B", "1", "--csv", "48.1", "--no-header", "--field", "at~00:00:04", "src/test/resources/a-bunch.xml")
+    output shouldEqual
+      """a-bunch.xml #1
+        |a-bunch.xml #2
         |a-bunch.xml #3
         |a-bunch.xml #4
         |""".stripMargin

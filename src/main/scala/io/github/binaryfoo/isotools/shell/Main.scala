@@ -55,6 +55,14 @@ object Main extends App {
     opt[Int]('C', "context") action {(n,c) =>
       c.copy(beforeContext = n, afterContext = n)
     } text "Like -C in grep"
+
+    opt[String]("sort") action {(field,c) =>
+      c.copy(sortBy = field)
+    } text "Sort output by field. Prevents incremental output"
+
+    opt[String]("sort-desc") action {(field,c) =>
+      c.copy(sortBy = field, sortDescending = true)
+    } text "Sort output descending by field. Prevents incremental output"
   }
 
   parser.parse(args, Config()).map { config =>
@@ -73,13 +81,20 @@ object Main extends App {
       entries = entries.applyFilters(config.filters, config.beforeContext, config.afterContext)
     }
 
+    // presumably both these options prevent incremental output
+    if (config.sortBy != null) {
+      entries = entries.sortBy(_(config.sortBy))
+      if (config.sortDescending) {
+        entries = entries.reverse
+      }
+    }
+
     entries
       .map(e => config.format(e))
       .foreach(e => println(e))
   }
 
   implicit class RichLogEntries(val v: Stream[ConvertibleToMap]) extends AnyVal {
-    import scala.collection.JavaConversions._
 
     def applyFilters(filters: Seq[LogFilter], beforeContext: Int, afterContext: Int): Stream[ConvertibleToMap] = {
       val shouldInclude = (m: ConvertibleToMap) => filters.forall(_(m))
@@ -92,7 +107,7 @@ object Main extends App {
         v.flatMap { item =>
           if (shouldInclude(item)) {
             aftersNeeded = afterContext
-            preceding.toList :+ item
+            preceding.dump() :+ item
           } else if (aftersNeeded > 0) {
             aftersNeeded -= 1
             List(item)
