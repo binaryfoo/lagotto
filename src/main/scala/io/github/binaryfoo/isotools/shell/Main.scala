@@ -1,7 +1,9 @@
 package io.github.binaryfoo.isotools.shell
 
 import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
+import io.github.binaryfoo.isotools.shell.FieldFilter.MatchOp
 import io.github.binaryfoo.isotools.{ConvertibleToMap, LogReader}
+import scopt.Read
 
 object Main extends App {
 
@@ -18,8 +20,8 @@ object Main extends App {
       c.copy(filters = c.filters :+ GrepFilter(expr))
     }
 
-    opt[(String, String)]('f', "field") unbounded() action { case ((path, value), c) =>
-      c.copy(filters = c.filters :+ FieldFilter(path, value))
+    opt[LogFilter]('f', "field") unbounded() action { case (filter, c) =>
+      c.copy(filters = c.filters :+ filter)
     } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
 
     opt[String]('t', "tsv") action { (fields, c) =>
@@ -64,4 +66,25 @@ object Main extends App {
       }
     }
   }
+
+  implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
+    val LogFilterPattern = "([^=><~]+)([=><~])(.+)".r
+    val arity = 2
+    val reads = { (s: String) =>
+      s match {
+        case LogFilterPattern(key, operator, value) =>
+          val op: MatchOp = operator match {
+            case "=" => _ == _
+            case ">" => _.toInt >= _.toInt
+            case "<" => _.toInt <= _.toInt
+            case "~" => _.toLowerCase contains _.toLowerCase
+            case _ => throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
+          }
+          FieldFilter(key, value, op)
+        case _ =>
+          throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
+      }
+    }
+  }
+
 }

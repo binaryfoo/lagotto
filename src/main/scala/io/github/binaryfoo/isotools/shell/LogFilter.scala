@@ -1,6 +1,7 @@
 package io.github.binaryfoo.isotools.shell
 
 import io.github.binaryfoo.isotools.ConvertibleToMap
+import io.github.binaryfoo.isotools.shell.FieldFilter.MatchOp
 
 trait LogFilter {
   def apply(entry: ConvertibleToMap): Boolean
@@ -10,6 +11,14 @@ case class GrepFilter(pattern: String) extends LogFilter {
   override def apply(entry: ConvertibleToMap): Boolean = entry.lines.exists(_.contains(pattern))
 }
 
-case class FieldFilter(field: String, value: String) extends LogFilter {
-  override def apply(entry: ConvertibleToMap): Boolean = entry(field) == value
+case class FieldFilter(field: String, desired: String, op: MatchOp) extends LogFilter {
+  override def apply(entry: ConvertibleToMap): Boolean = {
+    val actual = entry(field)
+    actual != null && op(actual, desired)
+  }
+}
+
+object FieldFilter {
+  type MatchOp = (String, String) => Boolean
+//  def equals(String, String)
 }

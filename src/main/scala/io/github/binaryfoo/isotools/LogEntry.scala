@@ -2,7 +2,6 @@ package io.github.binaryfoo.isotools
 
 import java.util.regex.Pattern
 
-import io.github.binaryfoo.isotools.Iso8583.{normaliseToRequestMTI, isResponseMTI}
 import org.joda.time.DateTime
 
 import scala.collection.mutable
