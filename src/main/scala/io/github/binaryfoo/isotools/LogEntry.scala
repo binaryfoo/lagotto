@@ -1,7 +1,5 @@
 package io.github.binaryfoo.isotools
 
-import java.util.regex.Pattern
-
 import org.joda.time.DateTime
 
 import scala.collection.mutable
@@ -41,8 +39,6 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
 
 object LogEntry {
 
-  val ID_VAL_PATTERN = Pattern.compile("(\\w+)=\"([^\"]*)\"")
-
   def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
     val fields = new mutable.ListMap[String, String]
     var path = ""
@@ -74,21 +70,47 @@ object LogEntry {
       } else if (line.contains("</isomsg>") && path.nonEmpty) {
         popPath()
       } else if (line.contains("<log ")) {
-        extractAttributes(line).foreach(fields += _)
+        extractAttributes(line, fields)
       }
     }
     LogEntry(fields.toMap, lines.mkString("\n"), source)
   }
 
-  def extractAttributes(line: String): Map[String, String] = {
-    val attrs = new mutable.ListMap[String, String]
-    val matcher = ID_VAL_PATTERN.matcher(line)
-    while (matcher.find()) {
-      val name = matcher.group(1)
-      val value = matcher.group(2)
-      attrs.put(name, value)
+  def extractAttributes(line: String, fields: mutable.Map[String, String]) = {
+    var state = -1
+    var nameStart = 0
+    var nameEnd = 0
+    var valueStart = 0
+    var i = 0
+
+    for (c <- line) {
+      state match {
+        case -1 =>
+          if (c == '<')
+            state = 0
+        case 0 =>
+          if (c == ' ') {
+            nameStart = i + 1
+            state = 1
+          }
+        case 1 =>
+          if (c == '=') {
+            nameEnd = i
+            state = 2
+          }
+        case 2 if c == '"' =>
+          valueStart = i + 1
+          state = 3
+        case 3 =>
+          if (c == '"') {
+            val name = line.substring(nameStart, nameEnd)
+            val value = line.substring(valueStart, i)
+            fields.put(name, value)
+            state = 0
+          }
+      }
+      i += 1
     }
-    attrs.toMap
   }
 
   def extractIdAndValue(line: String): (String, String) = {

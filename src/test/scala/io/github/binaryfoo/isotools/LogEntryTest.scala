@@ -1,13 +1,16 @@
 package io.github.binaryfoo.isotools
 
 import org.joda.time.DateTime
+import scala.collection.immutable.ListMap
+import scala.collection.mutable
 import org.scalatest.{FlatSpec, Matchers}
 
 class LogEntryTest extends FlatSpec with Matchers {
 
   val timestamp = "Mon Nov 24 16:59:03 EST 2014.292"
   val realm = "some.channel/10.0.0.1:4321"
-  val lines = s"""<log realm="$realm" at="$timestamp" lifespan="10005ms">
+  val lifespan = """10005ms"""
+  val lines = s"""<log realm="$realm" at="$timestamp" lifespan="$lifespan">
   <receive>
     <isomsg direction="incoming">
       <!-- org.jpos.iso.packager.XMLPackager -->
@@ -62,10 +65,8 @@ class LogEntryTest extends FlatSpec with Matchers {
   }
 
   "A single entry" should "be convertible to a .csv row" in {
-    for (i <- 0 to 100) {
-      val entry = LogEntry.fromLines(lines)
-      entry.toCsv("time", "48.2.13", "11", "7") shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"
-    }
+    val entry = LogEntry.fromLines(lines)
+    entry.toCsv("time", "48.2.13", "11", "7") shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"
   }
 
   "A trio of entries" should "be coalescable" in {
@@ -78,9 +79,18 @@ class LogEntryTest extends FlatSpec with Matchers {
   }
 
   "Attributes" should "be extracted" in {
-    val attributes = LogEntry.extractAttributes("""<field id="7" value="1124000003"/>""")
+    val attributes = new mutable.ListMap[String, String]
+    LogEntry.extractAttributes("""<field id="7" value="1124000003"/>""", attributes)
     attributes should contain ("id" -> "7")
     attributes should contain ("value" -> "1124000003")
+  }
+
+  it should "extract attributes from a indented <log> line" in {
+    val attributes = new mutable.ListMap[String, String]
+    LogEntry.extractAttributes(s"""    <log realm="$realm" at="$timestamp" lifespan="$lifespan">""", attributes)
+    attributes should contain ("realm" -> realm)
+    attributes should contain ("at" -> timestamp)
+    attributes should contain ("lifespan" -> lifespan)
   }
 
   "Id and value" should "be extracted" in {
