@@ -33,6 +33,10 @@ object Main extends App {
     opt[Unit]("pair") action {(_, c) =>
       c.copy(pair = true)
     } text "Match requests with responses"
+
+    opt[Unit]("no-header") action {(_, c) =>
+      c.copy(header = false)
+    } text "Don't print the tsv/csv header row"
   }
 
   parser.parse(args, Config()).map { config =>
@@ -42,6 +46,10 @@ object Main extends App {
       logEntries.pair()
     else
       logEntries
+
+    if (config.header) {
+      config.format.header().map(println(_))
+    }
 
     entries
       .applyFilters(config.filters)

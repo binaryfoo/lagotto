@@ -1,25 +1,33 @@
 package io.github.binaryfoo.isotools.shell
 
-import java.io.{File, ByteArrayOutputStream}
-import java.nio.file.Files
+import java.io.ByteArrayOutputStream
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 class MainTest extends FlatSpec with Matchers {
 
   "Main" should "produce tab separated output with --tsv option" in {
     val output = run("--tsv", "time,mti,11", "src/test/resources/a-bunch.xml")
-    output shouldEqual """00:00:03.292	0200	1
+    output shouldEqual """time	mti	11
+                         |00:00:03.292	0200	1
                          |00:00:04.292	0200	2
                          |00:00:04.892	0210	2
                          |00:00:04.992	0210	1
                          |""".stripMargin
   }
 
+  it should "leave out the header with --no-header option" in {
+    val output = run("--no-header", "--csv", "time,mti,11", "src/test/resources/basic.xml")
+    output shouldEqual """00:00:03.292,0800,28928
+                         |13:10:55.000,null,null
+                         |""".stripMargin
+  }
+
   it should "produce pair entries with --pair option" in {
     val output = run("--pair", "--csv", "time,mti,11,rtt", "src/test/resources/a-bunch.xml")
     // output ends up in ordered by response received time...
-    output shouldEqual """00:00:04.292,0200,2,600
+    output shouldEqual """time,mti,11,rtt
+                         |00:00:04.292,0200,2,600
                          |00:00:03.292,0200,1,1700
                          |""".stripMargin
   }
