@@ -39,7 +39,7 @@ class LogReaderTest extends FlatSpec with Matchers {
     csv shouldEqual
       """00:00:03.292,0800,28928
         |00:00:04.100,0810,28928
-        |13:10:55.000,null,null""".stripMargin
+        |13:10:55.000,,""".stripMargin
   }
 
   it should "support conversion of entries to a .csv file succinctly" in {
@@ -49,7 +49,7 @@ class LogReaderTest extends FlatSpec with Matchers {
     csv shouldEqual
       """00:00:03.292,0800,28928
         |00:00:04.100,0810,28928
-        |13:10:55.000,null,null""".stripMargin
+        |13:10:55.000,,""".stripMargin
   }
 
   it should "support conversion of two paired entries to a .csv file" in {

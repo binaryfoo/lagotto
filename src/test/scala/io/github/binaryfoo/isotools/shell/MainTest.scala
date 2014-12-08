@@ -20,7 +20,7 @@ class MainTest extends FlatSpec with Matchers {
   it should "leave out the header with --no-header option" in {
     val output = run("--no-header", "--csv", "time,mti,11", "src/test/resources/basic.xml")
     output shouldEqual """00:00:03.292,0800,28928
-                         |13:10:55.000,null,null
+                         |13:10:55.000,,
                          |""".stripMargin
   }
 

@@ -64,6 +64,13 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry("rubbish") shouldEqual null
   }
 
+  it should "extract logical link name from realm" in {
+    val entry = LogEntry.fromLines(s"""<log realm="linkName.channel/10.0.0.1:4321" at="$timestamp" lifespan="$lifespan">
+                                       |</log>
+                                     """.stripMargin.split('\n'))
+    entry("link") shouldEqual "linkName"
+  }
+
   "A single entry" should "be convertible to a .csv row" in {
     val entry = LogEntry.fromLines(lines)
     entry.toCsv("time", "48.2.13", "11", "7") shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"

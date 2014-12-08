@@ -14,6 +14,11 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
 
   def mti: String = field("0")
 
+  def link: String = {
+    val dot = realm.indexOf('.')
+    if (dot == -1) realm else realm.substring(0, dot)
+  }
+
   def field(path: String): String = fields.getOrElse(path, null)
 
   def hasField(path: String): Boolean = fields.contains(path)
@@ -28,6 +33,7 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
         case "timestamp" => timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
         case "time" => timestamp.toString("HH:mm:ss.SSS")
         case "date" => timestamp.toString("yyyy-MM-dd")
+        case "link" => link
         case "file" if source != null => source.toString
         case "line" if source != null => source.line.toString
         case _ => null

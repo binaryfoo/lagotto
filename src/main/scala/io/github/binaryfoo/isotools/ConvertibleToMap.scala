@@ -10,7 +10,13 @@ trait ConvertibleToMap {
 
   def toMap(ids: String*): Map[String, String] = toMap(ids.toIterable)
 
-  def toMap(ids: Iterable[String]): Map[String, String] = ListMap[String,String](ids.map(id => id -> apply(id)).toSeq :_*)
+  def toMap(ids: Iterable[String]): Map[String, String] = {
+    val pairs = ids.map { id =>
+      val value = apply(id)
+      id -> (if (value == null) "" else value)
+    }
+    ListMap[String, String](pairs.toSeq: _*)
+  }
 
   def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
