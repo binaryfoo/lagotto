@@ -1,5 +1,6 @@
 package io.github.binaryfoo.isotools
 
+import io.github.binaryfoo.isotools.TagType.TagType
 import org.joda.time.DateTime
 
 import scala.collection.mutable
@@ -11,6 +12,14 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
   def realm: String = fields.getOrElse("realm", "")
 
   def at: String = fields.getOrElse("at", "")
+
+  def msgType: String = fields.getOrElse("msgType", "")
+
+  def icon: String = msgType match {
+    case "send" => "\u2192"
+    case "receive" => "\u2190"
+    case _ => msgType
+  }
 
   def mti: String = field("0")
 
@@ -34,6 +43,7 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
         case "time" => timestamp.toString("HH:mm:ss.SSS")
         case "date" => timestamp.toString("yyyy-MM-dd")
         case "link" => link
+        case "icon" => icon
         case "file" if source != null => source.toString
         case "line" if source != null => source.line.toString
         case _ => null
@@ -45,6 +55,8 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
 }
 
 object LogEntry {
+
+  import TagType._
 
   def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
     val fields = new mutable.ListMap[String, String]
@@ -68,16 +80,21 @@ object LogEntry {
     }
 
     for (line <- lines) {
-      if (line.contains("<field")) {
-        val (id, value) = extractIdAndValue(line)
-        fields.put(pathTo(id), value)
-      } else if (line.contains("<isomsg id")) {
-        val (_, id) = extractId(line)
-        pushPath(id)
-      } else if (line.contains("</isomsg>") && path.nonEmpty) {
-        popPath()
-      } else if (line.contains("<log ")) {
-        extractAttributes(line, fields)
+      tagNameAndType(line) match {
+        case ("field", Start) =>
+          val (id, value) = extractIdAndValue(line)
+          fields.put(pathTo(id), value)
+        case ("isomsg", Start) =>
+          val (_, id) = extractId(line)
+          if (id != null)
+            pushPath(id)
+        case ("isomsg", End) if path.nonEmpty =>
+          popPath()
+        case ("log", Start) =>
+          extractAttributes(line, fields)
+        case (name, Start) if !msgTypeBlackList.contains(name) =>
+          fields.put("msgType", name)
+        case _ =>
       }
     }
     if (!fields.contains("at"))
@@ -88,6 +105,34 @@ object LogEntry {
     LogEntry(fields.toMap, lines.mkString("\n"), source)
   }
 
+  val msgTypeBlackList = Set("field", "isomsg", "log", "!--")
+
+  def tagNameAndType(line: String): (String, TagType) = {
+    var startIndex = line.indexOf('<')
+    if (startIndex == -1)
+      return (null, null)
+
+    val tagType = if (startIndex + 1 < line.length && line.charAt(startIndex + 1) == '/') {
+      startIndex += 2
+      End
+    } else {
+      startIndex += 1
+      Start
+    }
+    val name = new mutable.StringBuilder()
+
+    for (i <- startIndex to line.length - 1) {
+      val c = line.charAt(i)
+      if (c == ' ' || c == '>' || c == '/')
+        return (name.toString(), tagType)
+      else
+        name.append(c)
+    }
+
+    (name.toString(), tagType)
+  }
+
+  // slightly faster than a regex
   def extractAttributes(line: String, fields: mutable.Map[String, String]) = {
     var state = -1
     var nameStart = 0
@@ -127,6 +172,8 @@ object LogEntry {
 
   def extractIdAndValue(line: String): (String, String) = {
     val (idEnd: Int, id: String) = extractId(line)
+    if (id == null)
+      throw new IllegalArgumentException(s"Missing id in $line")
 
     val valueIndex = line.indexOf("value=\"", idEnd)
     if (valueIndex == -1) {
@@ -142,13 +189,13 @@ object LogEntry {
   def extractId(line: String): (Int, String) = {
     val idIndex = line.indexOf("id=\"")
     if (idIndex == -1) {
-      throw new IllegalArgumentException(s"Missing id in $line")
+      (-1, null)
+    } else {
+      val idStart = idIndex + 4
+      val idEnd = line.indexOf('"', idStart)
+      val id = line.substring(idStart, idEnd)
+      (idEnd, id)
     }
-    val idStart = idIndex + 4
-    val idEnd = line.indexOf('"', idStart)
-    val id = line.substring(idStart, idEnd)
-
-    (idEnd, id)
   }
 
   def apply(fields: (String, String)*): LogEntry = {
@@ -160,4 +207,9 @@ object LogEntry {
 
 case class SourceRef(file: String, line: Int) {
   override def toString: String = s"$file:$line"
+}
+
+object TagType extends Enumeration {
+  type TagType = Value
+  val Start, End = Value
 }

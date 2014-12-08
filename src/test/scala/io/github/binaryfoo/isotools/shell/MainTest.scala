@@ -242,7 +242,7 @@ class MainTest extends FlatSpec with Matchers {
   "Given a <log> record garbled by a 2nd partial within it" should "keep on truckin'" in {
     val output = run("--csv", "0,11", "src/test/resources/message-inception-garbage.xml")
     output shouldEqual """0,11
-                          |2804,127
+                          |2804,
                           |2814,127
                           |""".stripMargin
   }

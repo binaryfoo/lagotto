@@ -10,23 +10,7 @@ class LogEntryTest extends FlatSpec with Matchers {
   val timestamp = "Mon Nov 24 16:59:03 EST 2014.292"
   val realm = "some.channel/10.0.0.1:4321"
   val lifespan = """10005ms"""
-  val lines = s"""<log realm="$realm" at="$timestamp" lifespan="$lifespan">
-  <receive>
-    <isomsg direction="incoming">
-      <!-- org.jpos.iso.packager.XMLPackager -->
-      <field id="0" value="0800"/>
-      <field id="7" value="1124000003"/>
-      <field id="11" value="28928"/>
-      <isomsg id="48">
-        <field id="1" value="a subfield"/>
-        <isomsg id="2">
-          <field id="13" value="subfield 48.2.13"/>
-        </isomsg>
-        <field id="3" value=""/>
-      </isomsg>
-    </isomsg>
-  </receive>
-</log>""".split('\n')
+  val lines = oneEntry()
 
   "Log entry parser" should "parse extract fields" in {
     val entry = LogEntry.fromLines(lines)
@@ -65,10 +49,13 @@ class LogEntryTest extends FlatSpec with Matchers {
   }
 
   it should "extract logical link name from realm" in {
-    val entry = LogEntry.fromLines(s"""<log realm="linkName.channel/10.0.0.1:4321" at="$timestamp" lifespan="$lifespan">
-                                       |</log>
-                                     """.stripMargin.split('\n'))
+    val entry = LogEntry.fromLines(oneEntry(realm = "linkName.channel/10.0.0.1:4321"))
     entry("link") shouldEqual "linkName"
+  }
+
+  it should "extract type" in {
+    LogEntry.fromLines(oneEntry(msgType = "receive")).msgType shouldEqual "receive"
+    LogEntry.fromLines(oneEntry(msgType = "send")).msgType shouldEqual "send"
   }
 
   "A single entry" should "be convertible to a .csv row" in {
@@ -103,5 +90,25 @@ class LogEntryTest extends FlatSpec with Matchers {
   "Id and value" should "be extracted" in {
     val attributes = LogEntry.extractIdAndValue("""<field id="7" value="1124000003"/>""")
     attributes shouldEqual  ("7", "1124000003")
+  }
+
+  def oneEntry(realm: String = realm, timestamp: String = timestamp, lifespan: String = lifespan, msgType: String = "receive") = {
+    s"""<log realm="$realm" at="$timestamp" lifespan="$lifespan">
+  <$msgType>
+    <isomsg direction="incoming">
+      <!-- org.jpos.iso.packager.XMLPackager -->
+      <field id="0" value="0800"/>
+      <field id="7" value="1124000003"/>
+      <field id="11" value="28928"/>
+      <isomsg id="48">
+        <field id="1" value="a subfield"/>
+        <isomsg id="2">
+          <field id="13" value="subfield 48.2.13"/>
+        </isomsg>
+        <field id="3" value=""/>
+      </isomsg>
+    </isomsg>
+  </$msgType>
+</log>""".split('\n')
   }
 }
