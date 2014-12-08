@@ -47,13 +47,15 @@ object MsgPair {
         case e #:: tail =>
           val mti = e.mti
           if (mti != null) {
-            val key = normaliseToRequestMTI(mti) + "-" + e("11").toInt
-            pending.get(key) match {
+            val partnersKey = key(invertMTI(mti), e)
+            pending.get(partnersKey) match {
               case Some(other) =>
                 val m = if (isResponseMTI(mti)) new MsgPair(other, e) else new MsgPair(e, other)
-                pending.remove(key)
+                pending.remove(partnersKey)
                 return m #:: pairNext(tail)
-              case None => pending.put(key, e)
+              case None =>
+                val thisKey = key(mti, e)
+                pending.put(thisKey, e)
             }
           }
           pairNext(tail)
@@ -64,11 +66,22 @@ object MsgPair {
     pairNext(list)
   }
 
+  private def key(mti: String, e: LogEntry): String = mti + "-" + toIntIfPossible(e("11"))   + "-" + e.realm
+
   implicit class RichEntryIterable(val v: Stream[LogEntry]) extends AnyVal {
     def pair(): Stream[MsgPair] = MsgPair.pair(v)
   }
 
   implicit class RichMsgPairIterable(val v: Stream[MsgPair]) extends AnyVal {
     def coalesce(selector: MsgPair => String): Stream[Coalesced] = Collapser.coalesce(v, selector)
+  }
+
+  def toIntIfPossible(s: String): Any = {
+    try {
+      s.toInt
+    }
+    catch {
+      case e: NumberFormatException => s
+    }
   }
 }

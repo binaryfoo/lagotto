@@ -19,6 +19,35 @@ class MsgPairTest extends FlatSpec with Matchers {
     assert(pairs.head.response === response)
   }
 
+  it should "pair when field 11 is not numeric" in {
+    val request = LogEntry("0" -> "0800", "11" -> "abc")
+    val response = LogEntry("0" -> "0810", "11" -> "abc")
+
+    val pairs = MsgPair.pair(Stream(request, response))
+
+    pairs shouldEqual List(MsgPair(request, response))
+  }
+
+  it should "pair response with most recent request in face of duplicates" in {
+    val request = LogEntry("0" -> "0800", "11" -> "1", "id" -> "1")
+    val dupeRequest = LogEntry("0" -> "0800", "11" -> "1", "id" -> "2")
+    val response = LogEntry("0" -> "0810", "11" -> "1", "id" -> "3")
+
+    val pairs = MsgPair.pair(Stream(request, dupeRequest, response))
+
+    pairs shouldEqual List(MsgPair(dupeRequest, response))
+  }
+
+  it should "pairing should use realm" in {
+    val request = LogEntry("0" -> "0800", "11" -> "1", "realm" -> "a")
+    val wrongResponse = LogEntry("0" -> "0810", "11" -> "1", "realm" -> "b")
+    val response = LogEntry("0" -> "0810", "11" -> "1", "realm" -> "a")
+
+    val pairs = MsgPair.pair(Stream(request, wrongResponse, response))
+
+    pairs shouldEqual List(MsgPair(request, response))
+  }
+
   "Log entries that aren't messages" should "be ignored" in {
     val entries = LogReader.read(new File("src/test/resources/basic.xml"))
 

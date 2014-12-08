@@ -9,10 +9,15 @@ object JposTimestamp {
   private val READ_WORKAROUND_FORMAT = DateTimeFormat.forPattern("MMM dd HH:mm:ss yyyy")
 
   def parse(s: String): DateTime = {
-    val dot = s.lastIndexOf('.')
-    val millis = if (dot == -1) 0 else s.substring(dot + 1).toInt
-    val end = if (dot == -1) s.length else dot
-    READ_WORKAROUND_FORMAT.parseDateTime(s.substring(4, end).replace("EST ", "")).withMillisOfSecond(millis)
+    try {
+      val dot = s.lastIndexOf('.')
+      val millis = if (dot == -1) 0 else s.substring(dot + 1).toInt
+      val end = if (dot == -1) s.length else dot
+      READ_WORKAROUND_FORMAT.parseDateTime(s.substring(4, end).replace("EST ", "")).withMillisOfSecond(millis)
+    }
+    catch {
+      case e: Throwable => throw new IllegalArgumentException(s"Failed to parse time: $s", e)
+    }
   }
 
   def format(d: DateTime): String = d.toString(FORMAT) + "." + (d.getMillis % 1000)

@@ -39,6 +39,7 @@ object LogReader {
         lineNumber += 1
 
         if (line.contains("<log ") && record == null) {
+          // TODO: collect warning if record != null
           startLineNumber = lineNumber
           record = new ListBuffer[String]
         }
@@ -47,8 +48,16 @@ object LogReader {
           record += line
 
         if (line.contains("</log>") && record != null) {
-          entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
-          return entry #:: readNext()
+          // TODO: collect warning if record == null
+          try {
+            entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
+            return entry #:: readNext()
+          }
+          catch {
+            case e: IllegalArgumentException =>
+              // TODO: collect warning
+              record = null
+          }
         }
       }
 

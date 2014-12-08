@@ -29,6 +29,7 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
         case "time" => timestamp.toString("HH:mm:ss.SSS")
         case "date" => timestamp.toString("yyyy-MM-dd")
         case "file" if source != null => source.toString
+        case "line" if source != null => source.line.toString
         case _ => null
       }
     } else {
@@ -73,6 +74,11 @@ object LogEntry {
         extractAttributes(line, fields)
       }
     }
+    if (!fields.contains("at"))
+      throw new IllegalArgumentException(s"Missing 'at' in $lines")
+
+    if (!fields.contains("realm"))
+      throw new IllegalArgumentException(s"Missing 'realm' in $lines")
     LogEntry(fields.toMap, lines.mkString("\n"), source)
   }
 
