@@ -1,7 +1,8 @@
 package io.github.binaryfoo.isotools.shell
 
-import java.io.ByteArrayOutputStream
+import java.io.{File, ByteArrayOutputStream}
 
+import io.github.binaryfoo.isotools.LogReader
 import org.scalatest.{FlatSpec, Matchers}
 
 class MainTest extends FlatSpec with Matchers {
@@ -236,6 +237,14 @@ class MainTest extends FlatSpec with Matchers {
                          |</log>
                          |</pair>
                          |""".stripMargin
+  }
+
+  "Given a <log> record garbled by a 2nd partial within it" should "keep on truckin'" in {
+    val output = run("--csv", "0,11", "src/test/resources/message-inception-garbage.xml")
+    output shouldEqual """0,11
+                          |2804,127
+                          |2814,127
+                          |""".stripMargin
   }
 
   def run(args: String*): String = {

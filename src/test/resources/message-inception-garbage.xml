@@ -1,0 +1,36 @@
+<log realm="anzRemoteStub.channel/127.0.0.1:45115" at="Mon Dec 08 14:51:55 EST 2014.648" lifespan="1002ms">
+    <receive>
+        <isomsg direction="incoming">
+            <!-- org.jpos.iso.packager.XMLPackager -->
+            <field id="0" value="2804"/><log realm="remoteANZLink.channel" at="Mon Dec 08 14:51:55 EST 2014.648">
+            <field id="7" value="1208145155"/>
+
+            <receive>      <field id="11" value="127"/>
+
+            <field id="24" value="831"/>
+            <iso-exception>    </isomsg>
+
+        unconnected ISOChannel  </receive>
+
+</log>
+        org.jpos.iso.ISOException: unconnected ISOChannel
+        at org.jpos.iso.BaseChannel.receive(BaseChannel.java:662)
+        at org.jpos.q2.iso.ChannelAdaptor$Receiver.run(ChannelAdaptor.java:319)
+        at java.lang.Thread.run(Thread.java:722)
+        </iso-exception>
+        </receive>
+        </log>
+<log realm="anzRemoteStub.channel/127.0.0.1:45115" at="Mon Dec 08 14:51:55 EST 2014.649">
+<send>
+    <isomsg>
+        <!-- org.jpos.iso.packager.XMLPackager -->
+        <field id="0" value="2814"/>
+        <field id="7" value="1208145155"/>
+        <field id="11" value="127"/>
+        <field id="24" value="831"/>
+        <isomsg id="48">
+            <field id="1" value="true"/>
+        </isomsg>
+    </isomsg>
+</send>
+</log>

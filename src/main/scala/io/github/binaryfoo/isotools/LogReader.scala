@@ -38,7 +38,7 @@ object LogReader {
       for (line <- lines) {
         lineNumber += 1
 
-        if (line contains "<log ") {
+        if (line.contains("<log ") && record == null) {
           startLineNumber = lineNumber
           record = new ListBuffer[String]
         }
@@ -46,7 +46,7 @@ object LogReader {
         if (record != null)
           record += line
 
-        if (line contains "</log>") {
+        if (line.contains("</log>") && record != null) {
           entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
           return entry #:: readNext()
         }
