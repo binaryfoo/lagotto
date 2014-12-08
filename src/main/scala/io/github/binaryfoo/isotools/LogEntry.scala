@@ -103,11 +103,11 @@ object LogEntry {
         case _ =>
       }
     }
-    if (!fields.contains("at"))
-      throw new IllegalArgumentException(s"Missing 'at' in $lines")
+//    if (!fields.contains("at"))
+//      throw new IllegalArgumentException(s"Missing 'at' in $lines")
 
-    if (!fields.contains("realm"))
-      throw new IllegalArgumentException(s"Missing 'realm' in $lines")
+//    if (!fields.contains("realm"))/
+//      throw new IllegalArgumentException(s"Missing 'realm' in $lines")
     LogEntry(fields.toMap, lines.mkString("\n"), source)
   }
 
@@ -125,17 +125,14 @@ object LogEntry {
       startIndex += 1
       Start
     }
-    val name = new mutable.StringBuilder()
 
     for (i <- startIndex to line.length - 1) {
       val c = line.charAt(i)
       if (c == ' ' || c == '>' || c == '/')
-        return (name.toString(), tagType)
-      else
-        name.append(c)
+        return (line.substring(startIndex, i), tagType)
     }
 
-    (name.toString(), tagType)
+    (line.substring(startIndex), tagType)
   }
 
   // slightly faster than a regex
