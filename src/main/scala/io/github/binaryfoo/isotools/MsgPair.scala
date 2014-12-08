@@ -39,6 +39,9 @@ object MsgPair {
 
   def coalesce(seq: Stream[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
+  /**
+   * Match requests with responses based on MTI, STAN (field 11) and realm.
+   */
   def pair(list: Stream[LogEntry]): Stream[MsgPair] = {
     val pending = new mutable.ListMap[String, LogEntry]
 

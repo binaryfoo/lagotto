@@ -1,10 +1,16 @@
 package io.github.binaryfoo.isotools
 
-import io.github.binaryfoo.isotools.TagType.TagType
 import org.joda.time.DateTime
 
 import scala.collection.mutable
 
+/**
+ * A single &lt;log&gt; entry from a jPOS log.
+ *
+ * @param fields Output of parser
+ * @param lines Full text of the entry
+ * @param source Where the entry was read from
+ */
 case class LogEntry(fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with ConvertibleToMap {
 
   lazy val timestamp: DateTime = JposTimestamp.parse(at)
@@ -56,7 +62,7 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
 
 object LogEntry {
 
-  import TagType._
+  import io.github.binaryfoo.isotools.TagType._
 
   def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
     val fields = new mutable.ListMap[String, String]
