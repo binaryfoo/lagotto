@@ -123,13 +123,13 @@ object Main extends App {
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
     def deNull(s: String): String = if (s == null) "" else s
 
-    val LogFilterPattern = "([^=><~!]+)(!?)([=><~])(.+)".r
+    val LogFilterPattern = "([^=><~!]+)(!?)([=><~])(.*)".r
     val arity = 2
     val reads = { (s: String) =>
       s match {
         case LogFilterPattern(key, negation, operator, value) =>
           val op: MatchOp = operator match {
-            case "=" => _ == _
+            case "=" => deNull(_) == _
             case ">" => _.toInt >= _.toInt
             case "<" => _.toInt <= _.toInt
             case "~" => deNull(_).toLowerCase contains _.toLowerCase
