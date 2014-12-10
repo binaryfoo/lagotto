@@ -5,6 +5,8 @@ import scala.collection.immutable.ListMap
 import scala.collection.mutable
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.io.Source
+
 class LogEntryTest extends FlatSpec with Matchers {
 
   val timestamp = "Mon Nov 24 16:59:03 EST 2014.292"
@@ -113,7 +115,12 @@ class LogEntryTest extends FlatSpec with Matchers {
 
   "Id and value" should "be extracted" in {
     val attributes = LogEntry.extractIdAndValue("""<field id="7" value="1124000003"/>""")
-    attributes shouldEqual  ("7", "1124000003")
+    attributes shouldEqual ("7", "1124000003")
+  }
+
+  "An <exception> element" should "be extracted" in {
+    val entry = LogEntry.fromLines(Source.fromFile("src/test/resources/exception.xml").getLines().toSeq)
+    entry("exception") shouldEqual "Remote host closed connection during handshake"
   }
 
   def oneEntry(realm: String = realm, timestamp: String = timestamp, lifespan: String = lifespan, msgType: String = "receive") = {

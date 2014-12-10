@@ -99,6 +99,9 @@ object LogEntry {
           popPath()
         case ("log", Start) =>
           fields = extractAttributes(line) ::: fields
+        case ("exception", Start) =>
+          val ("name", value) :: _ = extractAttributes(line)
+          fields = ("exception", value) :: fields
         case (name, Start) if !msgTypeBlackList.contains(name) =>
           fields = ("msgType", name) :: fields
         case _ =>

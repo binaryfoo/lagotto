@@ -1,0 +1,29 @@
+<log realm="the.channel/192.168.0.1:4321" at="Wed Dec 01 11:00:00 EST 1984.101" lifespan="1ms">
+    <receive>
+        <exception name="Remote host closed connection during handshake">
+            javax.net.ssl.SSLHandshakeException: Remote host closed connection during handshake
+            at sun.security.ssl.SSLSocketImpl.readRecord(SSLSocketImpl.java:946)
+            at sun.security.ssl.SSLSocketImpl.performInitialHandshake(SSLSocketImpl.java:1312)
+            at sun.security.ssl.SSLSocketImpl.readDataRecord(SSLSocketImpl.java:882)
+            at sun.security.ssl.AppInputStream.read(AppInputStream.java:102)
+            at java.io.BufferedInputStream.read1(BufferedInputStream.java:273)
+            at java.io.BufferedInputStream.read(BufferedInputStream.java:334)
+            at java.io.DataInputStream.read(DataInputStream.java:149)
+            at sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:283)
+            at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:325)
+            at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:177)
+            at java.io.InputStreamReader.read(InputStreamReader.java:184)
+            at java.io.BufferedReader.fill(BufferedReader.java:154)
+            at java.io.BufferedReader.readLine(BufferedReader.java:317)
+            at java.io.BufferedReader.readLine(BufferedReader.java:382)
+            at org.jpos.iso.channel.XMLChannel.streamReceive(XMLChannel.java:88)
+            at org.jpos.iso.BaseChannel.receive(BaseChannel.java:672)
+            at org.jpos.iso.ISOServer$Session.run(ISOServer.java:155)
+            at org.jpos.util.ThreadPool$PooledThread.run(ThreadPool.java:72)
+            Caused by: java.io.EOFException: SSL peer shut down incorrectly
+            at sun.security.ssl.InputRecord.read(InputRecord.java:482)
+            at sun.security.ssl.SSLSocketImpl.readRecord(SSLSocketImpl.java:927)
+            ... 17 more
+        </exception>
+    </receive>
+</log>
