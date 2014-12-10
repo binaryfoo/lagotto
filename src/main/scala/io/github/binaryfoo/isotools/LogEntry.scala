@@ -2,8 +2,6 @@ package io.github.binaryfoo.isotools
 
 import org.joda.time.DateTime
 
-import scala.collection.mutable
-
 /**
  * A single &lt;log&gt; entry from a jPOS log.
  *
