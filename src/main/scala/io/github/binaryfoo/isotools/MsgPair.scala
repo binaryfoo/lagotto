@@ -69,7 +69,7 @@ object MsgPair {
     pairNext(list)
   }
 
-  private def key(mti: String, e: LogEntry): String = mti + "-" + toIntIfPossible(e("11"))   + "-" + e.realm
+  private def key(mti: String, e: LogEntry): String = mti + "-" + toIntIfPossible(e("11"))   + "-" + e.realm.raw
 
   implicit class RichEntryIterable(val v: Stream[LogEntry]) extends AnyVal {
     def pair(): Stream[MsgPair] = MsgPair.pair(v)

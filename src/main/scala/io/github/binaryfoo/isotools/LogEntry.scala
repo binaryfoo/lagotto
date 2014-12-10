@@ -18,7 +18,7 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
     JposTimestamp.parse(at)
   }
 
-  def realm: String = fields.getOrElse("realm", "")
+  def realm: Realm = Realm(fields.getOrElse("realm", ""))
 
   def at: String = fields.getOrElse("at", "")
 
@@ -32,11 +32,6 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
 
   def mti: String = field("0")
 
-  def link: String = {
-    val dot = realm.indexOf('.')
-    if (dot == -1) realm else realm.substring(0, dot)
-  }
-
   def field(path: String): String = fields.getOrElse(path, null)
 
   def hasField(path: String): Boolean = fields.contains(path)
@@ -45,14 +40,17 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
     val v = field(path)
     if (v == null) {
       path match {
-        case "realm" => realm
+        case "realm" => realm.raw
         case "at" => at
         case "mti" => mti
         case "timestamp" => timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
         case "time" => timestamp.toString("HH:mm:ss.SSS")
         case "date" => timestamp.toString("yyyy-MM-dd")
-        case "link" => link
+        case "link" => realm.link
         case "icon" => icon
+        case "socket" => realm.socket
+        case "ipAddress" => realm.ipAddress
+        case "port" => realm.port
         case "file" if source != null => source.toString
         case "line" if source != null => source.line.toString
         case _ => null
@@ -225,4 +223,42 @@ case class SourceRef(file: String, line: Int) {
 object TagType extends Enumeration {
   type TagType = Value
   val Start, End = Value
+}
+
+/**
+ * Pull apart a 'realm' attribute from a &ltlog&gt; record.
+ */
+case class Realm(raw: String) {
+
+  def link: String = {
+    val fullLink = linkAndSocket._1
+    // strip off .server or .channel added by jpos
+    fullLink.split('.') match {
+      case Array(link, _) => link
+      case _ => fullLink
+    }
+  }
+
+  def linkAndSocket: (String, String) = {
+    raw.split('/') match {
+      case Array(link, socket) => (link, socket)
+      case _ => ("", "")
+    }
+  }
+
+  def socket: String = linkAndSocket._2
+
+  def ipAddress: String = {
+    socket.split(':') match {
+      case Array(ip, _) => ip
+      case _ => socket
+    }
+  }
+
+  def port: String = {
+    socket.split(':') match {
+      case Array(_, port) => port
+      case _ => ""
+    }
+  }
 }

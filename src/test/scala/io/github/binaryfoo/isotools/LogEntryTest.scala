@@ -20,7 +20,7 @@ class LogEntryTest extends FlatSpec with Matchers {
 
   it should "extract realm" in {
     val entry = LogEntry.fromLines(lines)
-    entry.realm shouldEqual realm
+    entry.realm.raw shouldEqual realm
   }
 
   it should "extract 'at' attribute" in {
@@ -51,6 +51,32 @@ class LogEntryTest extends FlatSpec with Matchers {
   it should "extract logical link name from realm" in {
     val entry = LogEntry.fromLines(oneEntry(realm = "linkName.channel/10.0.0.1:4321"))
     entry("link") shouldEqual "linkName"
+  }
+
+  it should "extract logical link name from realm without a dot" in {
+    val entry = LogEntry.fromLines(oneEntry(realm = "linkName/10.0.0.1:4321"))
+    entry("link") shouldEqual "linkName"
+  }
+
+  it should "extract logical ip address from realm" in {
+    val entry = LogEntry.fromLines(oneEntry(realm = "linkName.channel/10.0.0.1:4321"))
+    entry("ipAddress") shouldEqual "10.0.0.1"
+    entry("port") shouldEqual "4321"
+    entry("socket") shouldEqual "10.0.0.1:4321"
+  }
+
+  it should "return empty when realm contains no port" in {
+    val entry = LogEntry.fromLines(oneEntry(realm = "linkName.channel/10.0.0.1"))
+    entry("ipAddress") shouldEqual "10.0.0.1"
+    entry("port") shouldEqual ""
+    entry("socket") shouldEqual "10.0.0.1"
+  }
+
+  it should "return empty when realm contains no socket" in {
+    val entry = LogEntry.fromLines(oneEntry(realm = "linkName.channel"))
+    entry("ipAddress") shouldEqual ""
+    entry("port") shouldEqual ""
+    entry("socket") shouldEqual ""
   }
 
   it should "extract type" in {
