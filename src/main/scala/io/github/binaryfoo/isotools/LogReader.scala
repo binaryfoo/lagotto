@@ -1,6 +1,7 @@
 package io.github.binaryfoo.isotools
 
-import java.io.File
+import java.io.{BufferedInputStream, FileInputStream, File}
+import java.util.zip.GZIPInputStream
 
 import scala.collection.mutable.ListBuffer
 import scala.io.{BufferedSource, Source}
@@ -19,9 +20,16 @@ object LogReader {
   def read(files: Iterable[File]): Stream[LogEntry] = {
     var joined: Stream[LogEntry] = Stream.empty
     for (f <- files.toList) {
-      joined = joined #::: read(Source.fromFile(f), f.getName)
+      joined = joined #::: read(open(f), f.getName)
     }
     joined
+  }
+
+  private def open(f: File): BufferedSource = {
+    if (f.getName.endsWith(".gz"))
+      Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(f))))
+    else
+      Source.fromFile(f)
   }
 
   def read(source: Source, sourceName: String = ""): Stream[LogEntry] = {
