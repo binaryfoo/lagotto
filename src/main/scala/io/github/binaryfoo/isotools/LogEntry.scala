@@ -13,7 +13,12 @@ import scala.collection.mutable
  */
 case class LogEntry(fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with ConvertibleToMap {
 
-  lazy val timestamp: DateTime = JposTimestamp.parse(at)
+  lazy val timestamp: DateTime = {
+    if (at == "")
+      throw new IllegalArgumentException(s"Missing 'at' in $lines")
+
+    JposTimestamp.parse(at)
+  }
 
   def realm: String = fields.getOrElse("realm", "")
 
@@ -64,8 +69,8 @@ object LogEntry {
 
   import io.github.binaryfoo.isotools.TagType._
 
-  def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
-    val fields = new mutable.ListMap[String, String]
+  def extractFields(lines: Seq[String]): Map[String, String] = {
+    var fields = List[(String, String)]()
     var path = ""
 
     def pathTo(id: String) = if (path.isEmpty) id else path + "." + id
@@ -89,7 +94,7 @@ object LogEntry {
       tagNameAndType(line) match {
         case ("field", Start) =>
           val (id, value) = extractIdAndValue(line)
-          fields.put(pathTo(id), value)
+          fields = (pathTo(id), value) :: fields
         case ("isomsg", Start) =>
           val (_, id) = extractId(line)
           if (id != null)
@@ -97,18 +102,22 @@ object LogEntry {
         case ("isomsg", End) if path.nonEmpty =>
           popPath()
         case ("log", Start) =>
-          extractAttributes(line, fields)
+          fields = extractAttributes(line) ::: fields
         case (name, Start) if !msgTypeBlackList.contains(name) =>
-          fields.put("msgType", name)
+          fields = ("msgType", name) :: fields
         case _ =>
       }
     }
-//    if (!fields.contains("at"))
-//      throw new IllegalArgumentException(s"Missing 'at' in $lines")
 
-//    if (!fields.contains("realm"))/
-//      throw new IllegalArgumentException(s"Missing 'realm' in $lines")
-    LogEntry(fields.toMap, lines.mkString("\n"), source)
+    fields.toMap
+  }
+  
+  def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
+    LogEntry(extractFields(lines), lines.mkString("\n"), source)
+  }
+
+  def fromString(s: String, source: SourceRef = null): LogEntry = {
+    LogEntry(extractFields(s.split('\n')), s, source)
   }
 
   val msgTypeBlackList = Set("field", "isomsg", "log", "!--")
@@ -136,12 +145,13 @@ object LogEntry {
   }
 
   // slightly faster than a regex
-  def extractAttributes(line: String, fields: mutable.Map[String, String]) = {
+  def extractAttributes(line: String): List[(String, String)] = {
     var state = -1
     var nameStart = 0
     var nameEnd = 0
     var valueStart = 0
     var i = 0
+    var fields = List[(String, String)]()
 
     for (c <- line) {
       state match {
@@ -165,12 +175,14 @@ object LogEntry {
           if (c == '"') {
             val name = line.substring(nameStart, nameEnd)
             val value = line.substring(valueStart, i)
-            fields.put(name, value)
+            fields = (name, value) :: fields
             state = 0
           }
       }
       i += 1
     }
+
+    fields
   }
 
   def extractIdAndValue(line: String): (String, String) = {

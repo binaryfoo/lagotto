@@ -73,15 +73,13 @@ class LogEntryTest extends FlatSpec with Matchers {
   }
 
   "Attributes" should "be extracted" in {
-    val attributes = new mutable.ListMap[String, String]
-    LogEntry.extractAttributes("""<field id="7" value="1124000003"/>""", attributes)
+    val attributes = LogEntry.extractAttributes("""<field id="7" value="1124000003"/>""")
     attributes should contain ("id" -> "7")
     attributes should contain ("value" -> "1124000003")
   }
 
   it should "extract attributes from a indented <log> line" in {
-    val attributes = new mutable.ListMap[String, String]
-    LogEntry.extractAttributes(s"""    <log realm="$realm" at="$timestamp" lifespan="$lifespan">""", attributes)
+    val attributes = LogEntry.extractAttributes(s"""    <log realm="$realm" at="$timestamp" lifespan="$lifespan">""")
     attributes should contain ("realm" -> realm)
     attributes should contain ("at" -> timestamp)
     attributes should contain ("lifespan" -> lifespan)
