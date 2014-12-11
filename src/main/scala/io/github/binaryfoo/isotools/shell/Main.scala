@@ -63,10 +63,14 @@ object Main extends App {
     opt[String]("sort-desc") action {(field,c) =>
       c.copy(sortBy = field, sortDescending = true)
     } text "Sort output descending by field. Prevents incremental output"
+
+    opt[Unit]("strict") action {(_,c) =>
+      c.copy(strict = true)
+    } text "Fail on rubbish input instead the default of continuing to read"
   }
 
   parser.parse(args, Config()).map { config =>
-    def logEntries = LogReader.readFilesOrStdIn(config.input)
+    def logEntries = LogReader(config.strict).readFilesOrStdIn(config.input)
 
     def pipeline: Stream[ConvertibleToMap] = {
       var entries: Stream[ConvertibleToMap] = if (config.pair)

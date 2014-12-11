@@ -49,19 +49,19 @@ class MsgPairTest extends FlatSpec with Matchers {
   }
 
   "Log entries that aren't messages" should "be ignored" in {
-    val entries = LogReader.read(new File("src/test/resources/basic.xml"))
+    val entries = LogReader().read(new File("src/test/resources/basic.xml"))
 
     MsgPair.pair(entries) should have size 0
   }
 
   "A pair read from a file" should "have a round trip time" in {
-    val pairs = MsgPair.pair(LogReader.read(new File("src/test/resources/a-pair.xml")))
+    val pairs = MsgPair.pair(LogReader().read(new File("src/test/resources/a-pair.xml")))
 
     pairs.head.rtt shouldEqual 808
   }
 
   it should "provide access to fields and attributes" in {
-    val pair = MsgPair.pair(LogReader.read(new File("src/test/resources/a-pair.xml"))).head
+    val pair = MsgPair.pair(LogReader().read(new File("src/test/resources/a-pair.xml"))).head
 
     pair("0") shouldEqual "0800"
     pair("48.1") shouldEqual "subfield 48.1"

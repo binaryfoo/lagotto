@@ -1,8 +1,8 @@
-<log realm="anzRemoteStub.channel/127.0.0.1:45115" at="Mon Dec 08 14:51:55 EST 2014.648" lifespan="1002ms">
+<log realm="remoteStub.channel/127.0.0.1:45115" at="Mon Dec 08 14:51:55 EST 2014.648" lifespan="1002ms">
     <receive>
         <isomsg direction="incoming">
             <!-- org.jpos.iso.packager.XMLPackager -->
-            <field id="0" value="2804"/><log realm="remoteANZLink.channel" at="Mon Dec 08 14:51:55 EST 2014.648">
+            <field id="0" value="2804"/><log realm="remoteLink.channel" at="Mon Dec 08 14:51:55 EST 2014.648">
             <field id="7" value="1208145155"/>
 
             <receive>      <field id="11" value="127"/>
@@ -20,7 +20,7 @@
         </iso-exception>
         </receive>
         </log>
-<log realm="anzRemoteStub.channel/127.0.0.1:45115" at="Mon Dec 08 14:51:55 EST 2014.649">
+<log realm="remoteStub.channel/127.0.0.1:45115" at="Mon Dec 08 14:51:55 EST 2014.649">
 <send>
     <isomsg>
         <!-- org.jpos.iso.packager.XMLPackager -->

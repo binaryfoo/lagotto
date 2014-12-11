@@ -6,13 +6,13 @@ import java.util.zip.GZIPInputStream
 import scala.collection.mutable.ListBuffer
 import scala.io.{BufferedSource, Source}
 
-object LogReader {
+case class LogReader(strict: Boolean = false) {
 
   def readFilesOrStdIn(args: Iterable[String]): Stream[LogEntry] = {
     if (args.isEmpty)
-      LogReader.read(new BufferedSource(System.in))
+      read(new BufferedSource(System.in))
     else
-      LogReader.read(args.map(new File(_)))
+      read(args.map(new File(_)))
   }
 
   def read(file: File*): Stream[LogEntry] = read(file.toIterable)
@@ -41,30 +41,39 @@ object LogReader {
     def readNext(): Stream[LogEntry] = {
 
       var record: ListBuffer[String] = null
-      var entry: LogEntry = null
 
       for (line <- lines) {
         lineNumber += 1
 
-        if (line.contains("<log ") && record == null) {
-          // TODO: collect warning if record != null
-          startLineNumber = lineNumber
-          record = new ListBuffer[String]
+        if (line.contains("<log ")) {
+          if (record == null) {
+            startLineNumber = lineNumber
+            record = new ListBuffer[String]
+          } else if (strict) {
+            throw new IllegalArgumentException(s"Unexpected <log> start tag. Line $sourceName:$lineNumber: $line")
+          }
         }
 
         if (record != null)
           record += line
 
-        if (line.contains("</log>") && record != null) {
-          // TODO: collect warning if record == null
-          try {
-            entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
+        if (line.contains("</log>")) {
+          if (record != null) {
+            var entry: LogEntry = null
+            try {
+              entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
+            }
+            catch {
+              case e: IllegalArgumentException =>
+                if (strict) {
+                  throw new IllegalArgumentException(s"Failed to process record ending line $sourceName:$lineNumber", e)
+                }
+            }
+            record = null
             return entry #:: readNext()
-          }
-          catch {
-            case e: IllegalArgumentException =>
-              // TODO: collect warning
-              record = null
+
+          } else if (strict) {
+            throw new IllegalArgumentException(s"Unexpected </log> end tag. Line $sourceName:$lineNumber: $line")
           }
         }
       }

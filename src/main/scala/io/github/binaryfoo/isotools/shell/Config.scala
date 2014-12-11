@@ -8,4 +8,5 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    beforeContext: Int = 0,
                    afterContext: Int = 0,
                    sortBy: String = null,
-                   sortDescending: Boolean = false)
+                   sortDescending: Boolean = false,
+                   strict: Boolean = false)

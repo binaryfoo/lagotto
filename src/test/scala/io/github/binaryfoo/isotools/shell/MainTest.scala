@@ -247,6 +247,12 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  "With --strict garbled input" should "be rejected" in {
+    the [IllegalArgumentException] thrownBy {
+      run("--strict", "src/test/resources/message-inception-garbage.xml")
+    } should have message """Unexpected <log> start tag. Line message-inception-garbage.xml:5:             <field id="0" value="2804"/><log realm="remoteLink.channel" at="Mon Dec 08 14:51:55 EST 2014.648">"""
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {

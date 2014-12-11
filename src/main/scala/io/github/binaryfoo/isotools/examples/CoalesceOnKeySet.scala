@@ -6,7 +6,7 @@ import io.github.binaryfoo.isotools.MsgPair.RichMsgPairIterable
 
 object CoalesceOnKeySet extends App {
 
-  LogReader.readFilesOrStdIn(args).pair()
+  LogReader().readFilesOrStdIn(args).pair()
     .filter(_.mti == "0200")
     .coalesce(e => {
       val normalized39 = if (e("39") == "01") e("39") else "ok"
