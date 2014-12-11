@@ -66,30 +66,33 @@ object Main extends App {
   }
 
   parser.parse(args, Config()).map { config =>
-    val logEntries = LogReader.readFilesOrStdIn(config.input)
+    def logEntries = LogReader.readFilesOrStdIn(config.input)
 
-    var entries: Stream[ConvertibleToMap] = if (config.pair)
-      logEntries.pair()
-    else
-      logEntries
+    def pipeline: Stream[ConvertibleToMap] = {
+      var entries: Stream[ConvertibleToMap] = if (config.pair)
+        logEntries.pair()
+      else
+        logEntries
 
-    if (config.header) {
-      config.format.header().map(println(_))
-    }
-
-    if (config.filters.nonEmpty) {
-      entries = entries.applyFilters(config.filters, config.beforeContext, config.afterContext)
-    }
-
-    // presumably both these options prevent incremental output
-    if (config.sortBy != null) {
-      entries = entries.sortBy(_(config.sortBy))
-      if (config.sortDescending) {
-        entries = entries.reverse
+      if (config.header) {
+        config.format.header().map(println(_))
       }
+
+      if (config.filters.nonEmpty) {
+        entries = entries.applyFilters(config.filters, config.beforeContext, config.afterContext)
+      }
+
+      // presumably both these options prevent incremental output
+      if (config.sortBy != null) {
+        entries = entries.sortBy(_(config.sortBy))
+        if (config.sortDescending) {
+          entries = entries.reverse
+        }
+      }
+      entries
     }
 
-    entries
+      pipeline
       .map(e => config.format(e))
       .foreach(e => println(e))
   }
