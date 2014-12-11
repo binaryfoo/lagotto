@@ -96,7 +96,7 @@ object Main extends App {
       entries
     }
 
-      pipeline
+    pipeline
       .map(e => config.format(e))
       .foreach(e => println(e))
   }

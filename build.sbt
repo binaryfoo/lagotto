@@ -1,6 +1,8 @@
 name := "jpos-tools-scala"
 
-version := "1.0"
+organization := "io.github.binaryfoo"
+
+version := "0.1-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 

@@ -35,6 +35,17 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry.timestamp shouldEqual new DateTime(2014, 11, 24, 16, 59, 3, 292)
   }
 
+  it should "parse the 'lifespan' attribute as a number" in {
+    val entry = LogEntry.fromLines(lines)
+    entry.lifespan shouldEqual Some(10005)
+  }
+
+  it should "handle a missing 'lifespan' attribute" in {
+    val entry = LogEntry.fromString(s"""<log realm="$realm" at="$timestamp">
+                                        |</log>""".stripMargin)
+    entry.lifespan shouldEqual None
+  }
+
   it should "expose both fields and attributes via apply" in {
     val entry = LogEntry.fromLines(lines)
 

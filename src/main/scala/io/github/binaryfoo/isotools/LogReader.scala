@@ -59,18 +59,17 @@ case class LogReader(strict: Boolean = false) {
 
         if (line.contains("</log>")) {
           if (record != null) {
-            var entry: LogEntry = null
             try {
-              entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
+              val entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
+              return entry #:: readNext()
             }
             catch {
               case e: IllegalArgumentException =>
                 if (strict) {
                   throw new IllegalArgumentException(s"Failed to process record ending line $sourceName:$lineNumber", e)
                 }
+                record = null
             }
-            record = null
-            return entry #:: readNext()
 
           } else if (strict) {
             throw new IllegalArgumentException(s"Unexpected </log> end tag. Line $sourceName:$lineNumber: $line")

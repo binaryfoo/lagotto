@@ -61,6 +61,10 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
   }
 
   def millisSince(e: LogEntry): Long = timestamp.getMillis - e.timestamp.getMillis
+
+  def lifespan: Option[Int] = fields.get("lifespan").map {
+    case s: String => s.replace("ms", "").toInt
+  }
 }
 
 object LogEntry {
