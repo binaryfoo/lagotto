@@ -59,6 +59,8 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
       v
     }
   }
+
+  def millisSince(e: LogEntry): Long = timestamp.getMillis - e.timestamp.getMillis
 }
 
 object LogEntry {
