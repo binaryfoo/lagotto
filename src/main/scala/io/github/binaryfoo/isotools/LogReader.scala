@@ -6,7 +6,7 @@ import java.util.zip.GZIPInputStream
 import scala.collection.mutable.ListBuffer
 import scala.io.{BufferedSource, Source}
 
-case class LogReader(strict: Boolean = false) {
+case class LogReader(strict: Boolean = false, keepFullText: Boolean = true) {
 
   def readFilesOrStdIn(args: Iterable[String]): Stream[LogEntry] = {
     if (args.isEmpty)
@@ -18,11 +18,7 @@ case class LogReader(strict: Boolean = false) {
   def read(file: File*): Stream[LogEntry] = read(file.toIterable)
 
   def read(files: Iterable[File]): Stream[LogEntry] = {
-    var joined: Stream[LogEntry] = Stream.empty
-    for (f <- files.toList) {
-      joined = joined #::: read(open(f), f.getName)
-    }
-    joined
+    files.toStream.flatMap(f => read(open(f), f.getName))
   }
 
   private def open(f: File): BufferedSource = {
@@ -60,8 +56,8 @@ case class LogReader(strict: Boolean = false) {
         if (line.contains("</log>")) {
           if (record != null) {
             try {
-              val entry = LogEntry.fromLines(record, SourceRef(sourceName, startLineNumber))
-              return entry #:: readNext()
+              val fullText = if (keepFullText) record.mkString("\n") else ""
+              return LogEntry(LogEntry.extractFields(record), fullText, SourceRef(sourceName, startLineNumber)) #:: readNext()
             }
             catch {
               case e: IllegalArgumentException =>
@@ -76,6 +72,8 @@ case class LogReader(strict: Boolean = false) {
           }
         }
       }
+
+      source.close()
 
       Stream.empty
     }
