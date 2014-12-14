@@ -6,6 +6,8 @@ version := "0.1-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 
+crossScalaVersions := Seq("2.11.4", "2.10.4")
+
 libraryDependencies += "joda-time" % "joda-time" % "2.6" % "compile"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
