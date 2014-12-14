@@ -248,6 +248,9 @@ case class Realm(raw: String) {
     }
   }
 
+  /**
+   * Split the realm on slash to get two parts: the 'link' and ip-address:port.
+   */
   def linkAndSocket: (String, String) = {
     raw.split('/') match {
       case Array(link, socket) => (link, socket)
@@ -255,6 +258,9 @@ case class Realm(raw: String) {
     }
   }
 
+  /**
+   * The ip-address:port pair from the realm.
+   */
   def socket: String = linkAndSocket._2
 
   def ipAddress: String = {
