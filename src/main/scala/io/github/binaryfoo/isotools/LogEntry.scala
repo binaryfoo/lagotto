@@ -22,6 +22,9 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
 
   def at: String = fields.getOrElse("at", "")
 
+  /**
+   * Values like "send", "receive", "session-start", "session-end".
+   */
   def msgType: String = fields.getOrElse("msgType", "")
 
   def icon: String = msgType match {

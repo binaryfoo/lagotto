@@ -53,7 +53,7 @@ object MsgPair {
             val partnersKey = key(invertMTI(mti), e)
             pending.get(partnersKey) match {
               case Some(other) =>
-                val m = if (isResponseMTI(mti)) new MsgPair(other, e) else new MsgPair(e, other)
+                val m = if (isResponseMTI(mti)) MsgPair(other, e) else MsgPair(e, other)
                 pending.remove(partnersKey)
                 return m #:: pairNext(tail)
               case None =>
