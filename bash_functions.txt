@@ -1,0 +1,5 @@
+viat() {
+    file=${1%:*}
+    line=${1#*:}
+    vi +$line $file -c "set syn="
+}
