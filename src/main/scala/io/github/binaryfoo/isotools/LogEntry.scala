@@ -5,27 +5,53 @@ import org.joda.time.DateTime
 /**
  * A single &lt;log&gt; entry from a jPOS log.
  *
- * @param fields Output of parser
+ * @param _fields Output of parser
  * @param lines Full text of the entry
  * @param source Where the entry was read from
  */
-case class LogEntry(fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with ConvertibleToMap {
+case class LogEntry(private val _fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with ConvertibleToMap {
 
-  lazy val timestamp: DateTime = {
-    if (at == "")
-      throw new IllegalArgumentException(s"Missing 'at' in $lines")
-
-    JposTimestamp.parse(at)
+  val fields = _fields.withDefault {
+    case "mti" => mti
+    case "timestamp" => timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
+    case "time" => timestamp.toString("HH:mm:ss.SSS")
+    case "date" => timestamp.toString("yyyy-MM-dd")
+    case "link" => realm.link
+    case "icon" => icon
+    case "socket" => realm.socket
+    case "ipAddress" => realm.ipAddress
+    case "port" => realm.port
+    case "file" if source != null => source.toString
+    case "line" if source != null => source.line.toString
+    case _ => null
   }
 
-  def realm: Realm = Realm(fields.getOrElse("realm", ""))
+  /**
+   * The 'at' attribute parsed as a joda DateTime. Viewed as mandatory.
+   *
+   * @throws IllegalArgumentException If the record contains no 'at' attribute.
+   */
+  lazy val timestamp: DateTime = fields.get("at") match {
+    case Some(v) => JposTimestamp.parse(v)
+    case None => throw new IllegalArgumentException(s"Missing 'at' in $lines")
+  }
 
-  def at: String = fields.getOrElse("at", "")
+  /**
+   * The 'realm' attribute disassembled into parts.
+   *
+   * @return Never null. If missing a value containing empty strings.
+   */
+  def realm: Realm = fields.get("realm") match {
+    case Some(v) => Realm(v)
+    case None => Realm("")
+  }
+
+  def at: String = fields("at")
 
   /**
    * Values like "send", "receive", "session-start", "session-end".
    */
-  def msgType: String = fields.getOrElse("msgType", "")
+  def msgType: String = fields("msgType")
 
   def icon: String = msgType match {
     case "send" => "\u2192"
@@ -33,35 +59,16 @@ case class LogEntry(fields: Map[String, String], lines: String = "", source: Sou
     case _ => msgType
   }
 
-  def mti: String = field("0")
+  def mti: String = fields("0")
 
-  def field(path: String): String = fields.getOrElse(path, null)
-
-  def hasField(path: String): Boolean = fields.contains(path)
-
-  def apply(path: String): String = {
-    val v = field(path)
-    if (v == null) {
-      path match {
-        case "realm" => realm.raw
-        case "at" => at
-        case "mti" => mti
-        case "timestamp" => timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
-        case "time" => timestamp.toString("HH:mm:ss.SSS")
-        case "date" => timestamp.toString("yyyy-MM-dd")
-        case "link" => realm.link
-        case "icon" => icon
-        case "socket" => realm.socket
-        case "ipAddress" => realm.ipAddress
-        case "port" => realm.port
-        case "file" if source != null => source.toString
-        case "line" if source != null => source.line.toString
-        case _ => null
-      }
-    } else {
-      v
-    }
-  }
+  /**
+   * Provides access to fields, attributes and extra derived values.
+   *
+   * Examples: fields like 11 and 48.1.2, attributes like 'at' and 'realm', derived values like time, date and socket.
+   * @param path A dot delimited ISO 8583 field number, an attribute from the &lt;log&gt; record or a named value like time.
+   * @return The value or null (rather than an Option). Rationale for not using an Option to avoid verbosity. Maybe flawed.
+   */
+  def apply(path: String): String = fields(path)
 
   def millisSince(e: LogEntry): Long = timestamp.getMillis - e.timestamp.getMillis
 

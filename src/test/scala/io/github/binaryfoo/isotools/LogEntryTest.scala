@@ -16,8 +16,8 @@ class LogEntryTest extends FlatSpec with Matchers {
 
   "Log entry parser" should "parse extract fields" in {
     val entry = LogEntry.fromLines(lines)
-    entry field "7" shouldBe "1124000003"
-    entry field "48.2.13" shouldBe "subfield 48.2.13"
+    entry("7") shouldBe "1124000003"
+    entry("48.2.13") shouldBe "subfield 48.2.13"
   }
 
   it should "extract realm" in {

@@ -15,7 +15,7 @@ class LogReaderTest extends FlatSpec with Matchers {
     val entries = LogReader().read(Source.fromFile("src/test/resources/basic.xml"))
     val head = entries.head
     head.at shouldEqual "Mon Nov 24 00:00:03 EST 2014.292"
-    head.field("7") shouldEqual "1124000003"
+    head("7") shouldEqual "1124000003"
   }
 
   it should "support conversion of pairs to a .csv file" in {
