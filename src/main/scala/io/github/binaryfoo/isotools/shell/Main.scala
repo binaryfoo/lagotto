@@ -1,11 +1,7 @@
 package io.github.binaryfoo.isotools.shell
 
 import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
-import io.github.binaryfoo.isotools.shell.FieldFilter.MatchOp
-import io.github.binaryfoo.isotools.{LogEntry, ConvertibleToMap, LogReader}
-import scopt.Read
-
-import scala.io.Source
+import io.github.binaryfoo.isotools.{DelayTimer, LogEntry, LogLike, LogReader}
 
 object Main extends App {
 
@@ -22,18 +18,18 @@ object Main extends App {
 
 class Pipeline(val config: Config) {
   
-  def apply(): Stream[ConvertibleToMap] = {
-    sort(filter(pair(read()).toIterator))
+  def apply(): Stream[LogLike] = {
+    addDelays(sort(filter(pair(read()).toIterator)))
   }
 
   def read() = LogReader(config.strict).readFilesOrStdIn(config.input)
 
-  def pair(v: Stream[LogEntry]): Stream[ConvertibleToMap] = if (config.pair) v.pair() else v
+  def pair(v: Stream[LogEntry]): Stream[LogLike] = if (config.pair) v.pair() else v
 
   // need an Iterator instead of Stream to prevent a call to filter() or flatMap() pinning the whole stream
   // in memory until the first match (if any)
-  def filter(v: Iterator[ConvertibleToMap]): Iterator[ConvertibleToMap] = {
-    val shouldInclude = (m: ConvertibleToMap) => config.filters.forall(_(m))
+  def filter(v: Iterator[LogLike]): Iterator[LogLike] = {
+    val shouldInclude = (m: LogLike) => config.filters.forall(_(m))
 
     if (config.filters.isEmpty) {
       v
@@ -41,7 +37,7 @@ class Pipeline(val config: Config) {
       // premature optimization for this case?
       v.filter(shouldInclude)
     } else {
-      val preceding = new BoundedQueue[ConvertibleToMap](config.beforeContext)
+      val preceding = new BoundedQueue[LogLike](config.beforeContext)
       var aftersNeeded = 0
       v.flatMap { item =>
         if (shouldInclude(item)) {
@@ -59,13 +55,21 @@ class Pipeline(val config: Config) {
   }
 
   // not always going to work in a bounded amount of memory
-  def sort(v: Iterator[ConvertibleToMap]): Stream[ConvertibleToMap] = {
+  def sort(v: Iterator[LogLike]): Stream[LogLike] = {
     if (config.sortBy == null) {
       v.toStream
     } else if (config.sortDescending) {
       v.toStream.sortBy(_(config.sortBy)).reverse
     } else {
       v.toStream.sortBy(_(config.sortBy))
+    }
+  }
+
+  def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
+    if (config.format.includesDelays) {
+      DelayTimer.calculateDelays(v)
+    } else {
+      v
     }
   }
 }

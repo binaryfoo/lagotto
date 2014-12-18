@@ -4,7 +4,7 @@ import java.io.File
 
 import org.scalatest.{Matchers, FlatSpec}
 import io.github.binaryfoo.isotools.Csv.IterableOfMapToCsv
-import io.github.binaryfoo.isotools.ConvertibleToMap.IterableOfConvertibleToMap
+import io.github.binaryfoo.isotools.LogLike.IterableOfConvertibleToMap
 import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
 
 import scala.io.Source

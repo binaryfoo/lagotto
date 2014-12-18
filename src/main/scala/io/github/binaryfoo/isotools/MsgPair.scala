@@ -8,7 +8,7 @@ import scala.collection.mutable
 /**
  * A single request paired with its response. Eg an auth (0200) and reply (0210).
  */
-case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with ConvertibleToMap {
+case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with LogLike {
 
   val Request = """(req|request)\.(.*)""".r
   val Response = """(resp|response)\.(.*)""".r

@@ -1,22 +1,22 @@
 package io.github.binaryfoo.isotools.shell
 
-import io.github.binaryfoo.isotools.ConvertibleToMap
+import io.github.binaryfoo.isotools.LogLike
 import io.github.binaryfoo.isotools.shell.FieldFilter.MatchOp
 
-trait LogFilter extends Function[ConvertibleToMap, Boolean] {
-  def apply(entry: ConvertibleToMap): Boolean
+trait LogFilter extends Function[LogLike, Boolean] {
+  def apply(entry: LogLike): Boolean
 }
 
 case class GrepFilter(pattern: String) extends LogFilter {
-  override def apply(entry: ConvertibleToMap): Boolean = entry.lines.contains(pattern)
+  override def apply(entry: LogLike): Boolean = entry.lines.contains(pattern)
 }
 
 case class NegativeGrepFilter(pattern: String) extends LogFilter {
-  override def apply(entry: ConvertibleToMap): Boolean = !entry.lines.contains(pattern)
+  override def apply(entry: LogLike): Boolean = !entry.lines.contains(pattern)
 }
 
 case class FieldFilter(field: String, desired: String, op: MatchOp) extends LogFilter {
-  override def apply(entry: ConvertibleToMap): Boolean = {
+  override def apply(entry: LogLike): Boolean = {
     op(entry(field), desired)
   }
 }

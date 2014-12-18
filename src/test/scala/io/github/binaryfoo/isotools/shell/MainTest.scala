@@ -17,6 +17,14 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "include delay between messages with delay field in --csv option" in {
+    val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time,mti,11,delay
+                         |00:00:03.292,0200,1,0
+                         |00:00:04.992,0210,1,1700
+                         |""".stripMargin
+  }
+
   it should "leave out the header with --no-header option" in {
     val output = run("--no-header", "--csv", "time,mti,11", "src/test/resources/basic.xml")
     output shouldEqual """00:00:03.292,0800,28928

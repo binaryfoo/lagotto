@@ -9,7 +9,7 @@ import org.joda.time.DateTime
  * @param lines Full text of the entry
  * @param source Where the entry was read from
  */
-case class LogEntry(private val _fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with ConvertibleToMap {
+case class LogEntry(private val _fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with LogLike {
 
   val fields = _fields.withDefault {
     case "mti" => mti

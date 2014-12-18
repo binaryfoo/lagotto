@@ -1,15 +1,16 @@
 package io.github.binaryfoo.isotools.shell
 
-import io.github.binaryfoo.isotools.ConvertibleToMap
+import io.github.binaryfoo.isotools.LogLike
 
 trait OutputFormat {
   def header(): Option[String]
-  def apply(e: ConvertibleToMap): String
+  def apply(e: LogLike): String
+  def includesDelays: Boolean = false
 }
 
 object FullText extends OutputFormat {
   override def header(): Option[String] = None
-  override def apply(e: ConvertibleToMap): String = e.lines
+  override def apply(e: LogLike): String = e.lines
 }
 
 trait Delimited extends OutputFormat {
@@ -17,9 +18,11 @@ trait Delimited extends OutputFormat {
 
   val delimiter: String
 
+  override def includesDelays: Boolean = fields.contains("delay")
+
   override def header(): Option[String] = Some(fields.mkString(delimiter))
 
-  override def apply(e: ConvertibleToMap): String = e.toMap(fields).values.mkString(delimiter)
+  override def apply(e: LogLike): String = e.toMap(fields).values.mkString(delimiter)
 }
 
 case class Tsv(fields: Seq[String]) extends Delimited {

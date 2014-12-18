@@ -1,8 +1,12 @@
 package io.github.binaryfoo.isotools
 
+import org.joda.time.DateTime
+
 import scala.collection.immutable.ListMap
 
-trait ConvertibleToMap {
+trait LogLike {
+
+  def timestamp: DateTime
 
   def apply(id: String): String
 
@@ -24,9 +28,9 @@ trait ConvertibleToMap {
 
 }
 
-object ConvertibleToMap {
+object LogLike {
 
-  implicit class IterableOfConvertibleToMap(val v: Iterable[ConvertibleToMap]) extends AnyVal {
+  implicit class IterableOfConvertibleToMap(val v: Iterable[LogLike]) extends AnyVal {
 
     def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
