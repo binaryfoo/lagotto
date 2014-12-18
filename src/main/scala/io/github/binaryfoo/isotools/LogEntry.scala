@@ -23,6 +23,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case "port" => realm.port
     case "file" if source != null => source.toString
     case "line" if source != null => source.line.toString
+    case LogEntry.TimeInFormat(format) => timestamp.toString(format)
     case _ => null
   }
 
@@ -233,6 +234,8 @@ object LogEntry {
   }
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
+
+  val TimeInFormat = """time\((.*)\)""".r
 }
 
 case class SourceRef(file: String, line: Int) {
