@@ -256,7 +256,7 @@ case class Realm(raw: String) {
     val fullLink = linkAndSocket._1
     // strip off .server or .channel added by jpos
     fullLink.split('.') match {
-      case Array(link, _) => link
+      case Array(link, _*) => link
       case _ => fullLink
     }
   }

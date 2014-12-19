@@ -3,8 +3,7 @@ package io.github.binaryfoo.isotools
 import java.io.File
 
 import org.scalatest.{Matchers, FlatSpec}
-import io.github.binaryfoo.isotools.Csv.IterableOfMapToCsv
-import io.github.binaryfoo.isotools.LogLike.IterableOfConvertibleToMap
+import io.github.binaryfoo.isotools.LogLike.IterableOfLogLike
 import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
 
 import scala.io.Source
@@ -20,7 +19,7 @@ class LogReaderTest extends FlatSpec with Matchers {
 
   it should "support conversion of pairs to a .csv file" in {
     val entries = LogReader().read(Source.fromFile("src/test/resources/a-pair.xml"))
-    val csv = MsgPair.pair(entries).map(_.toMap("time", "mti", "11", "rtt")).toCsv
+    val csv = MsgPair.pair(entries).toCsv("time", "mti", "11", "rtt")
 
     csv shouldEqual "00:00:03.292,0800,28928,808"
   }
@@ -34,7 +33,7 @@ class LogReaderTest extends FlatSpec with Matchers {
 
   it should "support conversion of entries to a .csv file" in {
     val entries = LogReader().read(Source.fromFile("src/test/resources/a-pair.xml"))
-    val csv = entries.map(_.toMap("time", "mti", "11")).toCsv
+    val csv = entries.toCsv("time", "mti", "11")
 
     csv shouldEqual
       """00:00:03.292,0800,28928

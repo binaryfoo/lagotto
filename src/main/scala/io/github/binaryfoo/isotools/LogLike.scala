@@ -24,17 +24,25 @@ trait LogLike {
 
   def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
-  def toCsv(ids: Iterable[String]): String = Csv.toCsv(toMap(ids))
+  def toCsv(ids: Iterable[String]): String = Xsv.toCsv(toMap(ids))
+
+  def toTsv(ids: String*): String = toTsv(ids.toIterable)
+
+  def toTsv(ids: Iterable[String]): String = Xsv.toTsv(toMap(ids))
 
 }
 
 object LogLike {
 
-  implicit class IterableOfConvertibleToMap(val v: Iterable[LogLike]) extends AnyVal {
+  implicit class IterableOfLogLike(val v: Iterable[LogLike]) extends AnyVal {
 
     def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
-    def toCsv(ids: Iterable[String]): String = v.map(m => Csv.toCsv(m.toMap(ids))).mkString("\n")
+    def toCsv(ids: Iterable[String]): String = v.map(_.toCsv(ids)).mkString("\n")
+
+    def toTsv(ids: String*): String = toTsv(ids.toIterable)
+
+    def toTsv(ids: Iterable[String]): String = v.map(_.toTsv(ids)).mkString("\n")
 
   }
 }
