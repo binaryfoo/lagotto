@@ -1,6 +1,6 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.isotools.Iso8583.invertMTI
+import io.github.binaryfoo.lagotto.Iso8583.invertMTI
 import org.scalatest.{FlatSpec, Matchers}
 
 class Iso8583Test extends FlatSpec with Matchers {

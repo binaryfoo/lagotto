@@ -1,8 +1,8 @@
-package io.github.binaryfoo.isotools.shell
+package io.github.binaryfoo.lagotto.shell
 
 import java.io.{File, ByteArrayOutputStream}
 
-import io.github.binaryfoo.isotools.LogReader
+import io.github.binaryfoo.lagotto.LogReader
 import org.scalatest.{FlatSpec, Matchers}
 
 class MainTest extends FlatSpec with Matchers {

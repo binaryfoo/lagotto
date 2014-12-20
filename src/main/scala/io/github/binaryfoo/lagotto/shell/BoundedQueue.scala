@@ -1,4 +1,4 @@
-package io.github.binaryfoo.isotools.shell
+package io.github.binaryfoo.lagotto.shell
 
 import java.util
 import scala.collection.JavaConversions._

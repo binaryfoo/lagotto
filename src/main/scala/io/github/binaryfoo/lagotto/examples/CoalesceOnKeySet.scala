@@ -1,8 +1,8 @@
-package io.github.binaryfoo.isotools.examples
+package io.github.binaryfoo.lagotto.examples
 
-import io.github.binaryfoo.isotools.{Group, MsgPair, LogReader}
-import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
-import io.github.binaryfoo.isotools.MsgPair.RichMsgPairIterable
+import io.github.binaryfoo.lagotto.{Group, MsgPair, LogReader}
+import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
+import io.github.binaryfoo.lagotto.MsgPair.RichMsgPairIterable
 
 object CoalesceOnKeySet extends App {
 

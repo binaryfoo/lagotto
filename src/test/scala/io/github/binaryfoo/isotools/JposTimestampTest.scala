@@ -1,7 +1,7 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
-import io.github.binaryfoo.isotools.JposTimestamp.DateTimeExtension
+import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import org.scalatest.{FlatSpec, Matchers}
 
 class JposTimestampTest extends FlatSpec with Matchers {

@@ -1,4 +1,4 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 

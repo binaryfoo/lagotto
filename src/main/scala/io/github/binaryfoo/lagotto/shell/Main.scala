@@ -1,7 +1,7 @@
-package io.github.binaryfoo.isotools.shell
+package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
-import io.github.binaryfoo.isotools.{DelayTimer, LogEntry, LogLike, LogReader}
+import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
+import io.github.binaryfoo.lagotto.{DelayTimer, LogEntry, LogLike, LogReader}
 
 object Main extends App {
 

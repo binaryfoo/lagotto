@@ -1,4 +1,4 @@
-package io.github.binaryfoo.isotools.examples
+package io.github.binaryfoo.lagotto.examples
 
 import java.io.{File, FilenameFilter}
 

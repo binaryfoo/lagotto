@@ -1,7 +1,7 @@
-package io.github.binaryfoo.isotools.shell
+package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.isotools.LogLike
-import io.github.binaryfoo.isotools.shell.FieldFilter.MatchOp
+import io.github.binaryfoo.lagotto.LogLike
+import io.github.binaryfoo.lagotto.shell.FieldFilter.MatchOp
 
 trait LogFilter extends Function[LogLike, Boolean] {
   def apply(entry: LogLike): Boolean

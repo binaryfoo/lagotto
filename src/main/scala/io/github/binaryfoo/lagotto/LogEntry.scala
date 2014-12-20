@@ -1,4 +1,4 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
@@ -80,7 +80,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
 
 object LogEntry {
 
-  import io.github.binaryfoo.isotools.TagType._
+  import io.github.binaryfoo.lagotto.TagType._
 
   def extractFields(lines: Seq[String]): Map[String, String] = {
     var fields = List[(String, String)]()

@@ -1,6 +1,6 @@
-package io.github.binaryfoo.isotools.shell
+package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.isotools.shell.FieldFilter._
+import io.github.binaryfoo.lagotto.shell.FieldFilter._
 import scopt.Read
 
 object Options {
@@ -8,7 +8,8 @@ object Options {
   def parse(args: Array[String]): Option[Config] = {
 
     val parser = new scopt.OptionParser[Config]("plog") {
-      head("plog", "1.0")
+      val dog = "\uD83D\uDC15"
+      head(s"lagotto $dog ", "1.0")
 
       help("help") text "Show usage"
 

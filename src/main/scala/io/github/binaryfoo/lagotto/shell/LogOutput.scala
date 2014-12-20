@@ -1,6 +1,6 @@
-package io.github.binaryfoo.isotools.shell
+package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.isotools.LogLike
+import io.github.binaryfoo.lagotto.LogLike
 
 trait OutputFormat {
   def header(): Option[String]

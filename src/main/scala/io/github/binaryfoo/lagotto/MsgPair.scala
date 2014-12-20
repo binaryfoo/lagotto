@@ -1,6 +1,6 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.isotools.Iso8583._
+import io.github.binaryfoo.lagotto.Iso8583._
 import org.joda.time.DateTime
 
 import scala.collection.mutable

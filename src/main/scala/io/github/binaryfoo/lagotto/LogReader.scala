@@ -1,4 +1,4 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
 import java.io.{BufferedInputStream, FileInputStream, File}
 import java.util.zip.GZIPInputStream

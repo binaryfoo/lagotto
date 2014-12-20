@@ -1,10 +1,10 @@
-package io.github.binaryfoo.isotools
+package io.github.binaryfoo.lagotto
 
 import java.io.File
 
 import org.scalatest.{Matchers, FlatSpec}
-import io.github.binaryfoo.isotools.LogLike.IterableOfLogLike
-import io.github.binaryfoo.isotools.MsgPair.RichEntryIterable
+import io.github.binaryfoo.lagotto.LogLike.IterableOfLogLike
+import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 
 import scala.io.Source
 

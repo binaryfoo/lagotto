@@ -1,4 +1,4 @@
-package io.github.binaryfoo.isotools.mmap
+package io.github.binaryfoo.lagotto.mmap
 
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
