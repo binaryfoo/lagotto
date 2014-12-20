@@ -27,4 +27,8 @@ object DelayTimer {
       next
     }
   }
+
+  implicit class RichLogLikeStream(val v: Stream[LogLike]) extends AnyVal {
+    def withDelays(): Stream[LogLike] = calculateDelays(v)
+  }
 }
