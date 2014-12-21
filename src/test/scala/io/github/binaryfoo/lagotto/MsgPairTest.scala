@@ -107,6 +107,6 @@ class MsgPairTest extends FlatSpec with Matchers {
   "A single pair" should "be reduceable to a map" in {
     val p = MsgPair(LogEntry("11" -> "123456", "37" -> "ignored"), LogEntry("39" -> "00"))
 
-    p.toMap("11", "39") shouldEqual Map("11" -> "123456", "39" -> "00")
+    p.toSeq("11", "39") shouldEqual Seq("123456", "00")
   }
 }

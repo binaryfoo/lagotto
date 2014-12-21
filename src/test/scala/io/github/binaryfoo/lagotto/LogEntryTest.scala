@@ -103,6 +103,12 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry.toCsv("time", "48.2.13", "11", "7") shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"
   }
 
+  it should "accept expressions when converting to a .csv row" in {
+    val entry = LogEntry.fromLines(lines)
+    val xsv = entry.toXsv(",", { _.timestamp.toString("HH:mm:ss").substring(0, 7) + "0"}, "7")
+    xsv shouldEqual "16:59:00,1124000003"
+  }
+
   "A trio of entries" should "be coalescable" in {
     val one = LogEntry("11" -> "1", "53" -> "2")
     val four = LogEntry("11" -> "4", "53" -> "1")

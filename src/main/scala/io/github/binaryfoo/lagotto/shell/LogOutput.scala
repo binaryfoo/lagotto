@@ -22,7 +22,7 @@ trait Delimited extends OutputFormat {
 
   override def header(): Option[String] = Some(fields.mkString(delimiter))
 
-  override def apply(e: LogLike): String = e.toMap(fields).values.mkString(delimiter)
+  override def apply(e: LogLike): String = e.toSeq(fields).mkString(delimiter)
 }
 
 case class Tsv(fields: Seq[String]) extends Delimited {

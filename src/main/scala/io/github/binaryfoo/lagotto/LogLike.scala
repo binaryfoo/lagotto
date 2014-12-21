@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
-import scala.collection.immutable.ListMap
+import scala.language.implicitConversions
 
 trait LogLike {
 
@@ -12,23 +12,33 @@ trait LogLike {
 
   def lines: String
 
-  def toMap(ids: String*): Map[String, String] = toMap(ids.toIterable)
+  def toSeq(ids: String*): Seq[String] = toSeq(ids.toIterable)
 
-  def toMap(ids: Iterable[String]): Map[String, String] = {
-    val pairs = ids.map { id =>
+  def toSeq(ids: Iterable[String]): Seq[String] = {
+    ids.map { id =>
       val value = apply(id)
-      id -> (if (value == null) "" else value)
-    }
-    ListMap[String, String](pairs.toSeq: _*)
+      if (value == null) "" else value
+    }.toSeq
+  }
+
+  def exprToSeq(ids: Iterable[LogFieldExpr]): Seq[String] = {
+    ids.map { id =>
+      val value = id(this)
+      if (value == null) "" else value
+    }.toSeq
   }
 
   def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
-  def toCsv(ids: Iterable[String]): String = Xsv.toCsv(toMap(ids))
+  def toCsv(ids: Iterable[String]): String = Xsv.toCsv(toSeq(ids))
 
   def toTsv(ids: String*): String = toTsv(ids.toIterable)
 
-  def toTsv(ids: Iterable[String]): String = Xsv.toTsv(toMap(ids))
+  def toTsv(ids: Iterable[String]): String = Xsv.toTsv(toSeq(ids))
+
+  def toXsv(separator: String, ids: LogFieldExpr*): String = toXsv(separator, ids.toIterable)
+
+  def toXsv(separator: String, ids: Iterable[LogFieldExpr]): String = Xsv.toXsv(separator, exprToSeq(ids))
 
 }
 
@@ -45,4 +55,6 @@ object LogLike {
     def toTsv(ids: Iterable[String]): String = v.map(_.toTsv(ids)).mkString("\n")
 
   }
+
+  implicit def stringAsLogFieldExpr(s: String): LogFieldExpr = { e: LogLike => e(s) }
 }
