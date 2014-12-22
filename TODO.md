@@ -10,5 +10,8 @@
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
 * Output with gnuplot header?
+* Drop "ms" in lifespan available through apply()
+* Can LogFieldExpr allow access to more specific type
+ * Override toXsv() on LogEntry?
 
 * Deploy artifact to maven central with fat .jar attachment
