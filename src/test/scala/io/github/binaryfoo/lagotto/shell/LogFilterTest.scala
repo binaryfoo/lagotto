@@ -26,4 +26,11 @@ class LogFilterTest extends FlatSpec with Matchers {
     filter(LogEntry("0" -> "0220")) shouldBe true
     filter(LogEntry("0" -> "023")) shouldBe true
   }
+
+  "Regex contains operator" should "not match null" in {
+    val filter = """mti!~/3.*/""" match {
+      case LogFilter(f) => f
+    }
+    filter(LogEntry()) shouldBe false
+  }
 }

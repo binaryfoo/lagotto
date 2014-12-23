@@ -1,7 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
-import io.github.binaryfoo.lagotto.{DelayTimer, LogEntry, LogLike, LogReader}
+import io.github.binaryfoo.lagotto._
 
 object Main extends App {
 
@@ -17,9 +17,9 @@ object Main extends App {
 }
 
 class Pipeline(val config: Config) {
-  
+
   def apply(): Stream[LogLike] = {
-    addDelays(sort(filter(pair(read()).toIterator)))
+    addDelaysOrCount(sort(filter(pair(read()).toIterator)))
   }
 
   def read() = LogReader(config.strict).readFilesOrStdIn(config.input)
@@ -65,11 +65,11 @@ class Pipeline(val config: Config) {
     }
   }
 
-  def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
-    if (config.format.includesDelays) {
-      DelayTimer.calculateDelays(v)
-    } else {
-      v
+  def addDelaysOrCount(v: Stream[LogLike]): Stream[LogLike] = {
+    config.format match {
+      case Delimited(fields, _) if fields.contains("delay") => DelayTimer.calculateDelays(v)
+      case Delimited(fields, _) if fields.contains("count") => AggregateLogLike.aggregate(v, fields)
+      case _ => v
     }
   }
 }

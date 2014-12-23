@@ -8,8 +8,19 @@ trait LogLike {
 
   def timestamp: DateTime
 
+  /**
+   * Provides access to fields, attributes and extra derived values.
+   *
+   * Examples: fields like 11 and 48.1.2, attributes like 'at' and 'realm', derived values like time, date and socket.
+   * @param id A dot delimited ISO 8583 field number, an attribute from the &lt;log&gt; record or a named value like time.
+   * @return The value or null (rather than an Option). Rationale for not using an Option to avoid verbosity. Maybe flawed.
+   */
   def apply(id: String): String
 
+  /**
+   * The record as text (XML)
+   * @return XML
+   */
   def lines: String
 
   def toSeq(ids: String*): Seq[String] = toSeq(ids.toIterable)

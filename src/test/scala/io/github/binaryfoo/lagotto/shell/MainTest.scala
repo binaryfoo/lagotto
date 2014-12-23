@@ -25,6 +25,14 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "group rows when count field included in --csv option" in {
+    val output = run("--csv", "time(mm:ss),count", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),count
+                          |00:03,1
+                          |00:04,3
+                          |""".stripMargin
+  }
+
   it should "leave out the header with --no-header option" in {
     val output = run("--no-header", "--csv", "time,mti,11", "src/test/resources/basic.xml")
     output shouldEqual """00:00:03.292,0800,28928

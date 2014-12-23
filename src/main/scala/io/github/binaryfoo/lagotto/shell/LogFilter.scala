@@ -24,7 +24,10 @@ case class FieldFilter(field: String, desired: String, op: MatchOp) extends LogF
 }
 
 case class RegexFilter(field: String, pattern: Regex, positive: Boolean = true) extends LogFilter {
-  override def apply(entry: LogLike): Boolean = pattern.findFirstMatchIn(entry(field)).isDefined == positive
+  override def apply(entry: LogLike): Boolean = {
+    val value = entry(field)
+    value != null && pattern.findFirstMatchIn(value).isDefined == positive
+  }
 }
 
 object LogFilter {

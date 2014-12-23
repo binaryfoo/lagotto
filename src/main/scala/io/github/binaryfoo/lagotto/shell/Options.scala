@@ -32,11 +32,11 @@ object Options {
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
 
       opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(format = Tsv(fields.split(",")))
+        c.copy(format = Delimited(fields.split(","), "\t"))
       } text "Output tab separated values"
 
       opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(format = Csv(fields.split(",")))
+        c.copy(format = Delimited(fields.split(","), ","))
       } text "Output comma separated values"
 
       opt[Unit]("pair") action {(_, c) =>
