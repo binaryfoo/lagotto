@@ -13,5 +13,7 @@
 * Drop "ms" in lifespan available through apply()
 * Can LogFieldExpr allow access to more specific type
  * Override toXsv() on LogEntry?
+* Support searching starts with (^) or fix MTI greater than (>)
 
 * Deploy artifact to maven central with fat .jar attachment
+* List available fields in --help
