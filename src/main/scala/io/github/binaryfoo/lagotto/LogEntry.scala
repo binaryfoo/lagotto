@@ -23,7 +23,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case "port" => realm.port
     case "file" if source != null => source.toString
     case "line" if source != null => source.line.toString
-    case LogEntry.TimeInFormat(format) => timestamp.toString(format)
+    case LogEntry.TimeInFormat(format) => timestampAs(format)
     case _ => null
   }
 
@@ -35,6 +35,17 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
   lazy val timestamp: DateTime = fields.get("at") match {
     case Some(v) => JposTimestamp.parse(v)
     case None => throw new IllegalArgumentException(s"Missing 'at' in $lines")
+  }
+
+  /**
+   * Format like Joda with same extras like HH:mm:s0 for 10 second buckets.
+   * @param format
+   * @return Timestamp as string
+   */
+  def timestampAs(format: String): String = format match {
+    case "HH:mm:s0" => timestamp.toString("HH:mm:ss").substring(0, 7) + "0"
+    case "HH:m0" => timestamp.toString("HH:mm").substring(0, 4) + "0"
+    case _ => timestamp.toString(format)
   }
 
   /**
