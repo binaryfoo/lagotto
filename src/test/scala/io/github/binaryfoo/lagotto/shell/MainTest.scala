@@ -247,6 +247,23 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "filter on lifespan greater than a number" in {
+    val output = run("--field", "lifespan>1001", "--csv", "mti,lifespan", "src/test/resources/a-pair.xml")
+    output shouldBe
+      """mti,lifespan
+        |0800,10005
+        |""".stripMargin
+  }
+
+  it should "filter on lifespan less than a number" in {
+    val output = run("--field", "lifespan<1000", "--csv", "mti,lifespan", "src/test/resources/a-pair.xml")
+    output shouldBe
+      """mti,lifespan
+        |0810,1000
+        |,
+        |""".stripMargin
+  }
+
   "Given a <log> record garbled by a 2nd partial within it" should "keep on truckin'" in {
     val output = run("--csv", "0,11", "src/test/resources/message-inception-garbage.xml")
     output shouldEqual """0,11

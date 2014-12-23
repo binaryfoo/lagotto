@@ -3,6 +3,8 @@ package io.github.binaryfoo.lagotto.shell
 import io.github.binaryfoo.lagotto.shell.FieldFilter._
 import scopt.Read
 
+import scala.util.Try
+
 object Options {
 
   def parse(args: Array[String]): Option[Config] = {
@@ -76,6 +78,21 @@ object Options {
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
     def deNull(s: String): String = if (s == null) "" else s
 
+    def greaterThanAsIntWithStringFallback(left: String, right: String): Boolean = compareAsIntWithStringFallback(left, right) >= 0
+
+    def lessThanAsIntWithStringFallback(left: String, right: String): Boolean = compareAsIntWithStringFallback(left, right) <= 0
+
+    def compareAsIntWithStringFallback(left: String, right: String): Int = {
+      val l = deNull(left)
+      val r = deNull(right)
+      try {
+        l.toInt compare r.toInt
+      }
+      catch {
+        case e: NumberFormatException => l compare r
+      }
+    }
+
     val LogFilterPattern = "([^=><~!]+)(!?)([=><~])(.*)".r
     val arity = 2
     val reads = { (s: String) =>
@@ -83,8 +100,8 @@ object Options {
         case LogFilterPattern(key, negation, operator, value) =>
           val op: MatchOp = operator match {
             case "=" => deNull(_) == _
-            case ">" => _.toInt >= _.toInt
-            case "<" => _.toInt <= _.toInt
+            case ">" => greaterThanAsIntWithStringFallback
+            case "<" => lessThanAsIntWithStringFallback
             case "~" => deNull(_).toLowerCase contains _.toLowerCase
             case _ => throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
           }

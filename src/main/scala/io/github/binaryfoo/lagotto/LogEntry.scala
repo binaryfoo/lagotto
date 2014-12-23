@@ -74,7 +74,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
   def millisSince(e: LogEntry): Long = timestamp.getMillis - e.timestamp.getMillis
 
   def lifespan: Option[Int] = fields.get("lifespan").map {
-    case s: String => s.replace("ms", "").toInt
+    case s: String => s.toInt
   }
 }
 
@@ -115,7 +115,10 @@ object LogEntry {
         case ("isomsg", End) if path.nonEmpty =>
           popPath()
         case ("log", Start) =>
-          fields = extractAttributes(line) ::: fields
+          fields = extractAttributes(line).map {
+            case (name, value) if name == "lifespan" => (name, value.replace("ms", ""))
+            case a => a
+          } ::: fields
         case ("exception", Start) =>
           val ("name", value) :: _ = extractAttributes(line)
           fields = ("exception", value) :: fields
