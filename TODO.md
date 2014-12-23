@@ -10,10 +10,15 @@
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
 * Output with gnuplot header?
-* Drop "ms" in lifespan available through apply()
 * Can LogFieldExpr allow access to more specific type
  * Override toXsv() on LogEntry?
-* Support searching starts with (^) or fix MTI greater than (>)
+* Allow 48.1(/sed/like/) ?
+* Group like uniq -c when count in field list for --tsv or --csv
+* Remove unicode dog. Not well supported...
+* Is regex mode sane - is the default match all or partial?
+* Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
 
 * Deploy artifact to maven central with fat .jar attachment
 * List available fields in --help
+ - mention regex for ~//
+ - mention numeric comparison for >,< with fallback to string
