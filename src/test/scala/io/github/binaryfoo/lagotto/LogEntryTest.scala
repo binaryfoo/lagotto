@@ -56,7 +56,7 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry("realm") shouldEqual realm
     entry("timestamp") shouldEqual "2014-11-24 16:59:03.292"
     entry("time") shouldEqual "16:59:03.292"
-    entry("time(HH:mm)") shouldEqual "16:59"
+    entry("time{HH:mm}") shouldEqual "16:59"
     entry("date") shouldEqual "2014-11-24"
     entry("42") shouldEqual null
     entry("rubbish") shouldEqual null

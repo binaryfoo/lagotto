@@ -29,4 +29,5 @@
  - mention numeric comparison for >,< with fallback to string
  - rtt
  - delay
- - count (like uniq -c)
+ - count - like uniq -c
+ - time with format - Eg {HH:mm}
