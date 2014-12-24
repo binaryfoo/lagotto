@@ -242,7 +242,7 @@ object LogEntry {
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
-  val TimeInFormat = """time\{(.*)\}""".r
+  val TimeInFormat = """time\((.*)\)""".r
 }
 
 case class SourceRef(file: String, line: Int) {

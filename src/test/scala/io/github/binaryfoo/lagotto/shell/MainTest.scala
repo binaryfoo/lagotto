@@ -44,16 +44,16 @@ class MainTest extends FlatSpec with Matchers {
   }
 
   it should "group rows when count field included in --csv option" in {
-    val output = run("--csv", "time{mm:ss},count", "src/test/resources/a-bunch.xml")
-    output shouldEqual """time{mm:ss},count
+    val output = run("--csv", "time(mm:ss),count", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),count
                           |00:03,1
                           |00:04,3
                           |""".stripMargin
   }
 
   it should "count only if condition is true for count(39=01) in --csv option" in {
-    val output = run("--csv", "time{mm:ss},count(39=01),count(39=00)", "src/test/resources/a-bunch.xml")
-    output shouldEqual """time{mm:ss},count(39=01),count(39=00)
+    val output = run("--csv", "time(mm:ss),count(39=01),count(39=00)", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),count(39=01),count(39=00)
                           |00:03,0,0
                           |00:04,1,1
                           |""".stripMargin
