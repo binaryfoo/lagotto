@@ -14,9 +14,10 @@
  * Override toXsv() on LogEntry?
 * Allow 48.1(/sed/like/) ?
 * Group like uniq -c when count in field list for --tsv or --csv
- - show min,max,average,percentiles for group
+ - show average,percentiles for group
+ - HDR histogram?
+* Output as HTML table, as ASCII table (need field width?)
 * Remove unicode dog. Not well supported...
-* Is regex mode sane - is the default match all or partial?
 * Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
 * Handle times like HH:m0 and HH:mm:s0
 * Separate tool to merge multiple series
@@ -30,4 +31,6 @@
  - rtt
  - delay
  - count - like uniq -c
+ - min,max,sum (maybe useless)
  - time with format - Eg {HH:mm}
+ - regex mode is partial match by default (link to javadoc)

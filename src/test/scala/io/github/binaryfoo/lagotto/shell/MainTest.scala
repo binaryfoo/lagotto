@@ -33,6 +33,30 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  it should "group rows when max(lifespan) field included in --csv option" in {
+    val output = run("--csv", "ipAddress,max(lifespan)", "src/test/resources/a-pair.xml")
+    output shouldEqual """ipAddress,max(lifespan)
+                          |10.0.0.1,10005
+                          |,
+                          |""".stripMargin
+  }
+
+  it should "group rows when min(lifespan) field included in --csv option" in {
+    val output = run("--csv", "ipAddress,min(lifespan)", "src/test/resources/a-pair.xml")
+    output shouldEqual """ipAddress,min(lifespan)
+                          |10.0.0.1,1000
+                          |,
+                          |""".stripMargin
+  }
+
+  it should "group rows when sum(lifespan) field included in --csv option" in {
+    val output = run("--csv", "ipAddress,sum(lifespan)", "src/test/resources/a-pair.xml")
+    output shouldEqual """ipAddress,sum(lifespan)
+                          |10.0.0.1,11005
+                          |,0
+                          |""".stripMargin
+  }
+
   it should "leave out the header with --no-header option" in {
     val output = run("--no-header", "--csv", "time,mti,11", "src/test/resources/basic.xml")
     output shouldEqual """00:00:03.292,0800,28928

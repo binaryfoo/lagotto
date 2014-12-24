@@ -68,7 +68,7 @@ class Pipeline(val config: Config) {
   def addDelaysOrCount(v: Stream[LogLike]): Stream[LogLike] = {
     config.format match {
       case Delimited(fields, _) if fields.contains("delay") => DelayTimer.calculateDelays(v)
-      case Delimited(fields, _) if fields.contains("count") => AggregateLogLike.aggregate(v, fields)
+      case Delimited(fields, _) => AggregateLogLike.aggregate(v, fields)
       case _ => v
     }
   }
