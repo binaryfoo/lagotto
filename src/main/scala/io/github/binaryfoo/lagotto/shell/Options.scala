@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
+import io.github.binaryfoo.lagotto.{NegativeGrepFilter, GrepFilter, LogFilter}
 import scopt.Read
 
 object Options {

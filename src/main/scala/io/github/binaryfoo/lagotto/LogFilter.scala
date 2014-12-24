@@ -1,7 +1,4 @@
-package io.github.binaryfoo.lagotto.shell
-
-import io.github.binaryfoo.lagotto.LogLike
-import io.github.binaryfoo.lagotto.shell.FieldFilter.MatchOp
+package io.github.binaryfoo.lagotto
 
 import scala.util.matching.Regex
 
@@ -17,7 +14,7 @@ case class NegativeGrepFilter(pattern: String) extends LogFilter {
   override def apply(entry: LogLike): Boolean = !entry.lines.contains(pattern)
 }
 
-case class FieldFilter(field: String, desired: String, op: MatchOp) extends LogFilter {
+case class FieldFilter(field: String, desired: String, op: LogFilter.MatchOp) extends LogFilter {
   override def apply(entry: LogLike): Boolean = {
     op(entry(field), desired)
   }
@@ -31,6 +28,8 @@ case class RegexFilter(field: String, pattern: Regex, positive: Boolean = true) 
 }
 
 object LogFilter {
+  type MatchOp = (String, String) => Boolean
+
   val LogFilterPattern = "([^=><~!]+)(!?)([=><~])(.*)".r
   val MatchAsRegexPattern = "([^=><~!]+)(!?)~/(.+)/".r
 
@@ -68,8 +67,4 @@ object LogFilter {
       case e: NumberFormatException => l compare r
     }
   }
-}
-
-object FieldFilter {
-  type MatchOp = (String, String) => Boolean
 }

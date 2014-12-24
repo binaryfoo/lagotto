@@ -51,6 +51,14 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  it should "count only if condition is true for count(39=01) in --csv option" in {
+    val output = run("--csv", "time{mm:ss},count(39=01),count(39=00)", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time{mm:ss},count(39=01),count(39=00)
+                          |00:03,0,0
+                          |00:04,1,1
+                          |""".stripMargin
+  }
+
   it should "group rows when max(lifespan) field included in --csv option" in {
     val output = run("--csv", "ipAddress,max(lifespan)", "src/test/resources/a-pair.xml")
     output shouldEqual """ipAddress,max(lifespan)

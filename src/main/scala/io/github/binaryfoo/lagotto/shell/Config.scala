@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
+import io.github.binaryfoo.lagotto.LogFilter
+
 case class Config (filters: Seq[LogFilter] = Seq(),
                    input: Seq[String] = Seq(),
                    format: OutputFormat = FullText,

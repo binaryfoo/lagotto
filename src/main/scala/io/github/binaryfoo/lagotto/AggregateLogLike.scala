@@ -21,6 +21,7 @@ object AggregateLogLike {
   val MinOp = """min\((.*)\)""".r
   val MaxOp = """max\((.*)\)""".r
   val SumOp = """sum\((.*)\)""".r
+  val CountIf = """count\((.*)\)""".r
 
   type AggregateOp = List[LogLike] => String
 
@@ -29,15 +30,16 @@ object AggregateLogLike {
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
         case "count" => _.size.toString
-        case AggregateLogLike.MinOp(field) => collectNonNull(_, field) match {
+        case CountIf(LogFilter(condition)) => _.count(condition).toString
+        case MinOp(field) => collectNonNull(_, field) match {
           case Nil => ""
           case l: List[String] => l.map(_.toInt).min.toString
         }
-        case AggregateLogLike.MaxOp(field) => collectNonNull(_, field) match {
+        case MaxOp(field) => collectNonNull(_, field) match {
           case Nil => ""
           case l: List[String] => l.map(_.toInt).max.toString
         }
-        case AggregateLogLike.SumOp(field) => collectNonNull(_, field).map(_.toInt).sum.toString
+        case SumOp(field) => collectNonNull(_, field).map(_.toInt).sum.toString
         case _ => null
       }
     Option(op)

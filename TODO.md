@@ -32,8 +32,6 @@
 * Value in multiple threads? actually CPU bound
 * Remove unicode dog. Not well supported...
 * Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
-* Handle times like HH:m0 and HH:mm:s0
-* Separate tool to merge multiple series
 * Ascii bar chart
 * Validate only one of delay or count is passed
 * Build an index and/or process data into more compact/faster to re-read format
@@ -48,6 +46,7 @@
  - rtt
  - delay
  - count - like uniq -c
+ - count(condition) like count(rtt>100)
  - min,max,sum (maybe useless)
- - time with format - Eg {HH:mm}
+ - time with format - Eg {HH:mm} plus HH:m0 and HH:mm:s0
  - regex mode is partial match by default (link to javadoc)

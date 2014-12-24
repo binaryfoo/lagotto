@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.LogEntry
+import io.github.binaryfoo.lagotto.{LogFilter, LogEntry}
 import org.scalatest.{Matchers, FlatSpec}
 
 class LogFilterTest extends FlatSpec with Matchers {
