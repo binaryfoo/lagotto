@@ -1,9 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.shell.FieldFilter._
 import scopt.Read
-
-import scala.util.Try
 
 object Options {
 
@@ -32,12 +29,16 @@ object Options {
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
 
       opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(format = Delimited(fields.split(","), "\t"))
+        c.copy(format = Tabular(fields.split(","), DelimitedTableFormat("\t")))
       } text "Output tab separated values"
 
       opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(format = Delimited(fields.split(","), ","))
+        c.copy(format = Tabular(fields.split(","), DelimitedTableFormat(",")))
       } text "Output comma separated values"
+
+      opt[String]('j', "jira-table") action { (fields, c) =>
+        c.copy(format = Tabular(fields.split(","), JiraTableFormat))
+      } text "Output a table that can be pasted into Jira"
 
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)

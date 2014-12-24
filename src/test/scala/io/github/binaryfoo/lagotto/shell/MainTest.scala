@@ -17,6 +17,16 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "produce jira formatted table with --jira-table option" in {
+    val output = run("--jira-table", "time,mti,11", "src/test/resources/a-bunch.xml")
+    output shouldEqual """||time||mti||11||
+|00:00:03.292|0200|1|
+|00:00:04.292|0200|2|
+|00:00:04.892|0210|2|
+|00:00:04.992|0210|1|
+"""
+  }
+
   it should "include delay between messages with delay field in --csv option" in {
     val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "src/test/resources/a-bunch.xml")
     output shouldEqual """time,mti,11,delay
@@ -39,6 +49,14 @@ class MainTest extends FlatSpec with Matchers {
                           |10.0.0.1,10005
                           |,
                           |""".stripMargin
+  }
+
+  it should "group rows when max(lifespan) field included in --jira-table option" in {
+    val output = run("--jira-table", "ipAddress,max(lifespan)", "src/test/resources/a-pair.xml")
+    output shouldEqual """||ipAddress||max(lifespan)||
+|10.0.0.1|10005|
+|||
+"""
   }
 
   it should "group rows when min(lifespan) field included in --csv option" in {
