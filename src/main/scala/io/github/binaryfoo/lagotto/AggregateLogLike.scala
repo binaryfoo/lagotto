@@ -21,37 +21,50 @@ object AggregateLogLike {
   val MinOp = """min\((.*)\)""".r
   val MaxOp = """max\((.*)\)""".r
   val SumOp = """sum\((.*)\)""".r
+  val AvgOp = """avg\((.*)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
 
   type AggregateOp = List[LogLike] => String
 
-  private def collectNonNull(values: List[LogLike], field: String) = values.flatMap(e => Option(e(field)))
+  private def collectIntegers(values: List[LogLike], field: String) = values.flatMap{e =>
+    val v = e(field)
+    if (v == null) None
+    else Some(v.toInt)
+  }
 
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
         case "count" => _.size.toString
         case CountIf(LogFilter(condition)) => _.count(condition).toString
-        case MinOp(field) => collectNonNull(_, field) match {
+        case MinOp(field) => collectIntegers(_, field) match {
           case Nil => ""
-          case l: List[String] => l.map(_.toInt).min.toString
+          case l: List[Int] => l.min.toString
         }
-        case MaxOp(field) => collectNonNull(_, field) match {
+        case MaxOp(field) => collectIntegers(_, field) match {
           case Nil => ""
-          case l: List[String] => l.map(_.toInt).max.toString
+          case l: List[Int] => l.max.toString
         }
-        case SumOp(field) => collectNonNull(_, field).map(_.toInt).sum.toString
+        case SumOp(field) => collectIntegers(_, field).sum.toString
+        case AvgOp(field) => values => (collectIntegers(values, field).sum / values.size).toString
         case GroupConcat(field) => _.map(_(field)).filter(_ != null).mkString(",")
         case _ => null
       }
     Option(op)
   }
 
+  /**
+   * Apply aggregation 'decorator' if something in outputFields requires it.
+   * @param s The stream of log entries that will be output.
+   * @param outputFields The set of fields that will be output.
+   * @return The original stream s or a Stream[AggregateLogLike].
+   */
   def aggregate(s: Stream[LogLike], outputFields: Seq[String]): Stream[LogLike] = {
-    val keyFields = outputFields.filter(operationFor(_).isEmpty)
-    if (keyFields.isEmpty) {
+    val aggregateFields = outputFields.filter(operationFor(_).isDefined).toSet
+    if (aggregateFields.isEmpty) {
       s
     } else {
+      val keyFields = outputFields.filterNot(aggregateFields)
       def keyFor(e: LogLike): Seq[(String, String)] = {
         for {
           k <- keyFields
