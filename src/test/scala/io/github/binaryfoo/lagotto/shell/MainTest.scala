@@ -27,6 +27,14 @@ class MainTest extends FlatSpec with Matchers {
 """
   }
 
+  it should "produce a HTML formatted table with --html option" in {
+    val output = run("--html", "time,mti,11", "src/test/resources/a-bunch.xml")
+    output should include ("<table>")
+    output should include ("<tr><th>time</th><th>mti</th><th>11</th></tr>")
+    output should include ("<tr><td>00:00:03.292</td><td>0200</td><td>1</td></tr>")
+    output should include ("</table>")
+  }
+
   it should "include delay between messages with delay field in --csv option" in {
     val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "src/test/resources/a-bunch.xml")
     output shouldEqual """time,mti,11,delay

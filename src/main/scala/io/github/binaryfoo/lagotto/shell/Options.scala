@@ -40,6 +40,10 @@ object Options {
         c.copy(format = Tabular(fields.split(","), JiraTableFormat))
       } text "Output a table that can be pasted into Jira"
 
+      opt[String]("html") action { (fields, c) =>
+        c.copy(format = Tabular(fields.split(","), HtmlTableFormat))
+      } text "Output an HTML table"
+
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)
       } text "Match requests with responses"

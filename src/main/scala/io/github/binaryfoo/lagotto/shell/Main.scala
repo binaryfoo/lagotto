@@ -7,12 +7,13 @@ object Main extends App {
 
   Options.parse(args).map { config =>
     if (config.header) {
-      config.format.header().map(println(_))
+      config.format.header().foreach(println(_))
     }
     val pipeline = new Pipeline(config)
     pipeline()
       .map(e => config.format(e))
       .foreach(e => println(e))
+    config.format.footer().foreach(println(_))
   }
 }
 
