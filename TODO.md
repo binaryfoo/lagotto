@@ -23,8 +23,11 @@
  - HDR histogram?
 * Output as
  - HTML table
+  - colour rows by a field like socket
+  - colour rows by match condition like lifespan>1000
  - as ASCII table (need field width?)
  - jira markup (other common table format)
+* More icons: session start and end, error
 * Add row number field
 * Value in multiple threads? actually CPU bound
 * Remove unicode dog. Not well supported...
