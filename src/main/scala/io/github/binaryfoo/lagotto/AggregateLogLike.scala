@@ -22,6 +22,7 @@ object AggregateLogLike {
   val MaxOp = """max\((.*)\)""".r
   val SumOp = """sum\((.*)\)""".r
   val CountIf = """count\((.*)\)""".r
+  val GroupConcat = """group_concat\((.*)\)""".r
 
   type AggregateOp = List[LogLike] => String
 
@@ -40,6 +41,7 @@ object AggregateLogLike {
           case l: List[String] => l.map(_.toInt).max.toString
         }
         case SumOp(field) => collectNonNull(_, field).map(_.toInt).sum.toString
+        case GroupConcat(field) => _.map(_(field)).filter(_ != null).mkString(",")
         case _ => null
       }
     Option(op)

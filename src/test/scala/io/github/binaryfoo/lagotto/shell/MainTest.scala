@@ -59,6 +59,14 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  it should "support mysql like group_concat() in --csv option" in {
+    val output = run("--csv", "time(mm:ss),group_concat(48.1(/.*#//))", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),group_concat(48.1(/.*#//))
+                         |00:03,1
+                         |00:04,2,3,4
+                         |""".stripMargin
+  }
+
   it should "group rows when max(lifespan) field included in --csv option" in {
     val output = run("--csv", "ipAddress,max(lifespan)", "src/test/resources/a-pair.xml")
     output shouldEqual """ipAddress,max(lifespan)
