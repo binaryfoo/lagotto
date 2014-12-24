@@ -31,13 +31,13 @@ object AggregateLogLike {
         case "count" => _.size.toString
         case AggregateLogLike.MinOp(field) => collectNonNull(_, field) match {
           case Nil => ""
-          case l: List[String] => l.min.toString
+          case l: List[String] => l.map(_.toInt).min.toString
         }
         case AggregateLogLike.MaxOp(field) => collectNonNull(_, field) match {
           case Nil => ""
-          case l: List[String] => l.max.toString
+          case l: List[String] => l.map(_.toInt).max.toString
         }
-        case AggregateLogLike.SumOp(field) => _.map(_(field)).filter(_ != null).map(_.toInt).sum.toString
+        case AggregateLogLike.SumOp(field) => collectNonNull(_, field).map(_.toInt).sum.toString
         case _ => null
       }
     Option(op)
