@@ -74,6 +74,16 @@ class LogEntryTest extends FlatSpec with Matchers {
     entry("link") shouldEqual "linkName"
   }
 
+  it should "allow arbitrary regex replacement in attributes" in {
+    val entry = LogEntry.fromLines(oneEntry(realm = "linkLink.channel/10.0.0.1:4321"))
+    entry("link(/Link//)") shouldEqual "link"
+  }
+
+  it should "allow back references in regex replacement in attributes" in {
+    val entry = LogEntry.fromLines(oneEntry(realm = "link-1-useless.channel/10.0.0.1:4321"))
+    entry("link(/.*-(\\d)-.*/no-$1/)") shouldEqual "no-1"
+  }
+
   it should "extract logical ip address from realm" in {
     val entry = LogEntry.fromLines(oneEntry(realm = "linkName.channel/10.0.0.1:4321"))
     entry("ipAddress") shouldEqual "10.0.0.1"

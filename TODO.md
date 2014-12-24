@@ -50,3 +50,4 @@
  - min,max,sum (maybe useless)
  - time with format - Eg {HH:mm} plus HH:m0 and HH:mm:s0
  - regex mode is partial match by default (link to javadoc)
+ - field(/regex/$1/)

@@ -24,6 +24,9 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case "file" if source != null => source.toString
     case "line" if source != null => source.line.toString
     case LogEntry.TimeInFormat(format) => timestampAs(format)
+    case LogEntry.RegexReplacement(field, regex, replacement) =>
+      val raw = this(field)
+      if (raw != null) raw.replaceAll(regex, replacement) else null
     case _ => null
   }
 
@@ -243,6 +246,7 @@ object LogEntry {
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
   val TimeInFormat = """time\((.*)\)""".r
+  val RegexReplacement = """([^(]+)\(/(.+)/(.*)/\)""".r
 }
 
 case class SourceRef(file: String, line: Int) {
