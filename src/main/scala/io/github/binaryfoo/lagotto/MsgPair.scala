@@ -43,7 +43,7 @@ object MsgPair {
    * Match requests with responses based on MTI, STAN (field 11) and realm.
    */
   def pair(list: Stream[LogEntry]): Stream[MsgPair] = {
-    val pending = new mutable.ListMap[String, LogEntry]
+    val pending = new mutable.LinkedHashMap[String, LogEntry]
 
     def pairNext(s: Stream[LogEntry]): Stream[MsgPair] = {
       s match {
