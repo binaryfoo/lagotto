@@ -12,6 +12,7 @@ object Main extends App {
     sink.start()
     pipeline().foreach(sink.entry)
     sink.finish()
+    config.progressMeter.finish()
   }
 
   def sinkFor(config: Config) = {
@@ -32,7 +33,10 @@ class Pipeline(val config: Config) {
     addDelaysOrCount(sort(filter(pair(read()).toIterator)))
   }
 
-  def read() = LogReader(config.strict).readFilesOrStdIn(config.input)
+  def read() = {
+    val reader = LogReader(strict = config.strict, progressMeter = config.progressMeter)
+    reader.readFilesOrStdIn(config.input.sortBy(LogFiles.sequenceNumber))
+  }
 
   def pair(v: Stream[LogEntry]): Stream[LogLike] = if (config.pair) v.pair() else v
 

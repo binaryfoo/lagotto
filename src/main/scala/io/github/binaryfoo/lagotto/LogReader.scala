@@ -6,7 +6,7 @@ import java.util.zip.GZIPInputStream
 import scala.collection.mutable.ListBuffer
 import scala.io.{BufferedSource, Source}
 
-case class LogReader(strict: Boolean = false, keepFullText: Boolean = true) {
+case class LogReader(strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter) {
 
   def readFilesOrStdIn(args: Iterable[String]): Stream[LogEntry] = {
     if (args.isEmpty)
@@ -18,6 +18,7 @@ case class LogReader(strict: Boolean = false, keepFullText: Boolean = true) {
   def read(file: File*): Stream[LogEntry] = read(file.toIterable)
 
   def read(files: Iterable[File]): Stream[LogEntry] = {
+    progressMeter.startRun(files.size)
     files.toStream.flatMap(f => read(open(f), f.getName))
   }
 
@@ -33,6 +34,10 @@ case class LogReader(strict: Boolean = false, keepFullText: Boolean = true) {
     val lines = source.getLines()
     var startLineNumber = 0
     var lineNumber = 0
+    var recordCount = 0
+
+    if (sourceName != "")
+      progressMeter.startFile(sourceName)
 
     def readNext(): Stream[LogEntry] = {
 
@@ -57,6 +62,7 @@ case class LogReader(strict: Boolean = false, keepFullText: Boolean = true) {
           if (record != null) {
             try {
               val fullText = if (keepFullText) record.mkString("\n") else ""
+              recordCount += 1
               return LogEntry(LogEntry.extractFields(record), fullText, SourceRef(sourceName, startLineNumber)) #:: readNext()
             }
             catch {
@@ -72,6 +78,8 @@ case class LogReader(strict: Boolean = false, keepFullText: Boolean = true) {
           }
         }
       }
+
+      progressMeter.finishFile(recordCount)
 
       source.close()
 

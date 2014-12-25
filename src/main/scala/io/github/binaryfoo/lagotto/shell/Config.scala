@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.LogFilter
+import io.github.binaryfoo.lagotto.{NullProgressMeter, ProgressMeter, LogFilter}
 
 case class Config (filters: Seq[LogFilter] = Seq(),
                    input: Seq[String] = Seq(),
@@ -12,4 +12,5 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    sortBy: String = null,
                    sortDescending: Boolean = false,
                    strict: Boolean = false,
+                   progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[String] = Seq())

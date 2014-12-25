@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.{NegativeGrepFilter, GrepFilter, LogFilter}
+import io.github.binaryfoo.lagotto.{ConsoleProgressMeter, NegativeGrepFilter, GrepFilter, LogFilter}
 import scopt.Read
 
 object Options {
@@ -80,6 +80,10 @@ object Options {
       opt[Unit]("strict") action {(_,c) =>
         c.copy(strict = true)
       } text "Fail on rubbish input instead the default of continuing to read"
+
+      opt[Unit]("progress") action {(_,c) =>
+        c.copy(progressMeter = new ConsoleProgressMeter())
+      } text "Print progress to standard error. Only really sane if standard out is redirected."
     }
 
     parser.parse(args, Config())
