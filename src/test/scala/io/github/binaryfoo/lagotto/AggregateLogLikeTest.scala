@@ -13,6 +13,10 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
     aggregateToCsv(threeStans, "mti", "count") shouldBe List("0200,2", "0210,1")
   }
 
+  it should "support count(distinct(field))" in {
+    aggregateToCsv(threeStans, "count(distinct(mti))") shouldBe List("2")
+  }
+
   private val twoLifespans = Stream(LogEntry("lifespan" -> "100"), LogEntry("lifespan" -> "200"))
 
   it should "support avg(field)" in {

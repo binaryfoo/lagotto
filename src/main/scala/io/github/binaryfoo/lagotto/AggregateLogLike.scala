@@ -22,6 +22,7 @@ object AggregateLogLike {
   val MaxOp = """max\((.*)\)""".r
   val SumOp = """sum\((.*)\)""".r
   val AvgOp = """avg\((.*)\)""".r
+  val CountDistinct = """count\(distinct\((.*)\)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
 
@@ -33,9 +34,12 @@ object AggregateLogLike {
     else Some(v.toInt)
   }
 
+  private def collectNonNull(values: List[LogLike], field: String) = values.flatMap(e => Option(e(field)))
+
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
         case "count" => _.size.toString
+        case CountDistinct(field) => collectNonNull(_, field).toSet[String].size.toString
         case CountIf(LogFilter(condition)) => _.count(condition).toString
         case MinOp(field) => collectIntegers(_, field) match {
           case Nil => ""
@@ -47,7 +51,7 @@ object AggregateLogLike {
         }
         case SumOp(field) => collectIntegers(_, field).sum.toString
         case AvgOp(field) => values => (collectIntegers(values, field).sum / values.size).toString
-        case GroupConcat(field) => _.map(_(field)).filter(_ != null).mkString(",")
+        case GroupConcat(field) => collectNonNull(_, field).mkString(",")
         case _ => null
       }
     Option(op)
