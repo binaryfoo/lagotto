@@ -26,6 +26,7 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
   private var recordsDone = 0
   private var startTime = 0L
   private var fileStartTime = 0L
+  private var timePerFile = 0L
   private var recordsPerSecond = 0L
   private var widthOfLastWrite = 0
 
@@ -37,29 +38,42 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
     startTime = DateTimeUtils.currentTimeMillis()
   }
 
-
   override def startFile(name: String): Unit = {
     filesDone += 1
     fileStartTime = DateTimeUtils.currentTimeMillis()
-    val progress = s"\rOn $name $filesDone of $totalFiles $recordsDone entries ($recordsPerSecond/ms) T $runTime"
-    widthOfLastWrite = progress.length
-    out.print(progress)
+    val remainingTime = formatRunTime((totalFiles - filesDone) * timePerFile)
+    write(s"\rOn $name $filesDone of $totalFiles $recordsDone entries ($recordsPerSecond/ms) T $runTime E $remainingTime")
   }
+
 
   override def finishFile(records: Int): Unit = {
     val elapsed = Math.max(DateTimeUtils.currentTimeMillis() - fileStartTime, 1)
+    timePerFile = elapsed
     recordsDone += records
     recordsPerSecond = records / elapsed
   }
 
   override def finish(): Unit = {
-    val took = runTime
-    val padding = " " * Math.max(0, widthOfLastWrite - took.length - 5)
-    out.printf("\rTook %s%s\n", padding, took)
+    val elapsed = totalElapsed
+    val recordsPerSecond = recordsDone / elapsed
+    val runTime = formatRunTime(elapsed)
+    write(s"\rTook $runTime $recordsDone ($recordsPerSecond/ms)")
+    write("\n")
   }
 
-  def runTime: String = {
-    val elapsed = DateTimeUtils.currentTimeMillis() - startTime
+  private def write(s: String) = {
+    val padded = if (s.startsWith("\r") && widthOfLastWrite > 0) {
+      "%s%s".format(s, " " * Math.max(0, widthOfLastWrite - s.length))
+    } else {
+      s
+    }
+    out.print(padded)
+    widthOfLastWrite = if (s.endsWith("\n")) 0 else s.length
+  }
+
+  private def runTime: String = formatRunTime(totalElapsed)
+
+  private def formatRunTime(elapsed: Long): String = {
     val formatter = new PeriodFormatterBuilder()
       .appendMinutes()
       .appendSuffix(" minute ", " minutes ")
@@ -68,4 +82,6 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
       .toFormatter
     formatter.print(new Period(elapsed))
   }
+
+  private def totalElapsed: Long = DateTimeUtils.currentTimeMillis() - startTime
 }
