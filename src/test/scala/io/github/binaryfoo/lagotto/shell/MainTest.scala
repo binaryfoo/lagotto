@@ -43,6 +43,13 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "allow filtering on delay between messages" in {
+    val output = run("-f", "socket=10.0.0.1:4321", "-f", "delay>1000", "--csv", "time,mti,11,delay", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time,mti,11,delay
+                         |00:00:04.992,0210,1,1700
+                         |""".stripMargin
+  }
+
   it should "group rows when count field included in --csv option" in {
     val output = run("--csv", "time(mm:ss),count", "src/test/resources/a-bunch.xml")
     output shouldEqual """time(mm:ss),count

@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.{ConsoleProgressMeter, NegativeGrepFilter, GrepFilter, LogFilter}
+import io.github.binaryfoo.lagotto._
 import scopt.Read
 
 object Options {
@@ -25,8 +25,12 @@ object Options {
         c.copy(filters = c.filters :+ NegativeGrepFilter(expr))
       } text "Exclude messages containing text"
 
-      opt[LogFilter]('f', "field") unbounded() action { case (filter, c) =>
-        c.copy(filters = c.filters :+ filter)
+      opt[FieldFilter]('f', "field") unbounded() action { case (filter, c) =>
+        if (filter.field == "delay") {
+          c.copy(secondStageFilters = c.secondStageFilters :+ filter)
+        } else {
+          c.copy(filters = c.filters :+ filter)
+        }
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
 
       opt[String]('t', "tsv") action { (fields, c) =>
@@ -89,7 +93,7 @@ object Options {
     parser.parse(args, Config())
   }
 
-  implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
+  implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {
     val arity = 2
     val reads = { (s: String) =>
       s match {

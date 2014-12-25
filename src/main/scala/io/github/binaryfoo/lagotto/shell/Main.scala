@@ -30,26 +30,34 @@ object Main extends App {
 class Pipeline(val config: Config) {
 
   def apply(): Stream[LogLike] = {
-    addDelaysOrCount(sort(filter(pair(read()).toIterator)))
+    // need to understand if this insane nesting can be removed without introducing a memory leak by pinning the whole
+    // Stream in memory
+    applyAggregation(
+      filter(
+        addDelays(
+          sort(
+            filter(pair(read()).toIterator,
+              config.filters))).toIterator,
+        config.secondStageFilters))
   }
 
-  def read() = {
+  private def read() = {
     val reader = LogReader(strict = config.strict, progressMeter = config.progressMeter)
     reader.readFilesOrStdIn(config.input.sortBy(LogFiles.sequenceNumber))
   }
 
-  def pair(v: Stream[LogEntry]): Stream[LogLike] = if (config.pair) v.pair() else v
+  private def pair(v: Stream[LogEntry]): Stream[LogLike] = if (config.pair) v.pair() else v
 
   // need an Iterator instead of Stream to prevent a call to filter() or flatMap() pinning the whole stream
   // in memory until the first match (if any)
-  def filter(v: Iterator[LogLike]): Iterator[LogLike] = {
-    val shouldInclude = (m: LogLike) => config.filters.forall(_(m))
+  private def filter(v: Iterator[LogLike], filters: Seq[LogFilter]): Stream[LogLike] = {
+    val shouldInclude = (m: LogLike) => filters.forall(_(m))
 
-    if (config.filters.isEmpty) {
-      v
+    if (filters.isEmpty) {
+      v.toStream
     } else if (config.beforeContext == 0 && config.afterContext == 0) {
       // premature optimization for this case?
-      v.filter(shouldInclude)
+      v.filter(shouldInclude).toStream
     } else {
       val preceding = new BoundedQueue[LogLike](config.beforeContext)
       var aftersNeeded = 0
@@ -64,24 +72,30 @@ class Pipeline(val config: Config) {
           preceding.add(item)
           List.empty
         }
-      }
+      }.toStream
     }
   }
 
   // not always going to work in a bounded amount of memory
-  def sort(v: Iterator[LogLike]): Stream[LogLike] = {
+  private def sort(v: Stream[LogLike]): Stream[LogLike] = {
     if (config.sortBy == null) {
-      v.toStream
+      v
     } else if (config.sortDescending) {
-      v.toStream.sortBy(_(config.sortBy)).reverse
+      v.sortBy(_(config.sortBy)).reverse
     } else {
-      v.toStream.sortBy(_(config.sortBy))
+      v.sortBy(_(config.sortBy))
     }
   }
 
-  def addDelaysOrCount(v: Stream[LogLike]): Stream[LogLike] = {
+  private def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
     config.format match {
       case Tabular(fields, _) if fields.contains("delay") => DelayTimer.calculateDelays(v)
+      case _ => v
+    }
+  }
+
+  private def applyAggregation(v: Stream[LogLike]): Stream[LogLike] = {
+    config.format match {
       case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields)
       case _ => v
     }
