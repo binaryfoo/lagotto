@@ -7,6 +7,12 @@ class LogFilesTest extends FlatSpec with Matchers {
 
   "Log sequence number" should "use N in blah.N.log" in {
     sequenceNumber(file("/some/directory/name.42.log")) shouldBe 42
+    sequenceNumber("/some/directory/name.42.log") shouldBe 42
+  }
+
+  it should "use N in blah.N.log.gz" in {
+    sequenceNumber(file("/some/directory/name.13.log.gz")) shouldBe 13
+    sequenceNumber("/some/directory/name.13.log.gz") shouldBe 13
   }
 
   it should "default to zero when missing" in {

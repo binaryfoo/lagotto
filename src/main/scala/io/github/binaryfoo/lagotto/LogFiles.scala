@@ -4,7 +4,7 @@ import java.io.{FilenameFilter, File}
 
 object LogFiles {
 
-  val LogSequenceNumber = """.*\.(\d{1,})\.log""".r
+  val LogSequenceNumber = """.*\.(\d{1,})\.log(?:\.gz)?""".r
 
   val endsWithLog = new FilenameFilter {
     override def accept(dir: File, name: String): Boolean = name.endsWith(".log")
@@ -12,7 +12,9 @@ object LogFiles {
 
   def file(name: String) = new File(name)
 
-  def sequenceNumber(f: File): Int = f.getName match {
+  def sequenceNumber(f: File): Int = sequenceNumber(f.getName)
+
+  def sequenceNumber(f: String): Int = f match {
     case LogSequenceNumber(n) => n.toInt
     case _ => 0
   }
