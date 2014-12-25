@@ -38,7 +38,7 @@ class Pipeline(val config: Config) {
           sort(
             filter(pair(read()).toIterator,
               config.filters))).toIterator,
-        config.secondStageFilters))
+        config.secondStageFilters).toIterator)
   }
 
   private def read() = {
@@ -94,10 +94,11 @@ class Pipeline(val config: Config) {
     }
   }
 
-  private def applyAggregation(v: Stream[LogLike]): Stream[LogLike] = {
+  // Iterator instead of Stream to the same reason as filter()
+  private def applyAggregation(v: Iterator[LogLike]): Stream[LogLike] = {
     config.format match {
       case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields)
-      case _ => v
+      case _ => v.toStream
     }
   }
 }

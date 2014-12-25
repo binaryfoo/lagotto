@@ -35,6 +35,9 @@
 * Build an index and/or process data into more compact/faster to re-read format
  - might ease path to Spark
 
+Bugs:
+ * Calculate delays if referenced in --field but not in -t
+
 * Deploy artifact to maven central with fat .jar attachment
 * Codeship.io free account
 * bintray/sonatype snapshots for artifact hosting?
@@ -50,3 +53,10 @@
  - time with format - Eg {HH:mm} plus HH:m0 and HH:mm:s0
  - regex mode is partial match by default (link to javadoc)
  - field(/regex/$1/)
+
+use cases:
+* rtt per outgoing link
+* send time per client
+* max concurrent requests?
+* stalls -> max delay between messages
+* throughput: incoming/sec outgoing/sec

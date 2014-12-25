@@ -102,7 +102,7 @@ class MainTest extends FlatSpec with Matchers {
     val output = run("--csv", "ipAddress,sum(lifespan)", "src/test/resources/a-pair.xml")
     output shouldEqual """ipAddress,sum(lifespan)
                           |10.0.0.1,11005
-                          |,0
+                          |,
                           |""".stripMargin
   }
 

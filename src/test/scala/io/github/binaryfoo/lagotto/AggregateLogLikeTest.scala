@@ -21,7 +21,7 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
 
   it should "support avg(field)" in {
     aggregate("avg(lifespan)") shouldBe List("150")
-    aggregateToCsv(threeStans, "mti", "min(11)") shouldBe List("0200,1", "0210,3")
+    aggregateToCsv(threeStans, "mti", "avg(11)") shouldBe List("0200,1", "0210,3")
   }
 
   it should "support min(field)" in {
@@ -46,17 +46,17 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
 
   it should "not pull from the stream if no aggregation is required" in {
     val stream = Stream.cons(LogEntry("0" -> "head"), throw new IllegalArgumentException("tail should not be called"))
-    val unaltered = AggregateLogLike.aggregate(stream, Seq("mti"))
+    val unaltered = AggregateLogLike.aggregate(stream.toIterator, Seq("mti"))
     unaltered shouldEqual stream
   }
 
   private def aggregate(field: String): List[String] = {
-    val aggregated = AggregateLogLike.aggregate(twoLifespans, Seq(field))
+    val aggregated = AggregateLogLike.aggregate(twoLifespans.toIterator, Seq(field))
     aggregated.map(_(field)).toList
   }
 
   private def aggregateToCsv(raw: Stream[LogLike], fields: String*): List[String] = {
-    val aggregated = AggregateLogLike.aggregate(raw, fields)
+    val aggregated = AggregateLogLike.aggregate(raw.toIterator, fields)
     aggregated.map(_.toCsv(fields)).toList
   }
 }

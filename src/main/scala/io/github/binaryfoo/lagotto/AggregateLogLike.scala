@@ -1,19 +1,30 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.AggregateLogLike.AggregateOp
 import org.joda.time.DateTime
 
-case class AggregateLogLike(key: Map[String, String], values: List[LogLike]) extends LogLike {
+import scala.collection.mutable
 
-  override def timestamp: DateTime = values.head.timestamp
+/**
+ * Like a row in the output of a SQL query with a GROUP BY clause. Has a group key and a set of aggregate values
+ * computed over that group.
+ *
+ * @param key The set of (key, value) pairs that uniquely identify the group.
+ * @param aggregates The set of values computed over the group.
+ */
+case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, String)]) extends LogLike {
 
-  override def lines: String =  values.map(_.lines).mkString("<group>\n", "\n", "\n</group>")
+  override def timestamp: DateTime = ???
+
+  override def lines: String =  ???
 
   override def apply(id: String): String = key.getOrElse(id, {
-    val op: AggregateOp = AggregateLogLike.operationFor(id).get
-    op(values)
+    aggregates.collectFirst { case (k, v) if k == id => v}.orNull
   })
 
+}
+
+trait AggregateOp extends mutable.Builder[LogLike, String] {
+  override def clear() = ???
 }
 
 object AggregateLogLike {
@@ -26,32 +37,16 @@ object AggregateLogLike {
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
 
-  type AggregateOp = List[LogLike] => String
-
-  private def collectIntegers(values: List[LogLike], field: String) = values.flatMap{e =>
-    val v = e(field)
-    if (v == null) None
-    else Some(v.toInt)
-  }
-
-  private def collectNonNull(values: List[LogLike], field: String) = values.flatMap(e => Option(e(field)))
-
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
-        case "count" => _.size.toString
-        case CountDistinct(field) => collectNonNull(_, field).toSet[String].size.toString
-        case CountIf(LogFilter(condition)) => _.count(condition).toString
-        case MinOp(field) => collectIntegers(_, field) match {
-          case Nil => ""
-          case l: List[Int] => l.min.toString
-        }
-        case MaxOp(field) => collectIntegers(_, field) match {
-          case Nil => ""
-          case l: List[Int] => l.max.toString
-        }
-        case SumOp(field) => collectIntegers(_, field).sum.toString
-        case AvgOp(field) => values => (collectIntegers(values, field).sum / values.size).toString
-        case GroupConcat(field) => collectNonNull(_, field).mkString(",")
+        case "count" => new CountBuilder
+        case CountDistinct(field) => new CountDistinctBuilder(field)
+        case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
+        case MinOp(field) => new IntegerOpBuilder(field, math.min)
+        case MaxOp(field) => new IntegerOpBuilder(field, math.max)
+        case SumOp(field) => new IntegerOpBuilder(field, _ + _)
+        case AvgOp(field) => new AverageBuilder(field)
+        case GroupConcat(field) => new GroupConcatBuilder(field)
         case _ => null
       }
     Option(op)
@@ -63,10 +58,10 @@ object AggregateLogLike {
    * @param outputFields The set of fields that will be output.
    * @return The original stream s or a Stream[AggregateLogLike].
    */
-  def aggregate(s: Stream[LogLike], outputFields: Seq[String]): Stream[LogLike] = {
+  def aggregate(s: Iterator[LogLike], outputFields: Seq[String]): Stream[LogLike] = {
     val aggregateFields = outputFields.filter(operationFor(_).isDefined).toSet
     if (aggregateFields.isEmpty) {
-      s
+      s.toStream
     } else {
       val keyFields = outputFields.filterNot(aggregateFields)
       def keyFor(e: LogLike): Seq[(String, String)] = {
@@ -74,10 +69,115 @@ object AggregateLogLike {
           k <- keyFields
         } yield (k, e(k))
       }
-      OrderedGroupBy.groupByOrdered(s, keyFor).map {
-        case (key, values) => AggregateLogLike(key.toMap, values)
-      }.toStream
+      def newBuilder(k: Seq[(String, String)]) = {
+        val aggregates = outputFields.flatMap(field => operationFor(field).map(op => (field, op)))
+        new AggregateLogLikeBuilder(k.toMap, aggregates)
+      }
+      OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
     }
   }
 
+}
+
+trait FieldBasedAggregateOp extends AggregateOp {
+
+  def field: String
+  def add(v: String)
+
+  final override def +=(elem: LogLike) = {
+    val v = elem(field)
+    if (v != null) {
+      add(v)
+    }
+    this
+  }
+
+}
+
+class CountBuilder extends AggregateOp {
+  
+  private var count = 0
+
+  override def +=(elem: LogLike) = {
+    count += 1
+    this
+  }
+  
+  override def result(): String = count.toString
+}
+
+class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
+  
+  private var count = 0
+  
+  override def +=(elem: LogLike) = {
+    if (condition(elem)) {
+      count += 1
+    }
+    this
+  }
+  
+  override def result(): String = count.toString
+}
+
+class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
+  
+  private val distinctValues = mutable.HashSet[String]()
+
+  override def add(v: String) = distinctValues.add(v)
+
+  override def result(): String = distinctValues.size.toString
+
+}
+
+class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
+  
+  private val values = mutable.ListBuffer[String]()
+
+  override def add(v: String) = values += v
+
+  override def result(): String = values.mkString(",")
+
+}
+
+class IntegerOpBuilder(val field: String, val op: (Int, Int) => Int) extends FieldBasedAggregateOp {
+
+  private var current: Option[Int] = None
+
+  override def add(v: String) = {
+    current = current match {
+      case Some(c) => Some(op(v.toInt, c))
+      case None => Some(v.toInt)
+    }
+  }
+
+  override def result(): String = current.getOrElse("").toString
+}
+
+class AverageBuilder(val field: String) extends FieldBasedAggregateOp {
+
+  private var sum = 0
+  private var count = 0
+
+  override def add(v: String) = {
+    sum += v.toInt
+    count += 1
+  }
+
+  override def result(): String = if (count == 0) "" else (sum / count).toString
+}
+
+/**
+ * Accumulate a set of aggregated values for the group uniquely identified by key.
+ */
+class AggregateLogLikeBuilder(key: Map[String, String], values: Seq[(String, AggregateOp)]) extends mutable.Builder[LogLike, AggregateLogLike] {
+  
+  override def +=(elem: LogLike) = {
+    values.foreach { case (_, v) => v += elem }
+    this
+  }
+
+  override def result(): AggregateLogLike = AggregateLogLike(key, values.map { case (k, v) => (k, v.result()) })
+
+  override def clear(): Unit = ???
 }
