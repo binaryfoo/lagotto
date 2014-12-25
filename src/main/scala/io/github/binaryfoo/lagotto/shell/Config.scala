@@ -11,4 +11,5 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    afterContext: Int = 0,
                    sortBy: String = null,
                    sortDescending: Boolean = false,
-                   strict: Boolean = false)
+                   strict: Boolean = false,
+                   histogramFields: Seq[String] = Seq())

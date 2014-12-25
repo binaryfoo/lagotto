@@ -47,9 +47,9 @@ trait LogLike {
 
   def toTsv(ids: Iterable[String]): String = Xsv.toTsv(toSeq(ids))
 
-  def toXsv(separator: String, ids: LogFieldExpr*): String = toXsv(separator, ids.toIterable)
+  def toXsv(separator: String, ids: LogFieldExpr*): String = Xsv.toXsv(separator, exprToSeq(ids))
 
-  def toXsv(separator: String, ids: Iterable[LogFieldExpr]): String = Xsv.toXsv(separator, exprToSeq(ids))
+  def toXsv(separator: String, ids: Iterable[String]): String = Xsv.toXsv(separator, toSeq(ids))
 
 }
 

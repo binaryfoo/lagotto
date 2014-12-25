@@ -45,6 +45,10 @@ object Options {
         c.copy(format = Tabular(fields.split(","), HtmlTableFormat))
       } text "Output an HTML table"
 
+      opt[String]("histogram") action { (fields, c) =>
+        c.copy(histogramFields = fields.split(","))
+      } text "Output a histogram"
+
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)
       } text "Match requests with responses"

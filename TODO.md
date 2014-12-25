@@ -16,9 +16,9 @@
 * Can LogFieldExpr allow access to more specific type
  * Override toXsv() on LogEntry?
 * Group like uniq -c when count in field list for --tsv or --csv
- - show average,percentiles for group
+ - show percentiles for group
  - min/max explode when not parseable as integers
- - HDR histogram?
+ - HDR histogram: use cases other than rtt and lifespan?
 * Output as
  - HTML table
   - colour rows by a field like socket

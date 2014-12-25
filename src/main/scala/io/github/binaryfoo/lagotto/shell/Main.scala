@@ -6,14 +6,23 @@ import io.github.binaryfoo.lagotto._
 object Main extends App {
 
   Options.parse(args).map { config =>
-    if (config.header) {
-      config.format.header().foreach(println(_))
-    }
+    val sink = sinkFor(config)
     val pipeline = new Pipeline(config)
-    pipeline()
-      .map(e => config.format(e))
-      .foreach(e => println(e))
-    config.format.footer().foreach(println(_))
+
+    sink.start()
+    pipeline().foreach(sink.entry)
+    sink.finish()
+  }
+
+  def sinkFor(config: Config) = {
+    if (config.histogramFields.size == 1) {
+      new SingleHistogramSink(config.histogramFields.head)
+    } else if (config.histogramFields.size > 1) {
+      val fields = config.histogramFields.toList
+      new MultipleHistogramSink(fields.dropRight(1), fields.last)
+    } else {
+      new IncrementalSink(config.format, config.header)
+    }
   }
 }
 

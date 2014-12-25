@@ -1,6 +1,9 @@
 package io.github.binaryfoo.lagotto.shell
 
+import java.io.{ByteArrayOutputStream, PrintStream}
+
 import io.github.binaryfoo.lagotto.LogLike
+import org.HdrHistogram.Histogram
 
 trait OutputFormat {
   def header(): Option[String]
