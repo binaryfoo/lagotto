@@ -25,10 +25,11 @@ class ConsoleProgressMeterTest extends FlatSpec with Matchers {
     meter.finishFile(1)
     meter.finish()
 
-    out.toString.replace("\r", "\n\\r") shouldEqual "\n" +
-                                                    "\\rOn number-1.log 1 of 10 0 entries (0/ms) T 0s E 0s\n" +
-                                                    "\\rOn number-2.log 2 of 10 10000 entries (10/ms) T 1s E 8s\n" +
-                                                    "\\rOn 3.log 3 of 10 10001 entries (1/ms) T 1s E 0.007s    \n" +
-                                                    "\\rTook 1 minute 1.001s 10002 (0/ms)                  \n"
+    val sanitized = out.toString.replace("\r", "\n\\r")
+    sanitized shouldEqual "\n" +
+                          "\\rOn number-1.log 1 of 10 (0 logs/ms) T+ 0s T- 0s\n" +
+                          "\\rOn number-2.log 2 of 10 (10 logs/ms) T+ 1s T- 8s\n" +
+                          "\\rOn 3.log 3 of 10 (1 logs/ms) T+ 1s T-           \n" +
+                          "\\rTook 1 minute 1s for 10002 logs (0:0:10/ms)\n"
   }
 }

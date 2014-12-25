@@ -28,6 +28,8 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
   private var fileStartTime = 0L
   private var timePerFile = 0L
   private var recordsPerSecond = 0L
+  private var maxRecordsPerSecond = 0L
+  private var minRecordsPerSecond = Long.MaxValue
   private var widthOfLastWrite = 0
 
   override def startRun(fileCount: Int): Unit = {
@@ -42,7 +44,7 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
     filesDone += 1
     fileStartTime = DateTimeUtils.currentTimeMillis()
     val remainingTime = formatRunTime((totalFiles - filesDone) * timePerFile)
-    write(s"\rOn $name $filesDone of $totalFiles $recordsDone entries ($recordsPerSecond/ms) T $runTime E $remainingTime")
+    write(s"\rOn $name $filesDone of $totalFiles ($recordsPerSecond logs/ms) T+ $runTime T- $remainingTime")
   }
 
 
@@ -51,13 +53,15 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
     timePerFile = elapsed
     recordsDone += records
     recordsPerSecond = records / elapsed
+    maxRecordsPerSecond = math.max(recordsPerSecond, maxRecordsPerSecond)
+    minRecordsPerSecond = math.min(recordsPerSecond, minRecordsPerSecond)
   }
 
   override def finish(): Unit = {
     val elapsed = totalElapsed
     val recordsPerSecond = recordsDone / elapsed
     val runTime = formatRunTime(elapsed)
-    write(s"\rTook $runTime $recordsDone ($recordsPerSecond/ms)")
+    write(s"\rTook $runTime for $recordsDone logs ($minRecordsPerSecond:$recordsPerSecond:$maxRecordsPerSecond/ms)")
     write("\n")
   }
 
@@ -77,7 +81,7 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
     val formatter = new PeriodFormatterBuilder()
       .appendMinutes()
       .appendSuffix(" minute ", " minutes ")
-      .appendSecondsWithOptionalMillis()
+      .appendSeconds()
       .appendSuffix("s")
       .toFormatter
     formatter.print(new Period(elapsed))
