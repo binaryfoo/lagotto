@@ -10,4 +10,13 @@ class XPathEvalTest extends FlatSpec with Matchers {
     val xml = Source.fromFile("src/test/resources/pool-exhaustion.xml").mkString
     XPathEval(xml, "//jobs[text()]") shouldBe "12413"
   }
+
+  it should "return null if not found" in {
+    val xml = Source.fromFile("src/test/resources/pool-exhaustion.xml").mkString
+    XPathEval(xml, "//rubbish[text()]") shouldBe null
+  }
+
+  it should "match text at root" in {
+    XPathEval("<root>text</root>", "//text()") shouldBe "text"
+  }
 }
