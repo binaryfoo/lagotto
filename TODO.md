@@ -16,15 +16,12 @@
 * Can LogFieldExpr allow access to more specific type
  * Override toXsv() on LogEntry?
 * Group like uniq -c when count in field list for --tsv or --csv
- - show percentiles for group
  - min/max explode when not parseable as integers
  - HDR histogram: use cases other than rtt and lifespan?
 * Output as
  - HTML table
   - colour rows by a field like socket
   - colour rows by match condition like lifespan>1000
- - as ASCII table (need field width?)
- - jira markup (other common table format)
 * More icons: session start and end, error
 * Add row number field
 * Value in multiple threads? actually CPU bound
@@ -34,6 +31,12 @@
 * Validate only one of delay or count is passed
 * Build an index and/or process data into more compact/faster to re-read format
  - might ease path to Spark
+* Can --pair idea by expanded to a SQL like join. One case for keeping memoized streams...
+* Possible to do subtract(max(time), min(time)) without massive restructure?
+ - percent()
+* Graceful error reporting...
+* Other input log formats: log4j, httpd
+* Allow --field for aggregate fields same as --sort
 
 Bugs:
  * Calculate delays if referenced in --field but not in -t
