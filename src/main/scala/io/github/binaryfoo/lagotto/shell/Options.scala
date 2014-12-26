@@ -78,11 +78,11 @@ object Options {
       } text "Like -C in grep"
 
       opt[String]("sort") action {(field,c) =>
-        c.copy(sortBy = field)
+        c.copy(sortBy = Some(field))
       } text "Sort output by field. Prevents incremental output"
 
       opt[String]("sort-desc") action {(field,c) =>
-        c.copy(sortBy = field, sortDescending = true)
+        c.copy(sortBy = Some(field), sortDescending = true)
       } text "Sort output descending by field. Prevents incremental output"
 
       opt[String]("gnuplot") action {(fileName,c) =>

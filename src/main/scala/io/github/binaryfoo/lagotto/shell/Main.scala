@@ -3,6 +3,8 @@ package io.github.binaryfoo.lagotto.shell
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
 
+import scala.util.Try
+
 object Main extends App {
 
   Options.parse(args).map { config =>
@@ -40,15 +42,26 @@ object Main extends App {
 class Pipeline(val config: Config) {
 
   def apply(): Stream[LogLike] = {
-    // need to understand if this insane nesting can be removed without introducing a memory leak by pinning the whole
-    // Stream in memory
-    applyAggregation(
-      filter(
-        addDelays(
-          sort(
-            filter(pair(read()).toIterator,
-              config.filters))).toIterator,
-        config.secondStageFilters).toIterator)
+    val (postAggregationSortKey, preAggregationSortKey) = config.sortBy.map {
+      case key @ AggregateOp(_) => (Some(key),None)
+      case "delay" => (Some("delay"),None)
+      case k => (None,Some(k))
+    }.getOrElse((None,None))
+    // Need to understand if this insane nesting can be removed without introducing a memory leak.
+    // ie pinning the whole Stream in memory.
+    // I suspect not. Maybe Stream ain't a good idea.
+    sort(
+      applyAggregation(
+        filter(
+          addDelays(
+            sort(
+              filter(
+                pair(read()).toIterator,
+                config.filters),
+              preAggregationSortKey, config.sortDescending)
+          ).toIterator,
+          config.secondStageFilters).toIterator),
+      postAggregationSortKey, config.sortDescending)
   }
 
   private def read() = {
@@ -87,13 +100,18 @@ class Pipeline(val config: Config) {
   }
 
   // not always going to work in a bounded amount of memory
-  private def sort(v: Stream[LogLike]): Stream[LogLike] = {
-    if (config.sortBy == null) {
+  private def sort(v: Stream[LogLike], sortBy: Option[String], descending: Boolean): Stream[LogLike] = {
+    if (sortBy.isEmpty) {
       v
-    } else if (config.sortDescending) {
-      v.sortBy(_(config.sortBy)).reverse
     } else {
-      v.sortBy(_(config.sortBy))
+      val key = sortBy.get
+      // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
+      // Options: could try to guess from they name of the key or write an Ordering[Any]?
+      if (descending) {
+        Try(v.sortBy(_(key).toInt).reverse).getOrElse(v.sortBy(_(key)).reverse)
+      } else {
+        Try(v.sortBy(_(key).toInt)).getOrElse(v.sortBy(_(key)))
+      }
     }
   }
 

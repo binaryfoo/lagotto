@@ -27,7 +27,7 @@ trait AggregateOp extends mutable.Builder[LogLike, String] {
   override def clear() = ???
 }
 
-object AggregateLogLike {
+object AggregateOp {
 
   val MinOp = """min\((.*)\)""".r
   val MaxOp = """max\((.*)\)""".r
@@ -41,20 +41,25 @@ object AggregateLogLike {
 
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
-        case "count" => new CountBuilder
-        case CountDistinct(field) => new CountDistinctBuilder(field)
-        case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
-        case MinOp(field) => new IntegerOpBuilder(field, math.min)
-        case MaxOp(field) => new IntegerOpBuilder(field, math.max)
-        case SumOp(field) => new IntegerOpBuilder(field, _ + _)
-        case AvgOp(field) => new AverageBuilder(field)
-        case GroupConcat(field) => new GroupConcatBuilder(field)
-        case MinStringOp(field) => new StringOpBuilder(field, (l, r) => if (l <= r) l else r)
-        case MaxStringOp(field) => new StringOpBuilder(field, (l, r) => if (l >= r) l else r)
-        case _ => null
-      }
+      case "count" => new CountBuilder
+      case CountDistinct(field) => new CountDistinctBuilder(field)
+      case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
+      case MinOp(field) => new IntegerOpBuilder(field, math.min)
+      case MaxOp(field) => new IntegerOpBuilder(field, math.max)
+      case SumOp(field) => new IntegerOpBuilder(field, _ + _)
+      case AvgOp(field) => new AverageBuilder(field)
+      case GroupConcat(field) => new GroupConcatBuilder(field)
+      case MinStringOp(field) => new StringOpBuilder(field, (l, r) => if (l <= r) l else r)
+      case MaxStringOp(field) => new StringOpBuilder(field, (l, r) => if (l >= r) l else r)
+      case _ => null
+    }
     Option(op)
   }
+
+  def unapply(expr: String): Option[AggregateOp] = operationFor(expr)
+}
+
+object AggregateLogLike {
 
   /**
    * Apply aggregation 'decorator' if something in outputFields requires it.
@@ -63,7 +68,7 @@ object AggregateLogLike {
    * @return The original stream s or a Stream[AggregateLogLike].
    */
   def aggregate(s: Iterator[LogLike], outputFields: Seq[String]): Stream[LogLike] = {
-    val aggregateFields = outputFields.filter(operationFor(_).isDefined).toSet
+    val aggregateFields = outputFields.filter(AggregateOp.operationFor(_).isDefined).toSet
     if (aggregateFields.isEmpty) {
       s.toStream
     } else {
@@ -74,7 +79,7 @@ object AggregateLogLike {
         } yield (k, e(k))
       }
       def newBuilder(k: Seq[(String, String)]) = {
-        val aggregates = outputFields.flatMap(field => operationFor(field).map(op => (field, op)))
+        val aggregates = outputFields.flatMap(field => AggregateOp.operationFor(field).map(op => (field, op)))
         new AggregateLogLikeBuilder(k.toMap, aggregates)
       }
       OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream

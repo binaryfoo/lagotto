@@ -50,6 +50,14 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "allow sort on delay between messages" in {
+    val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "--sort-desc", "delay", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time,mti,11,delay
+                         |00:00:04.992,0210,1,1700
+                         |00:00:03.292,0200,1,0
+                         |""".stripMargin
+  }
+
   it should "group rows when count field included in --csv option" in {
     val output = run("--csv", "time(mm:ss),count", "src/test/resources/a-bunch.xml")
     output shouldEqual """time(mm:ss),count
@@ -71,6 +79,14 @@ class MainTest extends FlatSpec with Matchers {
     output shouldEqual """time(mm:ss),group_concat(48.1(/.*#//))
                          |00:03,1
                          |00:04,2,3,4
+                         |""".stripMargin
+  }
+
+  it should "allow sort on count field included in --csv option" in {
+    val output = run("--csv", "time(mm:ss),count", "--sort-desc", "count", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),count
+                         |00:04,3
+                         |00:03,1
                          |""".stripMargin
   }
 
