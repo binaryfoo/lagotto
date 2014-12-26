@@ -1,10 +1,11 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{File, FileWriter, FileOutputStream, PrintStream}
+import java.io.{File, FileOutputStream, FileWriter, PrintStream}
 
 import io.github.binaryfoo.lagotto.LogLike
 import io.github.binaryfoo.lagotto.gnuplot.GnuplotScriptAuthor
 import org.HdrHistogram.Histogram
+
 import scala.collection.mutable
 
 trait Sink {
@@ -17,13 +18,13 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) exte
 
   override def start() = {
     if (includeHeader) {
-      format.header().foreach(println(_))
+      format.header().foreach(println)
     }
   }
 
-  override def entry(e: LogLike) = println(format(e))
+  override def entry(e: LogLike) = format(e).foreach(println)
 
-  override def finish() = format.footer().foreach(println(_))
+  override def finish() = format.footer().foreach(println)
 
 }
 
@@ -37,7 +38,7 @@ class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileNam
     }
   }
 
-  override def entry(e: LogLike) = out.println(format(e))
+  override def entry(e: LogLike) = format(e).foreach(out.println)
 
   override def finish() = {
     format.footer().foreach(out.println)
