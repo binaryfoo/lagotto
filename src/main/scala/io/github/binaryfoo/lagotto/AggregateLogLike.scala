@@ -36,6 +36,8 @@ object AggregateLogLike {
   val CountDistinct = """count\(distinct\((.*)\)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
+  val MinStringOp = """minStr\((.*)\)""".r
+  val MaxStringOp = """maxStr\((.*)\)""".r
 
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
@@ -47,6 +49,8 @@ object AggregateLogLike {
         case SumOp(field) => new IntegerOpBuilder(field, _ + _)
         case AvgOp(field) => new AverageBuilder(field)
         case GroupConcat(field) => new GroupConcatBuilder(field)
+        case MinStringOp(field) => new StringOpBuilder(field, (l, r) => if (l <= r) l else r)
+        case MaxStringOp(field) => new StringOpBuilder(field, (l, r) => if (l >= r) l else r)
         case _ => null
       }
     Option(op)
@@ -152,6 +156,20 @@ class IntegerOpBuilder(val field: String, val op: (Int, Int) => Int) extends Fie
   }
 
   override def result(): String = current.getOrElse("").toString
+}
+
+class StringOpBuilder(val field: String, val op: (String, String) => String) extends FieldBasedAggregateOp {
+
+  private var current: Option[String] = None
+
+  override def add(v: String) = {
+    current = current match {
+      case Some(c) => Some(op(v, c))
+      case None => Some(v)
+    }
+  }
+
+  override def result(): String = current.getOrElse("")
 }
 
 class AverageBuilder(val field: String) extends FieldBasedAggregateOp {

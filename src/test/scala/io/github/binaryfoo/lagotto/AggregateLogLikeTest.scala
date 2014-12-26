@@ -44,6 +44,19 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
     aggregateToCsv(threeStans, "mti", "group_concat(11)") shouldBe List("0200,1,2", "0210,3")
   }
 
+  private val twoStrings = Stream(
+    LogEntry("48" -> "a"),
+    LogEntry("48" -> "b"))
+
+
+  it should "support minStr(field)" in {
+    aggregateToCsv(twoStrings, "minStr(48)") shouldBe List("a")
+  }
+
+  it should "support maxStr(field)" in {
+    aggregateToCsv(twoStrings, "maxStr(48)") shouldBe List("b")
+  }
+
   it should "not pull from the stream if no aggregation is required" in {
     val stream = Stream.cons(LogEntry("0" -> "head"), throw new IllegalArgumentException("tail should not be called"))
     val unaltered = AggregateLogLike.aggregate(stream.toIterator, Seq("mti"))
