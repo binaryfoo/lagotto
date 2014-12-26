@@ -1,9 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{ByteArrayOutputStream, PrintStream}
-
 import io.github.binaryfoo.lagotto.LogLike
-import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
 
@@ -93,8 +90,8 @@ class AsciiTableFormat extends TableFormatter {
   }
 
   private def maximumWidths(): Seq[Int] = {
-    val zeroes = Seq.fill(rows.length)(0)
-    rows.foldLeft(zeroes) { (maxes, row) =>
+    val zeroes = Seq.fill(fields.length)(0)
+    (fields :: rows.toList).foldLeft(zeroes) { (maxes, row) =>
       row.map(_.length).zip(maxes).map { case (w, max) => math.max(w, max)}
     }
   }

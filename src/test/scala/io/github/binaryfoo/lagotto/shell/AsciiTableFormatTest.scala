@@ -15,11 +15,25 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
     sink.row(fields, LogEntry("one" -> "v1 r2", "two" -> "v2 r2"))
 
     sink.footer().get shouldBe """===================
-                            || one   | two     |
-                            |===================
-                            || v1    | long v2 |
-                            || v1 r2 | v2 r2   |
-                            |===================
-                            |""".stripMargin
+                                 || one   | two     |
+                                 |===================
+                                 || v1    | long v2 |
+                                 || v1 r2 | v2 r2   |
+                                 |===================
+                                 |""".stripMargin
+  }
+
+  it should "handle a field name longer than the value" in {
+    val sink = new AsciiTableFormat()
+    val fields = Seq("one", "quite long really")
+    sink.header(fields)
+    sink.row(fields, LogEntry("one" -> "v1", "quite long really" -> "v2"))
+
+    sink.footer().get shouldBe """===========================
+                                 || one | quite long really |
+                                 |===========================
+                                 || v1  | v2                |
+                                 |===========================
+                                 |""".stripMargin
   }
 }
