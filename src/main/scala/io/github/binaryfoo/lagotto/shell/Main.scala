@@ -21,6 +21,14 @@ object Main extends App {
     } else if (config.histogramFields.size > 1) {
       val fields = config.histogramFields.toList
       new MultipleHistogramSink(fields.dropRight(1), fields.last)
+    } else if (config.gnuplotFileName.isDefined) {
+      val baseName = config.gnuplotFileName.get
+      val csvFileName = baseName + ".csv"
+      val gpFileName = baseName + ".gp"
+      val fields = config.format match {
+        case Tabular(f, _) => f
+      }
+      new CompositeSink(Seq(new FileSink(config.format, true, csvFileName), new GnuplotSink(fields, csvFileName, gpFileName)))
     } else {
       new IncrementalSink(config.format, config.header)
     }

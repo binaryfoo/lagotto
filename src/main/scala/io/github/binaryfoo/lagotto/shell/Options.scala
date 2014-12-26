@@ -81,6 +81,10 @@ object Options {
         c.copy(sortBy = field, sortDescending = true)
       } text "Sort output descending by field. Prevents incremental output"
 
+      opt[String]("gnuplot") action {(fileName,c) =>
+        c.copy(gnuplotFileName = Some(fileName))
+      } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --tsv."
+
       opt[Unit]("strict") action {(_,c) =>
         c.copy(strict = true)
       } text "Fail on rubbish input instead the default of continuing to read"

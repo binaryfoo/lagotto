@@ -1,8 +1,9 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{FileOutputStream, PrintStream}
+import java.io.{FileWriter, FileOutputStream, PrintStream}
 
 import io.github.binaryfoo.lagotto.LogLike
+import io.github.binaryfoo.lagotto.gnuplot.GnuplotScriptAuthor
 import org.HdrHistogram.Histogram
 import scala.collection.mutable
 
@@ -23,6 +24,51 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) exte
   override def entry(e: LogLike) = println(format(e))
 
   override def finish() = format.footer().foreach(println(_))
+
+}
+
+class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileName: String) extends Sink {
+
+  val out = new PrintStream(new FileOutputStream(fileName))
+
+  override def start() = {
+    if (includeHeader) {
+      format.header().foreach(out.println)
+    }
+  }
+
+  override def entry(e: LogLike) = out.println(format(e))
+
+  override def finish() = {
+    format.footer().foreach(out.println)
+    out.close()
+    println(s"Wrote $fileName")
+  }
+
+}
+
+class GnuplotSink(val fields: Seq[String], val tsvfileName: String, val gpFileName: String) extends Sink {
+
+  override def start() = {}
+
+  override def entry(e: LogLike) = {}
+
+  override def finish() = {
+    val writer = new FileWriter(gpFileName)
+    writer.write(GnuplotScriptAuthor.write(fields, tsvfileName))
+    writer.close()
+    println(s"Wrote $gpFileName")
+  }
+
+}
+
+class CompositeSink(val sinks: Seq[Sink]) extends Sink {
+
+  override def start() = sinks.foreach(_.start())
+
+  override def entry(e: LogLike) = sinks.foreach(_.entry(e))
+
+  override def finish() = sinks.foreach(_.finish())
 
 }
 
