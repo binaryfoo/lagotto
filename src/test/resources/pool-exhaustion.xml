@@ -1,0 +1,14 @@
+<log realm="some.server" at="Wed Dec 10 02:19:20 EST 2012.971">
+    <warn>
+        pool exhausted [SSL: ServerSocket[addr=0.0.0.0/0.0.0.0,port=0,localport=443]]
+        <thread-pool name="ThreadPool-1">
+            <jobs>12413</jobs>
+            <size>10000</size>
+            <max>10000</max>
+            <active>10000</active>
+            <idle>0</idle>
+            <active>10000</active>
+            <pending>0</pending>
+        </thread-pool>
+    </warn>
+</log>

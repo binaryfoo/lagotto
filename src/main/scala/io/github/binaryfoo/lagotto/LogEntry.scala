@@ -24,6 +24,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case "file" if source != null => source.toString
     case "line" if source != null => source.line.toString
     case LogEntry.TimeInFormat(format) => timestampAs(format)
+    case LogEntry.XPathAccess(path) => xpath(path)
     case LogEntry.RegexReplacement(field, regex, replacement) =>
       val raw = this(field)
       if (raw != null) raw.replaceAll(regex, replacement) else null
@@ -50,6 +51,8 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case "HH:m0" => timestamp.toString("HH:mm").substring(0, 4) + "0"
     case _ => timestamp.toString(format)
   }
+
+  def xpath(path: String): String = XPathEval(lines, path)
 
   /**
    * The 'realm' attribute disassembled into parts.
@@ -246,6 +249,7 @@ object LogEntry {
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
   val TimeInFormat = """time\((.*)\)""".r
+  val XPathAccess = """xpath\((.+)\)""".r
   val RegexReplacement = """([^(]+)\(/(.+)/(.*)/\)""".r
 }
 
