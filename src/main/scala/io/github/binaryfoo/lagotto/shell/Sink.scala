@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{FileWriter, FileOutputStream, PrintStream}
+import java.io.{File, FileWriter, FileOutputStream, PrintStream}
 
 import io.github.binaryfoo.lagotto.LogLike
 import io.github.binaryfoo.lagotto.gnuplot.GnuplotScriptAuthor
@@ -47,17 +47,29 @@ class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileNam
 
 }
 
-class GnuplotSink(val fields: Seq[String], val tsvfileName: String, val gpFileName: String) extends Sink {
+class GnuplotSink(val fields: Seq[String], val csvfileName: String, val gpFileName: String, val baseName: String) extends Sink {
 
+  var xRange = ("", "")
+  
   override def start() = {}
 
-  override def entry(e: LogLike) = {}
+  override def entry(e: LogLike) = {
+    val time = e(fields.head)
+    if (time != null) {
+      xRange = xRange match {
+        case ("", _) => (time, time)
+        case (start, _) => (start, time)
+      }
+    }
+  }
 
   override def finish() = {
-    val writer = new FileWriter(gpFileName)
-    writer.write(GnuplotScriptAuthor.write(fields, tsvfileName))
+    val file = new File(gpFileName)
+    val writer = new FileWriter(file)
+    writer.write(GnuplotScriptAuthor.write(fields, csvfileName, baseName, xRange))
     writer.close()
     println(s"Wrote $gpFileName")
+    file.setExecutable(true)
   }
 
 }

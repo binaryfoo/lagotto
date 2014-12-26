@@ -28,7 +28,9 @@ object Main extends App {
       val fields = config.format match {
         case Tabular(f, _) => f
       }
-      new CompositeSink(Seq(new FileSink(config.format, true, csvFileName), new GnuplotSink(fields, csvFileName, gpFileName)))
+      val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
+      val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
+      new CompositeSink(Seq(dataFile, gnuplotScript))
     } else {
       new IncrementalSink(config.format, config.header)
     }
