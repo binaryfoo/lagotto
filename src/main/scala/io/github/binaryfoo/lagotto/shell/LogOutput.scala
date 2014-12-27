@@ -63,36 +63,87 @@ class AsciiTableFormat extends TableFormatter {
   }
 
   override def footer(): Option[String] = {
-    val b = new TableBuilder(maximumWidths())
-
-    b.addRow(fields)
-    b.addBar()
-    rows.foreach(b.addRow)
-    b.addBar()
-
-    Some(b.toString())
-  }
-
-  class TableBuilder(val widths: Seq[Int]) {
-    val totalWidth = widths.map(_ + 2).sum + widths.size + 1
-    val bar = "=" * totalWidth + "\n"
-    val b = new StringBuilder(totalWidth * (rows.size + 4), bar)
-
-    def addBar() = b.append(bar)
-    def addRow(row: Seq[String]) = {
-      val padded = row.zip(widths).map { case (v, width) =>
-        v + " " * (width - v.length)
-      }
-      padded.addString(b, "| ", " | ", " |\n")
-    }
-
-    override def toString: String = b.toString()
+    Some(new AsciiTable(maximumWidths(), rows.size)
+      .addHeader(fields)
+      .addRows(rows)
+      .addFooter()
+      .toString())
   }
 
   private def maximumWidths(): Seq[Int] = {
     val zeroes = Seq.fill(fields.length)(0)
-    (fields :: rows.toList).foldLeft(zeroes) { (maxes, row) =>
-      row.map(_.length).zip(maxes).map { case (w, max) => math.max(w, max)}
+    val headerAndRows = fields :: rows.toList
+    headerAndRows.foldLeft(zeroes) { (maxes, row) => AsciiTable.reviseColumnWidths(row, maxes) }
+  }
+}
+
+/**
+ * Spits out each row as it's processed. Makes columns wider if required.
+ * Not as neat but provides incremental output.
+ */
+class IncrementalAsciiTableFormat extends TableFormatter {
+
+  var columnWidths: Seq[Int] = null
+
+  override def header(fields: Seq[String]): Option[String] = {
+    columnWidths = AsciiTable.reviseColumnWidths(fields, Seq.fill(fields.length)(0))
+    Some(new AsciiTable(columnWidths).addHeader(fields).toIncrementalString)
+  }
+
+  override def row(fields: Seq[String], e: LogLike): Option[String] = {
+    val row = e.toSeq(fields)
+    columnWidths = AsciiTable.reviseColumnWidths(row, columnWidths)
+    Some(new AsciiTable(columnWidths).addRow(row).toIncrementalString)
+  }
+
+  override def footer(): Option[String] = {
+    Some(new AsciiTable(columnWidths).addFooter().toIncrementalString)
+  }
+
+}
+
+class AsciiTable(val columnWidths: Seq[Int], val rowCount: Int = 0) {
+  
+  val totalWidth = columnWidths.map(_ + 2).sum + columnWidths.size + 1
+  val bar = "=" * totalWidth + "\n"
+  val b = new StringBuilder(totalWidth * (rowCount + 4))
+
+  def addHeader(fields: Seq[String]): this.type = {
+    addBar()
+    addRow(fields)
+    addBar()
+    this
+  }
+
+  def addRows(rows: mutable.Traversable[Seq[String]]): this.type = {
+    rows.foreach(addRow)
+    this
+  }
+
+  def addRow(row: Seq[String]): this.type  = {
+    val padded = row.zip(columnWidths).map { case (v, width) =>
+      v + " " * (width - v.length)
     }
+    padded.addString(b, "| ", " | ", " |\n")
+    this
+  }
+
+  def addFooter(): this.type = {
+    addBar()
+    this
+  }
+
+  def addBar() = b.append(bar)
+
+  override def toString: String = b.toString()
+  def toIncrementalString: String = {
+    if (b.last == '\n') b.deleteCharAt(b.length - 1)
+    b.toString()
+  }
+}
+
+object AsciiTable {
+  def reviseColumnWidths(row: Seq[String], currentWidths: Seq[Int]): Seq[Int] = {
+    row.map(_.length).zip(currentWidths).map { case (w, max) => math.max(w, max)}
   }
 }

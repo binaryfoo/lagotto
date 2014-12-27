@@ -49,6 +49,10 @@ object Options {
         c.copy(format = Tabular(fields.split(","), new AsciiTableFormat()))
       } text "Output an ASCII table"
 
+      opt[String]("live-ascii") action { (fields, c) =>
+        c.copy(format = Tabular(fields.split(","), new IncrementalAsciiTableFormat()))
+      } text "Output an ASCII table incrementally. Can be messy."
+
       opt[String]("histogram") action { (fields, c) =>
         c.copy(histogramFields = fields.split(","))
       } text "Output a histogram"

@@ -8,13 +8,13 @@ import org.scalatest.{Matchers, FlatSpec}
 class AsciiTableFormatTest extends FlatSpec with Matchers {
 
   "Ascii table format" should "make a table" in {
-    val sink = new AsciiTableFormat()
+    val format = new AsciiTableFormat()
     val fields = Seq("one", "two")
-    sink.header(fields)
-    sink.row(fields, LogEntry("one" -> "v1", "two" -> "long v2"))
-    sink.row(fields, LogEntry("one" -> "v1 r2", "two" -> "v2 r2"))
+    format.header(fields)
+    format.row(fields, LogEntry("one" -> "v1", "two" -> "long v2"))
+    format.row(fields, LogEntry("one" -> "v1 r2", "two" -> "v2 r2"))
 
-    sink.footer().get shouldBe """===================
+    format.footer().get shouldBe """===================
                                  || one   | two     |
                                  |===================
                                  || v1    | long v2 |
@@ -24,16 +24,33 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
   }
 
   it should "handle a field name longer than the value" in {
-    val sink = new AsciiTableFormat()
+    val format = new AsciiTableFormat()
     val fields = Seq("one", "quite long really")
-    sink.header(fields)
-    sink.row(fields, LogEntry("one" -> "v1", "quite long really" -> "v2"))
+    format.header(fields)
+    format.row(fields, LogEntry("one" -> "v1", "quite long really" -> "v2"))
 
-    sink.footer().get shouldBe """===========================
+    format.footer().get shouldBe """===========================
                                  || one | quite long really |
                                  |===========================
                                  || v1  | v2                |
                                  |===========================
                                  |""".stripMargin
+  }
+
+  "Incremental ascii table" should "spit out rows as they're added" in {
+    val format = new IncrementalAsciiTableFormat()
+    val fields = Seq("one", "two")
+
+    val head = format.header(fields).get
+    val row1 = format.row(fields, LogEntry("one" -> "v1", "two" -> "fatter")).get
+    val row2 = format.row(fields, LogEntry("one" -> "fatter", "two" -> "v2")).get
+    val foot = format.footer().get
+
+    head shouldBe """=============
+                    || one | two |
+                    |=============""".stripMargin
+    row1 shouldBe   "| v1  | fatter |"
+    row2 shouldBe   "| fatter | v2     |"
+    foot shouldBe   "==================="
   }
 }
