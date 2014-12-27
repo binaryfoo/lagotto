@@ -26,11 +26,7 @@ object Options {
       } text "Exclude messages containing text"
 
       opt[FieldFilter]('f', "field") unbounded() action { case (filter, c) =>
-        if (filter.field == "delay") {
-          c.copy(secondStageFilters = c.secondStageFilters :+ filter)
-        } else {
           c.copy(filters = c.filters :+ filter)
-        }
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
 
       opt[String]('t', "tsv") action { (fields, c) =>

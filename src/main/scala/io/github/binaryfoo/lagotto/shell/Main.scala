@@ -39,29 +39,52 @@ object Main extends App {
   }
 }
 
+case class SortOrder(afterGrouping: Option[String] = None, beforeGrouping: Option[String] = None)
+
+case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Seq(), paired: Seq[LogFilter] = Seq())
+
 class Pipeline(val config: Config) {
 
   def apply(): Stream[LogLike] = {
-    val (postAggregationSortKey, preAggregationSortKey) = config.sortBy.map {
-      case key @ AggregateOp(_) => (Some(key),None)
-      case "delay" => (Some("delay"),None)
-      case k => (None,Some(k))
-    }.getOrElse((None,None))
+    val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
+    val filters = partitionFilters()
     // Need to understand if this insane nesting can be removed without introducing a memory leak.
     // ie pinning the whole Stream in memory.
     // I suspect not. Maybe Stream ain't a good idea.
     sort(
-      applyAggregation(
-        filter(
-          addDelays(
-            sort(
-              filter(
-                pair(read()).toIterator,
-                config.filters),
-              preAggregationSortKey, config.sortDescending)
-          ).toIterator,
-          config.secondStageFilters).toIterator),
+      filter(
+        applyAggregation(
+          filter(
+            addDelays(
+              sort(
+                filter(
+                  pair(read()).toIterator,
+                  filters.paired),
+                preAggregationSortKey, config.sortDescending)
+            ).toIterator,
+            filters.delay).toIterator).toIterator,
+        filters.aggregate
+      ),
       postAggregationSortKey, config.sortDescending)
+  }
+
+  def partitionSortKey(): SortOrder = {
+    config.sortBy.map {
+      case key@AggregateOp(_) => SortOrder(afterGrouping = Some(key))
+      case "delay" => SortOrder(afterGrouping = Some("delay"))
+      case k => SortOrder(beforeGrouping = Some(k))
+    }.getOrElse(SortOrder())
+  }
+  
+  def partitionFilters(): Filters = {
+    val aggregate = config.filters.collect {
+      case f@FieldFilterOn(AggregateOp(_)) => f
+    }
+    val delay = config.filters.collect {
+      case f@FieldFilterOn("delay") => f
+    }
+    val paired = config.filters.diff(aggregate ++ delay)
+    Filters(aggregate, delay, paired)
   }
 
   private def read() = {

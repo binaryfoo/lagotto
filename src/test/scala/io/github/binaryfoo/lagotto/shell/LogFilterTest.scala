@@ -1,14 +1,13 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.{LogFilter, LogEntry}
+import io.github.binaryfoo.lagotto.{AggregateLogLike, LogEntry}
+import io.github.binaryfoo.lagotto.LogFilter.filterFor
 import org.scalatest.{Matchers, FlatSpec}
 
 class LogFilterTest extends FlatSpec with Matchers {
 
   "Contains operator" should "use a regex if value like /regex/" in {
-    val filter = """mti~/\d\d[13]\d/""" match {
-      case LogFilter(f) => f
-    }
+    val filter = filterFor("""mti~/\d\d[13]\d/""")
     filter(LogEntry("0" -> "0210")) shouldBe true
     filter(LogEntry("0" -> "0200")) shouldBe false
     filter(LogEntry("0" -> "0230")) shouldBe true
@@ -17,9 +16,8 @@ class LogFilterTest extends FlatSpec with Matchers {
   }
 
   it should "negate the regex for value like /regex/ with operator !~" in {
-    val filter = """mti!~/\d\d[13]\d/""" match {
-      case LogFilter(f) => f
-    }
+    val filter = filterFor("""mti!~/\d\d[13]\d/""")
+    filter.field shouldBe "mti"
     filter(LogEntry("0" -> "0210")) shouldBe false
     filter(LogEntry("0" -> "0200")) shouldBe true
     filter(LogEntry("0" -> "0230")) shouldBe false
@@ -27,10 +25,31 @@ class LogFilterTest extends FlatSpec with Matchers {
     filter(LogEntry("0" -> "023")) shouldBe true
   }
 
-  "Regex contains operator" should "not match null" in {
-    val filter = """mti!~/3.*/""" match {
-      case LogFilter(f) => f
-    }
+  "Equals operator" should "allow comparison with empty string" in {
+    val filter = filterFor("exception!=")
+    filter.field shouldBe "exception"
+    filter(LogEntry("exception" -> "oh my")) shouldBe true
+    filter(LogEntry("exception" -> "")) shouldBe false
     filter(LogEntry()) shouldBe false
+  }
+
+  "Regex contains operator" should "not match null" in {
+    val filter = filterFor("""mti!~/3.*/""")
+    filter(LogEntry()) shouldBe false
+  }
+
+  "Greater than operator" should "be applicable to the result of count(condition)" in {
+    val filter = filterFor("count(mti=0200)>10")
+    filter.field shouldBe "count(mti=0200)"
+    filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "10"))) shouldBe true
+    filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "9"))) shouldBe false
+  }
+
+  "Regex operator" should "be applicable to the result of count(condition)" in {
+    val filter = filterFor("count(mti=0200)~/1[01]1/")
+    filter.field shouldBe "count(mti=0200)"
+    filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "101"))) shouldBe true
+    filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "111"))) shouldBe true
+    filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "191"))) shouldBe false
   }
 }

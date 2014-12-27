@@ -10,18 +10,25 @@ trait FieldFilter extends LogFilter {
   def field: String
 }
 
+object FieldFilterOn {
+  def unapply(f: FieldFilter): Option[String] = Some(f.field)
+}
+
 case class GrepFilter(pattern: String) extends LogFilter {
   override def apply(entry: LogLike): Boolean = entry.lines.contains(pattern)
+  override def toString(): String = s"grep($pattern)"
 }
 
 case class NegativeGrepFilter(pattern: String) extends LogFilter {
   override def apply(entry: LogLike): Boolean = !entry.lines.contains(pattern)
+  override def toString(): String = s"grep!($pattern)"
 }
 
-case class FieldOpFilter(field: String, desired: String, op: LogFilter.MatchOp) extends FieldFilter {
+case class FieldOpFilter(field: String, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
     op(entry(field), desired)
   }
+  override def toString(): String = s"$field$operatorSymbol$desired"
 }
 
 case class RegexFilter(field: String, pattern: Regex, positive: Boolean = true) extends FieldFilter {
@@ -29,13 +36,17 @@ case class RegexFilter(field: String, pattern: Regex, positive: Boolean = true) 
     val value = entry(field)
     value != null && pattern.findFirstMatchIn(value).isDefined == positive
   }
+  override def toString(): String = {
+    val negation = if (positive) "" else "!"
+    s"$field$negation~/$pattern/"
+  }
 }
 
 object LogFilter {
   type MatchOp = (String, String) => Boolean
 
-  val LogFilterPattern = "([^=><~!]+)(!?)([=><~])(.*)".r
-  val MatchAsRegexPattern = "([^=><~!]+)(!?)~/(.+)/".r
+  val LogFilterPattern = "(.+?)(!?)([=><~])([^=><~!]*)".r
+  val MatchAsRegexPattern = "(.+?)(!?)~/(.+)/".r
 
   def unapply(s: String): Option[FieldFilter] = s match {
     case MatchAsRegexPattern(key, negation, pattern) => Some(RegexFilter(key, pattern.r, negation == ""))
@@ -47,12 +58,16 @@ object LogFilter {
         case "~" => deNull(_).toLowerCase contains _.toLowerCase
       }
       if (negation == "!") {
-        Some(FieldOpFilter(key, value, (a, b) => !op(a, b)))
+        Some(FieldOpFilter(key, value, negation + operator, (a, b) => !op(a, b)))
       } else {
-        Some(FieldOpFilter(key, value, op))
+        Some(FieldOpFilter(key, value, operator, op))
       }
     case _ =>
       None
+  }
+
+  def filterFor(expr: String) = expr match {
+    case LogFilter(f) => f
   }
 
   def deNull(s: String): String = if (s == null) "" else s

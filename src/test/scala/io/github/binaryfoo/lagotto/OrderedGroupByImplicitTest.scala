@@ -1,7 +1,6 @@
 package io.github.binaryfoo.lagotto
 
 import org.scalatest.{Matchers, FlatSpec}
-import io.github.binaryfoo.lagotto.OrderedGroupBy
 
 class OrderedGroupByImplicitTest extends FlatSpec with Matchers {
 

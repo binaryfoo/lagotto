@@ -38,8 +38,13 @@
 * Other input log formats: log4j, httpd
 * Allow --field for aggregate fields same as --sort
 
+Politeness:
+* Warn if sorting lots of rows: gonna die due to GC
+* Warn about typos like count(exception)
+
 Bugs:
  * Calculate delays if referenced in --field but not in -t
+ * Same for something like count(time(mm:ss)=00:03)>N (aggregates)
 
 * Deploy artifact to maven central with fat .jar attachment
 * Codeship.io free account

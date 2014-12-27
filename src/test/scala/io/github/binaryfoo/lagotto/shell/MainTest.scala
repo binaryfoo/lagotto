@@ -66,6 +66,20 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  it should "filter on group count with --field count>N" in {
+    val output = run("--csv", "time(mm:ss),count", "--field", "count>2", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),count
+                          |00:04,3
+                          |""".stripMargin
+  }
+
+  it should "filter on group count(condition) with --field count>N" in {
+    val output = run("--csv", "time(mm:ss),count(time(mm:ss)=00:03)", "--field", "count(time(mm:ss)=00:03)>1", "src/test/resources/a-bunch.xml")
+    output shouldEqual """time(mm:ss),count(time(mm:ss)=00:03)
+                          |00:03,1
+                          |""".stripMargin
+  }
+
   it should "count only if condition is true for count(39=01) in --csv option" in {
     val output = run("--csv", "time(mm:ss),count(39=01),count(39=00)", "src/test/resources/a-bunch.xml")
     output shouldEqual """time(mm:ss),count(39=01),count(39=00)

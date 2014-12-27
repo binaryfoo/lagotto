@@ -113,6 +113,8 @@ class CountBuilder extends AggregateOp {
   }
   
   override def result(): String = count.toString
+
+  override def toString: String = s"count{count=$count}"
 }
 
 class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
@@ -127,6 +129,8 @@ class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
   }
   
   override def result(): String = count.toString
+
+  override def toString: String = s"count(if($condition)){count=$count}"
 }
 
 class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
@@ -137,6 +141,7 @@ class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
 
   override def result(): String = distinctValues.size.toString
 
+  override def toString: String = s"count(distinct($field)){count=${distinctValues.size}}"
 }
 
 class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
@@ -147,6 +152,7 @@ class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
 
   override def result(): String = values.mkString(",")
 
+  override def toString: String = s"group_concat($field){values=$values}"
 }
 
 class IntegerOpBuilder(val field: String, val op: (Int, Int) => Int) extends FieldBasedAggregateOp {
@@ -161,6 +167,8 @@ class IntegerOpBuilder(val field: String, val op: (Int, Int) => Int) extends Fie
   }
 
   override def result(): String = current.getOrElse("").toString
+
+  override def toString: String = s"integerOp($field){current=$current}"
 }
 
 class StringOpBuilder(val field: String, val op: (String, String) => String) extends FieldBasedAggregateOp {
@@ -175,6 +183,8 @@ class StringOpBuilder(val field: String, val op: (String, String) => String) ext
   }
 
   override def result(): String = current.getOrElse("")
+
+  override def toString: String = s"stringOp($field){current=$current}"
 }
 
 class AverageBuilder(val field: String) extends FieldBasedAggregateOp {
@@ -188,6 +198,8 @@ class AverageBuilder(val field: String) extends FieldBasedAggregateOp {
   }
 
   override def result(): String = if (count == 0) "" else (sum / count).toString
+
+  override def toString: String = s"avg($field){sum=$sum,count=$count}"
 }
 
 /**
