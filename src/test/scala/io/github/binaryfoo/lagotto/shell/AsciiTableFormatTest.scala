@@ -11,8 +11,8 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
     val format = new AsciiTableFormat()
     val fields = Seq("one", "two")
     format.header(fields)
-    format.row(fields, LogEntry("one" -> "v1", "two" -> "long v2"))
-    format.row(fields, LogEntry("one" -> "v1 r2", "two" -> "v2 r2"))
+    format.row(Seq("v1", "long v2"))
+    format.row(Seq("v1 r2", "v2 r2"))
 
     format.footer().get shouldBe """===================
                                  || one   | two     |
@@ -27,7 +27,7 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
     val format = new AsciiTableFormat()
     val fields = Seq("one", "quite long really")
     format.header(fields)
-    format.row(fields, LogEntry("one" -> "v1", "quite long really" -> "v2"))
+    format.row(Seq("v1", "v2"))
 
     format.footer().get shouldBe """===========================
                                  || one | quite long really |
@@ -42,8 +42,8 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
     val fields = Seq("one", "two")
 
     val head = format.header(fields).get
-    val row1 = format.row(fields, LogEntry("one" -> "v1", "two" -> "fatter")).get
-    val row2 = format.row(fields, LogEntry("one" -> "fatter", "two" -> "v2")).get
+    val row1 = format.row(Seq("v1", "fatter")).get
+    val row2 = format.row(Seq("fatter", "v2")).get
     val foot = format.footer().get
 
     head shouldBe """=============

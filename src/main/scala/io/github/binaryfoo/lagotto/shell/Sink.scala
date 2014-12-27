@@ -14,6 +14,9 @@ trait Sink {
   def finish()
 }
 
+/**
+ * Write each log record to the console as it pops out of the pipeline.
+ */
 class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) extends Sink {
 
   override def start() = {
@@ -28,6 +31,9 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) exte
 
 }
 
+/**
+ * Write each log record to a file as it pops out of the pipeline.
+ */
 class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileName: String) extends Sink {
 
   val out = new PrintStream(new FileOutputStream(fileName))
@@ -48,7 +54,10 @@ class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileNam
 
 }
 
-class GnuplotSink(val fields: Seq[String], val csvfileName: String, val gpFileName: String, val baseName: String) extends Sink {
+/**
+ * Spit out two files: the data (.csv) and a script to plot the series in that file (.gp).
+ */
+class GnuplotSink(val fields: Seq[String], val csvFileName: String, val gpFileName: String, val baseName: String) extends Sink {
 
   var xRange = ("", "")
   
@@ -67,7 +76,7 @@ class GnuplotSink(val fields: Seq[String], val csvfileName: String, val gpFileNa
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptAuthor.write(fields, csvfileName, baseName, xRange))
+    writer.write(GnuplotScriptAuthor.write(fields, csvFileName, baseName, xRange))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)
@@ -85,6 +94,10 @@ class CompositeSink(val sinks: Seq[Sink]) extends Sink {
 
 }
 
+/**
+ * Write to the console an HDR histogram for the range of
+ * values produced by ''field''.
+ */
 class SingleHistogramSink(val field: String) extends Sink {
 
   private val histogram = new Histogram(3600000000000L, 3)
@@ -103,6 +116,10 @@ class SingleHistogramSink(val field: String) extends Sink {
 
 }
 
+/**
+ * Output an HDR histogram for each group. The group is identified by ''keyFields''. The histogram is for the range of
+ * values produced by ''field''. Each histogram is written to a file name ''prefix''.hgrm where prefix is the group identifier.
+ */
 class MultipleHistogramSink(val keyFields: Seq[String], val field: String) extends Sink {
 
   private val histograms = mutable.Map[String, Histogram]()

@@ -18,29 +18,29 @@ object FullText extends OutputFormat {
 
 case class Tabular(fields: Seq[String], tableFormatter: TableFormatter) extends OutputFormat {
   override def header(): Option[String] = tableFormatter.header(fields)
-  override def apply(e: LogLike): Option[String] = tableFormatter.row(fields, e)
+  override def apply(e: LogLike): Option[String] = tableFormatter.row(e.toSeq(fields))
   override def footer(): Option[String] = tableFormatter.footer()
 }
 
 trait TableFormatter {
   def header(fields: Seq[String]): Option[String]
-  def row(fields: Seq[String], e: LogLike): Option[String]
+  def row(row: Seq[String]): Option[String]
   def footer(): Option[String] = None
 }
 
 case class DelimitedTableFormat(delimiter: String) extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some(fields.mkString(delimiter))
-  override def row(fields: Seq[String], e: LogLike): Option[String] = Some(e.toSeq(fields).mkString(delimiter))
+  override def row(row: Seq[String]): Option[String] = Some(row.mkString(delimiter))
 }
 
 object JiraTableFormat extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some(fields.mkString("||", "||", "||"))
-  override def row(fields: Seq[String], e: LogLike): Option[String] = Some(e.toSeq(fields).mkString("|", "|", "|"))
+  override def row(row: Seq[String]): Option[String] = Some(row.mkString("|", "|", "|"))
 }
 
 object HtmlTableFormat extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some(fields.mkString("<table>\n<thead><tr><th>", "</th><th>", "</th></tr></thead>\n<tbody>"))
-  override def row(fields: Seq[String], e: LogLike): Option[String] = Some(e.toSeq(fields).mkString("<tr><td>", "</td><td>", "</td></tr>"))
+  override def row(row: Seq[String]): Option[String] = Some(row.mkString("<tr><td>", "</td><td>", "</td></tr>"))
   override def footer(): Option[String] = Some("</tbody>\n</table>")
 }
 
@@ -57,8 +57,8 @@ class AsciiTableFormat extends TableFormatter {
     None
   }
 
-  override def row(fields: Seq[String], e: LogLike): Option[String] = {
-    rows += e.toSeq(fields)
+  override def row(row: Seq[String]): Option[String] = {
+    rows += row
     None
   }
 
@@ -90,8 +90,7 @@ class IncrementalAsciiTableFormat extends TableFormatter {
     Some(new AsciiTable(columnWidths).addHeader(fields).toIncrementalString)
   }
 
-  override def row(fields: Seq[String], e: LogLike): Option[String] = {
-    val row = e.toSeq(fields)
+  override def row(row: Seq[String]): Option[String] = {
     columnWidths = AsciiTable.reviseColumnWidths(row, columnWidths)
     Some(new AsciiTable(columnWidths).addRow(row).toIncrementalString)
   }
