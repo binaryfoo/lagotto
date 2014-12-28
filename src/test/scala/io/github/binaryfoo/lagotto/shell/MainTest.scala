@@ -151,6 +151,13 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  "calc(a/b)" should "output ratio between counts of message types" in {
+    val output = run("--csv", "calc(count(mti=0200)/count)", testFile("a-bunch.xml"))
+    output shouldEqual """calc(count(mti=0200)/count)
+                          |0.5000
+                          |""".stripMargin
+  }
+
   "--field" should "allow calc(a-b)>N as a filter" in {
     val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--field", "calc(max(time(millis))-min(time(millis)))>101", testFile("a-bunch.xml"))
     output shouldEqual """mti,calc(max(time(millis))-min(time(millis)))

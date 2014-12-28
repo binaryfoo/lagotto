@@ -2,14 +2,14 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.Period
 
-import scala.collection.mutable.ListBuffer
-
 object LogFieldExpr {
   val SubtractOp = """calc\((.+)-(.+)\)""".r
+  val DivideOp = """calc\((.+)/(.+)\)""".r
 
   def unapply(expr: String): Option[GroundedFieldExpr] = {
     Some(expr match {
       case field@SubtractOp(LogFieldExpr(left), LogFieldExpr(right)) => SubtractTimeExpr(field, left, right)
+      case field@DivideOp(LogFieldExpr(left), LogFieldExpr(right)) => DivideExpr(field, left, right)
       case "delay" => DelayFieldExpr
       case field@AggregateOp(op) => AggregateFieldExpr(field, op)
       case s => DirectLogFieldExpr(s)
@@ -86,5 +86,14 @@ case class SubtractTimeExpr(field: String, left: GroundedFieldExpr, right: Groun
     case TimeFormatter(format) => format
   }
 
+  override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
+}
+
+case class DivideExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends GroundedFieldExpr with CanRequireAggregates {
+  def apply(e: LogLike): String = {
+    val leftNumber = left(e).toDouble
+    val rightNumber = right(e).toDouble
+    (leftNumber / rightNumber).formatted("%.4f")
+  }
   override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
 }
