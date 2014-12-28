@@ -39,7 +39,7 @@ object Main extends App {
   }
 }
 
-case class SortOrder(afterGrouping: Option[String] = None, beforeGrouping: Option[String] = None)
+case class SortOrder(afterGrouping: Option[GroundedFieldExpr] = None, beforeGrouping: Option[GroundedFieldExpr] = None)
 
 case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Seq(), paired: Seq[LogFilter] = Seq())
 
@@ -70,8 +70,9 @@ class Pipeline(val config: Config) {
 
   def partitionSortKey(): SortOrder = {
     config.sortBy.map {
-      case key@AggregateOp(_) => SortOrder(afterGrouping = Some(key))
-      case "delay" => SortOrder(afterGrouping = Some("delay"))
+      case key@AggregateFieldExpr(_,_) => SortOrder(afterGrouping = Some(key))
+      case key@SubtractTimeExpr(_, AggregateFieldExpr(_,_), AggregateFieldExpr(_,_)) => SortOrder(afterGrouping = Some(key))
+      case DelayFieldExpr => SortOrder(afterGrouping = Some(DelayFieldExpr))
       case k => SortOrder(beforeGrouping = Some(k))
     }.getOrElse(SortOrder())
   }
@@ -124,7 +125,7 @@ class Pipeline(val config: Config) {
   }
 
   // not always going to work in a bounded amount of memory
-  private def sort(v: Stream[LogLike], sortBy: Option[String], descending: Boolean): Stream[LogLike] = {
+  private def sort(v: Stream[LogLike], sortBy: Option[GroundedFieldExpr], descending: Boolean): Stream[LogLike] = {
     if (sortBy.isEmpty) {
       v
     } else {
@@ -132,9 +133,9 @@ class Pipeline(val config: Config) {
       // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
       // Options: could try to guess from they name of the key or write an Ordering[Any]?
       if (descending) {
-        Try(v.sortBy(_(key).toInt).reverse).getOrElse(v.sortBy(_(key)).reverse)
+        Try(v.sortBy(key(_).toInt).reverse).getOrElse(v.sortBy(key(_)).reverse)
       } else {
-        Try(v.sortBy(_(key).toInt)).getOrElse(v.sortBy(_(key)))
+        Try(v.sortBy(key(_).toInt)).getOrElse(v.sortBy(key(_)))
       }
     }
   }

@@ -36,9 +36,7 @@
  - percent()
 * Graceful error reporting...
 * Other input log formats: log4j, httpd
-* Allow --field for aggregate fields same as --sort
 * calc(timestamp-lifespan)
-* Allow --sortBy calc(maxStr(time)-minStr(time))
 * Allow aggregation like min(calc(timestamp-lifespan))
 * Rename --field to --filter
 

@@ -158,7 +158,7 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
-  it should "leave out the header with --no-header option" in {
+  "--no-header" should "leave out the header" in {
     val output = run("--no-header", "--csv", "time,mti,11", testFile("basic.xml"))
     output shouldEqual """00:00:03.292,0800,28928
                          |13:10:55.000,,
@@ -181,7 +181,7 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
-  it should "produce pair entries with --pair option" in {
+  "--pair" should "produce pair entries" in {
     val output = run("--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     // output ends up in ordered by response received time...
     output shouldEqual """time,mti,11,rtt
@@ -190,7 +190,7 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
-  it should "sort by --sort option" in {
+  "--sort" should "sort by the chosen field" in {
     val output = run("--sort", "time", "--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,rtt
                          |00:00:03.292,0200,1,1700
@@ -198,11 +198,27 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
-  it should "reverse sort with --sort-desc option" in {
+  it should "allow calc(a-b)>N as a sort" in {
+    val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--sort", "calc(max(time(millis))-min(time(millis)))", testFile("a-bunch.xml"))
+    output shouldEqual """mti,calc(max(time(millis))-min(time(millis)))
+                         |0210,100
+                         |0200,1000
+                         |""".stripMargin
+  }
+
+  "--sort-desc" should "reverse sort order" in {
     val output = run("--sort-desc", "11", "--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,rtt
                          |00:00:04.292,0200,2,600
                          |00:00:03.292,0200,1,1700
+                         |""".stripMargin
+  }
+
+  it should "allow calc(a-b)>N as a reversed sort" in {
+    val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--sort-desc", "calc(max(time(millis))-min(time(millis)))", testFile("a-bunch.xml"))
+    output shouldEqual """mti,calc(max(time(millis))-min(time(millis)))
+                         |0200,1000
+                         |0210,100
                          |""".stripMargin
   }
 
