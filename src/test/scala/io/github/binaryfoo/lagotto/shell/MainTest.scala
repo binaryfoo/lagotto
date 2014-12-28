@@ -151,6 +151,13 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  "--field" should "allow calc(a-b)>N as a filter" in {
+    val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--field", "calc(max(time(millis))-min(time(millis)))>101", testFile("a-bunch.xml"))
+    output shouldEqual """mti,calc(max(time(millis))-min(time(millis)))
+                         |0200,1000
+                         |""".stripMargin
+  }
+
   it should "leave out the header with --no-header option" in {
     val output = run("--no-header", "--csv", "time,mti,11", testFile("basic.xml"))
     output shouldEqual """00:00:03.292,0800,28928

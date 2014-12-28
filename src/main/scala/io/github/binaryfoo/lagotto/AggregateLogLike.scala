@@ -67,19 +67,28 @@ object AggregateLogLike {
    * @param outputFields The set of fields that will be output.
    * @return The original stream s or a Stream[AggregateLogLike].
    */
-  def aggregate(s: Iterator[LogLike], outputFields: Seq[String]): Stream[LogLike] = {
-    val aggregateFields = outputFields.filter(AggregateOp.operationFor(_).isDefined).toSet
+  def aggregate(s: Iterator[LogLike], outputFields: Seq[GroundedFieldExpr]): Stream[LogLike] = {
+    val (aggregateFields, keyFields) = outputFields.partition {
+      case AggregateFieldExpr(_, _) => true
+      case SubtractTimeExpr(_, AggregateFieldExpr(_, _), AggregateFieldExpr(_, _)) => true
+      case _ => false
+    }
     if (aggregateFields.isEmpty) {
       s.toStream
     } else {
-      val keyFields = outputFields.filterNot(aggregateFields)
       def keyFor(e: LogLike): Seq[(String, String)] = {
         for {
           k <- keyFields
-        } yield (k, e(k))
+        } yield (k.field, k(e))
       }
       def newBuilder(k: Seq[(String, String)]) = {
-        val aggregates = outputFields.flatMap(field => AggregateOp.operationFor(field).map(op => (field, op)))
+        val aggregates = aggregateFields.flatMap {
+          // TODO remove whackness of calling AggregateOp.operationFor() by making the Builder used by OrderedGroupBy immutable
+          case SubtractTimeExpr(_, AggregateFieldExpr(left, _), AggregateFieldExpr(right, _)) =>
+            Seq((left, AggregateOp.operationFor(left).get), (right, AggregateOp.operationFor(right).get))
+          case AggregateFieldExpr(field, _) =>
+            Seq((field, AggregateOp.operationFor(field).get))
+        }
         new AggregateLogLikeBuilder(k.toMap, aggregates)
       }
       OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
@@ -155,14 +164,14 @@ class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
   override def toString: String = s"group_concat($field){values=$values}"
 }
 
-class IntegerOpBuilder(val field: String, val op: (Int, Int) => Int) extends FieldBasedAggregateOp {
+class IntegerOpBuilder(val field: String, val op: (Long, Long) => Long) extends FieldBasedAggregateOp {
 
-  private var current: Option[Int] = None
+  private var current: Option[Long] = None
 
   override def add(v: String) = {
     current = current match {
-      case Some(c) => Some(op(v.toInt, c))
-      case None => Some(v.toInt)
+      case Some(c) => Some(op(v.toLong, c))
+      case None => Some(v.toLong)
     }
   }
 

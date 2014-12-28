@@ -59,17 +59,17 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
 
   it should "not pull from the stream if no aggregation is required" in {
     val stream = Stream.cons(LogEntry("0" -> "head"), throw new IllegalArgumentException("tail should not be called"))
-    val unaltered = AggregateLogLike.aggregate(stream.toIterator, Seq("mti"))
+    val unaltered = AggregateLogLike.aggregate(stream.toIterator, Seq("mti").flatMap(LogFieldExpr.unapply))
     unaltered shouldEqual stream
   }
 
   private def aggregate(field: String): List[String] = {
-    val aggregated = AggregateLogLike.aggregate(twoLifespans.toIterator, Seq(field))
+    val aggregated = AggregateLogLike.aggregate(twoLifespans.toIterator, Seq(field).flatMap(LogFieldExpr.unapply))
     aggregated.map(_(field)).toList
   }
 
   private def aggregateToCsv(raw: Stream[LogLike], fields: String*): List[String] = {
-    val aggregated = AggregateLogLike.aggregate(raw.toIterator, fields)
+    val aggregated = AggregateLogLike.aggregate(raw.toIterator, fields.flatMap(LogFieldExpr.unapply))
     aggregated.map(_.toCsv(fields)).toList
   }
 }

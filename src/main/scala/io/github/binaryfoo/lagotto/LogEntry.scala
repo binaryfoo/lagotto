@@ -43,7 +43,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
    * @param pattern
    * @return Timestamp as string
    */
-  def timestampAs(pattern: String): String = new TimeFormatter(pattern).print(timestamp)
+  def timestampAs(pattern: String): String = new HumanTimeFormatter(pattern).print(timestamp)
 
   def xpath(path: String): String = XPathEval(lines, path)
 

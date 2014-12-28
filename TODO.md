@@ -39,8 +39,8 @@
 * Allow --field for aggregate fields same as --sort
 * calc(timestamp-lifespan)
 * Allow --sortBy calc(maxStr(time)-minStr(time))
-* Allow --field calc(maxStr(time)-minStr(time))>N
 * Allow aggregation like min(calc(timestamp-lifespan))
+* Rename --field to --filter
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
@@ -65,6 +65,7 @@ Bugs:
  - time with format - Eg {HH:mm} plus HH:m0 and HH:mm:s0
  - regex mode is partial match by default (link to javadoc)
  - field(/regex/$1/)
+ - can filter on calc() expressions like calc(maxStr(time)-minStr(time))>N
 
 use cases:
 * rtt per outgoing link

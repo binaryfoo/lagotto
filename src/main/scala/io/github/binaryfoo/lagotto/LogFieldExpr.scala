@@ -7,28 +7,48 @@ object LogFieldExpr {
 
   def unapply(expr: String): Option[GroundedFieldExpr] = {
     Some(expr match {
-      case SubtractOp(left, right) => SubtractTimeExpr(left, right)
+      case field@SubtractOp(LogFieldExpr(left), LogFieldExpr(right)) => SubtractTimeExpr(field, left, right)
+      case "delay" => DelayFieldExpr
+      case field@AggregateOp(op) => AggregateFieldExpr(field, op)
       case s => DirectLogFieldExpr(s)
     })
   }
 }
 
 trait GroundedFieldExpr extends LogFieldExpr {
-  def fields: Seq[String]
+  def field: String
+  override def toString(): String = field
 }
 
 case class DirectLogFieldExpr(field: String) extends GroundedFieldExpr {
   def apply(e: LogLike): String = e(field)
-  override def toString(): String = field
-  override def fields: Seq[String] = Seq(field)
 }
 
-case class SubtractTimeExpr(left: String, right: String) extends GroundedFieldExpr {
+object DelayFieldExpr extends GroundedFieldExpr {
+  val field = "delay"
+  def apply(e: LogLike): String = {
+    if (!e.isInstanceOf[DelayTimer]) {
+      throw new IllegalStateException(s"We lost delay calculation. Can't retrieve delay from $e")
+    }
+    e(field)
+  }
+}
+
+case class AggregateFieldExpr(field: String, op: AggregateOp) extends GroundedFieldExpr {
+  override def apply(e: LogLike): String = {
+    if (!e.isInstanceOf[AggregateLogLike]) {
+      throw new IllegalStateException(s"We lost aggregation. Can't retrieve $field from $e")
+    }
+    e(field)
+  }
+}
+
+case class SubtractTimeExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends GroundedFieldExpr {
 
   def apply(e: LogLike): String = {
-    val format = extractTimeFormat(left)
-    val leftTime = format.parseDateTime(e(left))
-    val rightTime = format.parseDateTime(e(right))
+    val format = extractTimeFormat(left.field)
+    val leftTime = format.parseDateTime(left(e))
+    val rightTime = format.parseDateTime(right(e))
     val period = new Period(rightTime, leftTime)
     format.print(period)
   }
@@ -39,8 +59,4 @@ case class SubtractTimeExpr(left: String, right: String) extends GroundedFieldEx
     case Aggregated(TimeFormatter(format)) => format
     case TimeFormatter(format) => format
   }
-
-  override def fields: Seq[String] = Seq(left, right)
-
-  override def toString(): String = s"calc($left-$right)"
 }

@@ -3,7 +3,13 @@ package io.github.binaryfoo.lagotto
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter, PeriodFormatter, PeriodFormatterBuilder}
 import org.joda.time.{DateTime, Period}
 
-class TimeFormatter(val pattern: String) {
+trait TimeFormatter {
+  def print(timestamp: DateTime): String
+  def print(period: Period): String
+  def parseDateTime(s: String): DateTime
+}
+
+class HumanTimeFormatter(val pattern: String) extends TimeFormatter {
   type TimestampPrinter = (DateTime, DateTimeFormatter) => String
 
   val (jodaPattern, printer): (String, TimestampPrinter) = pattern match {
@@ -14,15 +20,22 @@ class TimeFormatter(val pattern: String) {
   val jodaFormatter = DateTimeFormat.forPattern(jodaPattern)
   private lazy val periodFormatter = PeriodFormatTranslator.translate(jodaPattern)
 
-  def print(timestamp: DateTime): String = printer(timestamp, jodaFormatter)
-  def print(period: Period): String = periodFormatter.print(period)
-  def parseLocalTime(s: String) = jodaFormatter.parseLocalTime(s)
-  def parseDateTime(s: String) = jodaFormatter.parseDateTime(s)
+  override def print(timestamp: DateTime): String = printer(timestamp, jodaFormatter)
+  override def print(period: Period): String = periodFormatter.print(period)
+  override def parseDateTime(s: String) = jodaFormatter.parseDateTime(s)
 }
 
-object DefaultDateTimeFormat extends TimeFormatter("yyyy-MM-dd HH:mm:ss.SSS")
-object DefaultTimeFormat extends TimeFormatter("HH:mm:ss.SSS")
-object DefaultDateFormat extends TimeFormatter("yyyy-MM-dd")
+object EpochTimeFormatter extends TimeFormatter {
+  override def print(timestamp: DateTime): String = timestamp.getMillis.toString
+
+  override def parseDateTime(s: String): DateTime = new DateTime(s.toLong)
+
+  override def print(period: Period): String = new DateTime(0).withPeriodAdded(period, 1).getMillis.toString
+}
+
+object DefaultDateTimeFormat extends HumanTimeFormatter("yyyy-MM-dd HH:mm:ss.SSS")
+object DefaultTimeFormat extends HumanTimeFormatter("HH:mm:ss.SSS")
+object DefaultDateFormat extends HumanTimeFormatter("yyyy-MM-dd")
 
 object TimeFormatter {
 
@@ -32,7 +45,8 @@ object TimeFormatter {
     case "time" => Some(DefaultTimeFormat)
     case "timestamp" => Some(DefaultDateTimeFormat)
     case "date" => Some(DefaultDateFormat)
-    case TimeExpression(pattern) => Some(new TimeFormatter(pattern))
+    case "time(millis)" => Some(EpochTimeFormatter)
+    case TimeExpression(pattern) => Some(new HumanTimeFormatter(pattern))
     case _ => None
   }
 }

@@ -78,10 +78,11 @@ class Pipeline(val config: Config) {
   
   def partitionFilters(): Filters = {
     val aggregate = config.filters.collect {
-      case f@FieldFilterOn(AggregateOp(_)) => f
+      case f@FieldFilterOn(AggregateFieldExpr(_,_)) => f
+      case f@FieldFilterOn(SubtractTimeExpr(_, AggregateFieldExpr(_,_), AggregateFieldExpr(_,_))) => f
     }
     val delay = config.filters.collect {
-      case f@FieldFilterOn("delay") => f
+      case f@FieldFilterOn(DelayFieldExpr) => f
     }
     val paired = config.filters.diff(aggregate ++ delay)
     Filters(aggregate, delay, paired)
@@ -140,7 +141,7 @@ class Pipeline(val config: Config) {
 
   private def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
     config.format match {
-      case Tabular(fields, _) if fields.contains(DirectLogFieldExpr("delay")) => DelayTimer.calculateDelays(v)
+      case Tabular(fields, _) if fields.contains(DelayFieldExpr) => DelayTimer.calculateDelays(v)
       case _ => v
     }
   }
@@ -148,8 +149,7 @@ class Pipeline(val config: Config) {
   // Iterator instead of Stream to the same reason as filter()
   private def applyAggregation(v: Iterator[LogLike]): Stream[LogLike] = {
     config.format match {
-        // TODO: do the unapply in Options ...?
-      case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields.flatMap(_.fields))
+      case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields)
       case _ => v.toStream
     }
   }

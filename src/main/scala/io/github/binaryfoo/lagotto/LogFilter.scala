@@ -7,11 +7,12 @@ trait LogFilter extends Function[LogLike, Boolean] {
 }
 
 trait FieldFilter extends LogFilter {
-  def field: String
+  def field: String = expr.toString()
+  def expr: GroundedFieldExpr
 }
 
 object FieldFilterOn {
-  def unapply(f: FieldFilter): Option[String] = Some(f.field)
+  def unapply(f: FieldFilter): Option[GroundedFieldExpr] = Some(f.expr)
 }
 
 case class GrepFilter(pattern: String) extends LogFilter {
@@ -24,21 +25,21 @@ case class NegativeGrepFilter(pattern: String) extends LogFilter {
   override def toString(): String = s"grep!($pattern)"
 }
 
-case class FieldOpFilter(field: String, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
+case class FieldOpFilter(expr: GroundedFieldExpr, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
-    op(entry(field), desired)
+    op(expr(entry), desired)
   }
-  override def toString(): String = s"$field$operatorSymbol$desired"
+  override def toString(): String = s"$expr$operatorSymbol$desired"
 }
 
-case class RegexFilter(field: String, pattern: Regex, positive: Boolean = true) extends FieldFilter {
+case class RegexFilter(expr: GroundedFieldExpr, pattern: Regex, positive: Boolean = true) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
-    val value = entry(field)
+    val value = expr(entry)
     value != null && pattern.findFirstMatchIn(value).isDefined == positive
   }
   override def toString(): String = {
     val negation = if (positive) "" else "!"
-    s"$field$negation~/$pattern/"
+    s"$expr$negation~/$pattern/"
   }
 }
 
@@ -49,8 +50,8 @@ object LogFilter {
   val MatchAsRegexPattern = "(.+?)(!?)~/(.+)/".r
 
   def unapply(s: String): Option[FieldFilter] = s match {
-    case MatchAsRegexPattern(key, negation, pattern) => Some(RegexFilter(key, pattern.r, negation == ""))
-    case LogFilterPattern(key, negation, operator, value) =>
+    case MatchAsRegexPattern(LogFieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
+    case LogFilterPattern(LogFieldExpr(expr), negation, operator, value) =>
       val op: MatchOp = operator match {
         case "=" => deNull(_) == _
         case ">" => greaterThanAsIntWithStringFallback
@@ -58,9 +59,9 @@ object LogFilter {
         case "~" => deNull(_).toLowerCase contains _.toLowerCase
       }
       if (negation == "!") {
-        Some(FieldOpFilter(key, value, negation + operator, (a, b) => !op(a, b)))
+        Some(FieldOpFilter(expr, value, negation + operator, (a, b) => !op(a, b)))
       } else {
-        Some(FieldOpFilter(key, value, operator, op))
+        Some(FieldOpFilter(expr, value, operator, op))
       }
     case _ =>
       None
