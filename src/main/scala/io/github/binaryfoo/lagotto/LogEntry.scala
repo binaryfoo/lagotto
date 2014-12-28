@@ -13,9 +13,6 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
 
   val fields = _fields.withDefault {
     case "mti" => mti
-    case "timestamp" => timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
-    case "time" => timestamp.toString("HH:mm:ss.SSS")
-    case "date" => timestamp.toString("yyyy-MM-dd")
     case "link" => realm.link
     case "icon" => icon
     case "socket" => realm.socket
@@ -23,7 +20,7 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case "port" => realm.port
     case "file" if source != null => source.toString
     case "line" if source != null => source.line.toString
-    case LogEntry.TimeInFormat(format) => timestampAs(format)
+    case TimeFormatter(format) => format.print(timestamp)
     case LogEntry.XPathAccess(path) => xpath(path)
     case LogEntry.RegexReplacement(field, regex, replacement) =>
       val raw = this(field)
@@ -43,14 +40,10 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
 
   /**
    * Format like Joda with same extras like HH:mm:s0 for 10 second buckets.
-   * @param format
+   * @param pattern
    * @return Timestamp as string
    */
-  def timestampAs(format: String): String = format match {
-    case "HH:mm:s0" => timestamp.toString("HH:mm:ss").substring(0, 7) + "0"
-    case "HH:m0" => timestamp.toString("HH:mm").substring(0, 4) + "0"
-    case _ => timestamp.toString(format)
-  }
+  def timestampAs(pattern: String): String = new TimeFormatter(pattern).print(timestamp)
 
   def xpath(path: String): String = XPathEval(lines, path)
 
@@ -248,7 +241,6 @@ object LogEntry {
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
 
-  val TimeInFormat = """time\((.*)\)""".r
   val XPathAccess = """xpath\((.+)\)""".r
   val RegexReplacement = """([^(]+)\(/(.+)/(.*)/\)""".r
 }

@@ -37,6 +37,10 @@
 * Graceful error reporting...
 * Other input log formats: log4j, httpd
 * Allow --field for aggregate fields same as --sort
+* calc(timestamp-lifespan)
+* Allow --sortBy calc(maxStr(time)-minStr(time))
+* Allow --field calc(maxStr(time)-minStr(time))>N
+* Allow aggregation like min(calc(timestamp-lifespan))
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC

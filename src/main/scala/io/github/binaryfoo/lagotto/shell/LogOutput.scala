@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.LogLike
+import io.github.binaryfoo.lagotto.{GroundedFieldExpr, LogLike}
 
 import scala.collection.mutable
 
@@ -16,9 +16,9 @@ object FullText extends OutputFormat {
   override def footer(): Option[String] = None
 }
 
-case class Tabular(fields: Seq[String], tableFormatter: TableFormatter) extends OutputFormat {
-  override def header(): Option[String] = tableFormatter.header(fields)
-  override def apply(e: LogLike): Option[String] = tableFormatter.row(e.toSeq(fields))
+case class Tabular(fields: Seq[GroundedFieldExpr], tableFormatter: TableFormatter) extends OutputFormat {
+  override def header(): Option[String] = tableFormatter.header(fields.map(_.toString()))
+  override def apply(e: LogLike): Option[String] = tableFormatter.row(e.exprToSeq(fields))
   override def footer(): Option[String] = tableFormatter.footer()
 }
 

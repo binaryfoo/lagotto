@@ -140,7 +140,7 @@ class Pipeline(val config: Config) {
 
   private def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
     config.format match {
-      case Tabular(fields, _) if fields.contains("delay") => DelayTimer.calculateDelays(v)
+      case Tabular(fields, _) if fields.contains(DirectLogFieldExpr("delay")) => DelayTimer.calculateDelays(v)
       case _ => v
     }
   }
@@ -148,7 +148,8 @@ class Pipeline(val config: Config) {
   // Iterator instead of Stream to the same reason as filter()
   private def applyAggregation(v: Iterator[LogLike]): Stream[LogLike] = {
     config.format match {
-      case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields)
+        // TODO: do the unapply in Options ...?
+      case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields.flatMap(_.fields))
       case _ => v.toStream
     }
   }

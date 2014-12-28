@@ -30,27 +30,27 @@ object Options {
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
 
       opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(format = Tabular(fields.split(","), DelimitedTableFormat("\t")))
+        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat("\t")))
       } text "Output tab separated values"
 
       opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(format = Tabular(fields.split(","), DelimitedTableFormat(",")))
+        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat(",")))
       } text "Output comma separated values"
 
       opt[String]('j', "jira-table") action { (fields, c) =>
-        c.copy(format = Tabular(fields.split(","), JiraTableFormat))
+        c.copy(format = Tabular(parseFields(fields), JiraTableFormat))
       } text "Output a table that can be pasted into Jira"
 
       opt[String]("html") action { (fields, c) =>
-        c.copy(format = Tabular(fields.split(","), HtmlTableFormat))
+        c.copy(format = Tabular(parseFields(fields), HtmlTableFormat))
       } text "Output an HTML table"
 
       opt[String]("ascii") action { (fields, c) =>
-        c.copy(format = Tabular(fields.split(","), new AsciiTableFormat()))
+        c.copy(format = Tabular(parseFields(fields), new AsciiTableFormat()))
       } text "Output an ASCII table"
 
       opt[String]("live-ascii") action { (fields, c) =>
-        c.copy(format = Tabular(fields.split(","), new IncrementalAsciiTableFormat()))
+        c.copy(format = Tabular(parseFields(fields), new IncrementalAsciiTableFormat()))
       } text "Output an ASCII table incrementally. Can be messy."
 
       opt[String]("histogram") action { (fields, c) =>
@@ -99,6 +99,10 @@ object Options {
     }
 
     parser.parse(args, Config())
+  }
+
+  def parseFields(fields: String): Seq[GroundedFieldExpr] = {
+    fields.split(",").map { case LogFieldExpr(e) => e }
   }
 
   implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {

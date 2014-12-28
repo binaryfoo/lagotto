@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.{File, FileOutputStream, FileWriter, PrintStream}
 
-import io.github.binaryfoo.lagotto.LogLike
+import io.github.binaryfoo.lagotto.{LogFieldExpr, LogLike}
 import io.github.binaryfoo.lagotto.gnuplot.GnuplotScriptAuthor
 import org.HdrHistogram.Histogram
 
@@ -57,14 +57,14 @@ class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileNam
 /**
  * Spit out two files: the data (.csv) and a script to plot the series in that file (.gp).
  */
-class GnuplotSink(val fields: Seq[String], val csvFileName: String, val gpFileName: String, val baseName: String) extends Sink {
+class GnuplotSink(val fields: Seq[LogFieldExpr], val csvFileName: String, val gpFileName: String, val baseName: String) extends Sink {
 
   var xRange = ("", "")
   
   override def start() = {}
 
   override def entry(e: LogLike) = {
-    val time = e(fields.head)
+    val time = fields.head(e)
     if (time != null) {
       xRange = xRange match {
         case ("", _) => (time, time)
@@ -76,7 +76,7 @@ class GnuplotSink(val fields: Seq[String], val csvFileName: String, val gpFileNa
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptAuthor.write(fields, csvFileName, baseName, xRange))
+    writer.write(GnuplotScriptAuthor.write(fields.map(_.toString), csvFileName, baseName, xRange))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)
