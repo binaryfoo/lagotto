@@ -51,6 +51,13 @@ class MainTest extends FlatSpec with Matchers {
                          |""".stripMargin
   }
 
+  it should "still filter on delay between messages when it's not included in the field list" in {
+    val output = run("-f", "socket=10.0.0.1:4321", "-f", "delay>1000", "--csv", "time,mti,11", testFile("a-bunch.xml"))
+    output shouldEqual """time,mti,11
+                         |00:00:04.992,0210,1
+                         |""".stripMargin
+  }
+
   it should "allow sort on delay between messages" in {
     val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "--sort-desc", "delay", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,delay

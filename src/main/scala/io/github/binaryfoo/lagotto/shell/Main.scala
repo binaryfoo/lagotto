@@ -139,10 +139,10 @@ class Pipeline(val config: Config) {
   }
 
   private def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
-    config.format match {
-      case Tabular(fields, _) if fields.contains(DelayFieldExpr) => DelayTimer.calculateDelays(v)
-      case _ => v
-    }
+    if (config.requiresDelayCalculation())
+      DelayTimer.calculateDelays(v)
+    else
+    v
   }
 
   // Iterator instead of Stream to the same reason as filter()
