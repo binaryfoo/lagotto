@@ -2,6 +2,8 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.Period
 
+import scala.collection.mutable.ListBuffer
+
 object LogFieldExpr {
   val SubtractOp = """calc\((.+)-(.+)\)""".r
 
@@ -15,6 +17,9 @@ object LogFieldExpr {
   }
 }
 
+/**
+ * Exists separately from LogFieldExpr to allow passing lambas to LogLike.toXsv(). Maybe misguided.
+ */
 trait GroundedFieldExpr extends LogFieldExpr {
   def field: String
   override def toString(): String = field
@@ -43,7 +48,28 @@ case class AggregateFieldExpr(field: String, op: AggregateOp) extends GroundedFi
   }
 }
 
-case class SubtractTimeExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends GroundedFieldExpr {
+trait CanRequireAggregates {
+  def aggregates(): Seq[AggregateFieldExpr] = {
+    children().collect {
+      case e: AggregateFieldExpr => e
+    }
+  }
+  def children(): Seq[GroundedFieldExpr]
+}
+
+object HasAggregateExpressions {
+  def unapply(expr: GroundedFieldExpr): Option[Seq[AggregateFieldExpr]] = {
+    expr match {
+      case e: CanRequireAggregates =>
+        val children = e.aggregates()
+        if (children.isEmpty) None else Some(children)
+      case e: AggregateFieldExpr => Some(Seq(e))
+      case _ => None
+    }
+  }
+}
+
+case class SubtractTimeExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends GroundedFieldExpr with CanRequireAggregates {
 
   def apply(e: LogLike): String = {
     val format = extractTimeFormat(left.field)
@@ -59,4 +85,6 @@ case class SubtractTimeExpr(field: String, left: GroundedFieldExpr, right: Groun
     case Aggregated(TimeFormatter(format)) => format
     case TimeFormatter(format) => format
   }
+
+  override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
 }

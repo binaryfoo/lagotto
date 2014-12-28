@@ -69,8 +69,7 @@ object AggregateLogLike {
    */
   def aggregate(s: Iterator[LogLike], outputFields: Seq[GroundedFieldExpr]): Stream[LogLike] = {
     val (aggregateFields, keyFields) = outputFields.partition {
-      case AggregateFieldExpr(_, _) => true
-      case SubtractTimeExpr(_, AggregateFieldExpr(_, _), AggregateFieldExpr(_, _)) => true
+      case HasAggregateExpressions(_) => true
       case _ => false
     }
     if (aggregateFields.isEmpty) {
@@ -82,12 +81,9 @@ object AggregateLogLike {
         } yield (k.field, k(e))
       }
       def newBuilder(k: Seq[(String, String)]) = {
+        // TODO remove whackness of calling AggregateOp.operationFor() by making the Builder used by OrderedGroupBy immutable
         val aggregates = aggregateFields.flatMap {
-          // TODO remove whackness of calling AggregateOp.operationFor() by making the Builder used by OrderedGroupBy immutable
-          case SubtractTimeExpr(_, AggregateFieldExpr(left, _), AggregateFieldExpr(right, _)) =>
-            Seq((left, AggregateOp.operationFor(left).get), (right, AggregateOp.operationFor(right).get))
-          case AggregateFieldExpr(field, _) =>
-            Seq((field, AggregateOp.operationFor(field).get))
+          case HasAggregateExpressions(exprs) => exprs.map { case AggregateFieldExpr(field, _) => (field, AggregateOp.operationFor(field).get) }
         }
         new AggregateLogLikeBuilder(k.toMap, aggregates)
       }

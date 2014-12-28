@@ -70,8 +70,7 @@ class Pipeline(val config: Config) {
 
   def partitionSortKey(): SortOrder = {
     config.sortBy.map {
-      case key@AggregateFieldExpr(_,_) => SortOrder(afterGrouping = Some(key))
-      case key@SubtractTimeExpr(_, AggregateFieldExpr(_,_), AggregateFieldExpr(_,_)) => SortOrder(afterGrouping = Some(key))
+      case key@HasAggregateExpressions(_) => SortOrder(afterGrouping = Some(key))
       case DelayFieldExpr => SortOrder(afterGrouping = Some(DelayFieldExpr))
       case k => SortOrder(beforeGrouping = Some(k))
     }.getOrElse(SortOrder())
@@ -79,8 +78,7 @@ class Pipeline(val config: Config) {
   
   def partitionFilters(): Filters = {
     val aggregate = config.filters.collect {
-      case f@FieldFilterOn(AggregateFieldExpr(_,_)) => f
-      case f@FieldFilterOn(SubtractTimeExpr(_, AggregateFieldExpr(_,_), AggregateFieldExpr(_,_))) => f
+      case f@FieldFilterOn(HasAggregateExpressions(_)) => f
     }
     val delay = config.filters.collect {
       case f@FieldFilterOn(DelayFieldExpr) => f

@@ -40,6 +40,9 @@
 * Allow aggregation like min(calc(timestamp-lifespan))
 * Rename --field to --filter
 
+Debt:
+* Mutable Builder in OrderedGroupBy
+
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
 * Warn about typos like count(exception)
@@ -66,6 +69,7 @@ Bugs:
  - can filter on calc() expressions like calc(maxStr(time)-minStr(time))>N
 
 use cases:
+* fraction of auths as total messages
 * rtt per outgoing link
 * send time per client
 * max concurrent requests?
