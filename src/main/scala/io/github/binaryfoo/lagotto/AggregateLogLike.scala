@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto
 import org.joda.time.DateTime
 
 import scala.collection.mutable
+import scala.util.Try
 
 /**
  * Like a row in the output of a SQL query with a GROUP BY clause. Has a group key and a set of aggregate values
@@ -41,21 +42,17 @@ object AggregateOp {
   val CountDistinct = """count\(distinct\((.*)\)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
-  val MinStringOp = """minStr\((.*)\)""".r
-  val MaxStringOp = """maxStr\((.*)\)""".r
 
   def operationFor(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
       case "count" => new CountBuilder
       case CountDistinct(field) => new CountDistinctBuilder(field)
       case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
-      case MinOp(field) => new IntegerOpBuilder(field, math.min)
-      case MaxOp(field) => new IntegerOpBuilder(field, math.max)
-      case SumOp(field) => new IntegerOpBuilder(field, _ + _)
+      case MinOp(field) => new TryLongOpBuilder(field, math.min, (l, r) => if (l <= r) l else r)
+      case MaxOp(field) => new TryLongOpBuilder(field, math.max, (l, r) => if (l >= r) l else r)
+      case SumOp(field) => new LongOpBuilder(field, _ + _)
       case AvgOp(field) => new AverageBuilder(field)
       case GroupConcat(field) => new GroupConcatBuilder(field)
-      case MinStringOp(field) => new StringOpBuilder(field, (l, r) => if (l <= r) l else r)
-      case MaxStringOp(field) => new StringOpBuilder(field, (l, r) => if (l >= r) l else r)
       case _ => null
     }
     Option(op)
@@ -172,7 +169,7 @@ class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
   override def copy() = new GroupConcatBuilder(field)
 }
 
-class IntegerOpBuilder(val field: String, val op: (Long, Long) => Long) extends FieldBasedAggregateOp {
+class LongOpBuilder(val field: String, val op: (Long, Long) => Long) extends FieldBasedAggregateOp {
 
   private var current: Option[Long] = None
 
@@ -185,27 +182,53 @@ class IntegerOpBuilder(val field: String, val op: (Long, Long) => Long) extends 
 
   override def result(): String = current.getOrElse("").toString
 
-  override def toString: String = s"integerOp($field){current=$current}"
+  override def toString: String = s"longOp($field){current=$current}"
 
-  override def copy() = new IntegerOpBuilder(field, op)
+  override def copy() = new LongOpBuilder(field, op)
 }
 
-class StringOpBuilder(val field: String, val op: (String, String) => String) extends FieldBasedAggregateOp {
+class TryLongOpBuilder(val field: String, val op: (Long, Long) => Long, val fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
 
-  private var current: Option[String] = None
+  private var useStringOp = false
+  private var current: Option[Long] = None
+  private var currentFallback: Option[String] = None
 
   override def add(v: String) = {
+    if (useStringOp) {
+      addWithStringOp(v)
+    } else {
+      try {
+        addWithLongOp(v.toLong)
+      }
+      catch {
+        case e: NumberFormatException =>
+          useStringOp = true
+          currentFallback = current.map(_.toString)
+          addWithStringOp(v)
+      }
+    }
+    
+  }
+
+  def addWithLongOp(v: Long): Unit = {
     current = current match {
       case Some(c) => Some(op(v, c))
       case None => Some(v)
     }
   }
 
-  override def result(): String = current.getOrElse("")
+  def addWithStringOp(v: String): Unit = {
+    currentFallback = currentFallback match {
+      case Some(c) => Some(fallbackOp(v, c))
+      case None => Some(v)
+    }
+  }
 
-  override def toString: String = s"stringOp($field){current=$current}"
+  override def result(): String = current.map(_.toString).getOrElse(currentFallback.getOrElse(""))
 
-  override def copy() = new StringOpBuilder(field, op)
+  override def toString: String = s"tryIntegerOp($field){current=$current,currentFallback=$currentFallback}"
+
+  override def copy() = new TryLongOpBuilder(field, op, fallbackOp)
 }
 
 class AverageBuilder(val field: String) extends FieldBasedAggregateOp {

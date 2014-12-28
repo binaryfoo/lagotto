@@ -3,8 +3,6 @@
  - needs a data dictionary. perhaps use ISO 8583 defaults (public spec?)
 * Dictionary could be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
 * Tail mode (-F)
-* Progress logger on stderr
- - number of files, number of records rate and completion time
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
 * Add --splitBy field to Main? Use case would be ip address or transaction id or link
@@ -15,9 +13,6 @@
 * Output with gnuplot header?
 * Can LogFieldExpr allow access to more specific type
  * Override toXsv() on LogEntry?
-* Group like uniq -c when count in field list for --tsv or --csv
- - min/max explode when not parseable as integers
- - HDR histogram: use cases other than rtt and lifespan?
 * Output as
  - HTML table
   - colour rows by a field like socket
@@ -61,7 +56,7 @@ Bugs:
  - time with format - Eg {HH:mm} plus HH:m0 and HH:mm:s0
  - regex mode is partial match by default (link to javadoc)
  - field(/regex/$1/)
- - can filter on calc() expressions like calc(maxStr(time)-minStr(time))>N
+ - can filter on calc() expressions like calc(max(time)-min(time))>N
 
 use cases:
 * fraction of auths as total messages calc(count(mti=0200)/count)
@@ -70,3 +65,4 @@ use cases:
 * max concurrent requests?
 * stalls -> max delay between messages
 * throughput: incoming/sec outgoing/sec
+* HDR histogram: use cases other than rtt and lifespan?

@@ -49,12 +49,12 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
     LogEntry("48" -> "b"))
 
 
-  it should "support minStr(field)" in {
-    aggregateToCsv(twoStrings, "minStr(48)") shouldBe List("a")
+  "min(field)" should "support string comparison" in {
+    aggregateToCsv(twoStrings, "min(48)") shouldBe List("a")
   }
 
-  it should "support maxStr(field)" in {
-    aggregateToCsv(twoStrings, "maxStr(48)") shouldBe List("b")
+  "max(field)" should "support string comparison" in {
+    aggregateToCsv(twoStrings, "max(48)") shouldBe List("b")
   }
 
   it should "not pull from the stream if no aggregation is required" in {

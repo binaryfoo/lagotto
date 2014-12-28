@@ -138,15 +138,15 @@ class MainTest extends FlatSpec with Matchers {
   }
 
   it should "output difference between two timestamps with calc(a-b) in field list" in {
-    val output = run("--csv", "calc(maxStr(time)-minStr(time))", testFile("a-bunch.xml"))
-    output shouldEqual """calc(maxStr(time)-minStr(time))
+    val output = run("--csv", "calc(max(time)-min(time))", testFile("a-bunch.xml"))
+    output shouldEqual """calc(max(time)-min(time))
                           |00:00:01.700
                           |""".stripMargin
   }
 
   "calc(a-b)" should "output difference between two timestamps in custom format" in {
-    val output = run("--csv", "calc(maxStr(time(mm:ss))-minStr(time(mm:ss)))", testFile("a-bunch.xml"))
-    output shouldEqual """calc(maxStr(time(mm:ss))-minStr(time(mm:ss)))
+    val output = run("--csv", "calc(max(time(mm:ss))-min(time(mm:ss)))", testFile("a-bunch.xml"))
+    output shouldEqual """calc(max(time(mm:ss))-min(time(mm:ss)))
                           |00:01
                           |""".stripMargin
   }
