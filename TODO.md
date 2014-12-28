@@ -32,16 +32,11 @@
 * Build an index and/or process data into more compact/faster to re-read format
  - might ease path to Spark
 * Can --pair idea by expanded to a SQL like join. One case for keeping memoized streams...
-* Possible to do subtract(max(time), min(time)) without massive restructure?
- - percent()
 * Graceful error reporting...
 * Other input log formats: log4j, httpd
 * calc(timestamp-lifespan)
 * Allow aggregation like min(calc(timestamp-lifespan))
 * Rename --field to --filter
-
-Debt:
-* Mutable Builder in OrderedGroupBy
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
@@ -69,7 +64,7 @@ Bugs:
  - can filter on calc() expressions like calc(maxStr(time)-minStr(time))>N
 
 use cases:
-* fraction of auths as total messages
+* fraction of auths as total messages calc(count(mti=0200)/count)
 * rtt per outgoing link
 * send time per client
 * max concurrent requests?

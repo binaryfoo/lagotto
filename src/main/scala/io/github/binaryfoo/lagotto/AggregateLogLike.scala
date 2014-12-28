@@ -25,6 +25,11 @@ case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, S
 
 trait AggregateOp extends mutable.Builder[LogLike, String] {
   override def clear() = ???
+
+  /**
+   * Create a new empty builder of the same type. Don't copy the current builder state.
+   */
+  def copy(): AggregateOp
 }
 
 object AggregateOp {
@@ -80,11 +85,10 @@ object AggregateLogLike {
           k <- keyFields
         } yield (k.field, k(e))
       }
+      val prototypeAggregates = aggregateFields.flatMap { case HasAggregateExpressions(exprs) => exprs }
       def newBuilder(k: Seq[(String, String)]) = {
-        // TODO remove whackness of calling AggregateOp.operationFor() by making the Builder used by OrderedGroupBy immutable
-        val aggregates = aggregateFields.flatMap {
-          case HasAggregateExpressions(exprs) => exprs.map { case AggregateFieldExpr(field, _) => (field, AggregateOp.operationFor(field).get) }
-        }
+        // Each aggregate holds state so needs to be cloned for each new group
+        val aggregates = prototypeAggregates.map(e => (e.field, e.op.copy()))
         new AggregateLogLikeBuilder(k.toMap, aggregates)
       }
       OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
@@ -120,6 +124,8 @@ class CountBuilder extends AggregateOp {
   override def result(): String = count.toString
 
   override def toString: String = s"count{count=$count}"
+
+  override def copy() = new CountBuilder
 }
 
 class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
@@ -136,6 +142,8 @@ class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
   override def result(): String = count.toString
 
   override def toString: String = s"count(if($condition)){count=$count}"
+
+  override def copy() = new CountIfBuilder(condition)
 }
 
 class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
@@ -147,6 +155,8 @@ class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
   override def result(): String = distinctValues.size.toString
 
   override def toString: String = s"count(distinct($field)){count=${distinctValues.size}}"
+
+  override def copy() = new CountDistinctBuilder(field)
 }
 
 class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
@@ -158,6 +168,8 @@ class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
   override def result(): String = values.mkString(",")
 
   override def toString: String = s"group_concat($field){values=$values}"
+
+  override def copy() = new GroupConcatBuilder(field)
 }
 
 class IntegerOpBuilder(val field: String, val op: (Long, Long) => Long) extends FieldBasedAggregateOp {
@@ -174,6 +186,8 @@ class IntegerOpBuilder(val field: String, val op: (Long, Long) => Long) extends 
   override def result(): String = current.getOrElse("").toString
 
   override def toString: String = s"integerOp($field){current=$current}"
+
+  override def copy() = new IntegerOpBuilder(field, op)
 }
 
 class StringOpBuilder(val field: String, val op: (String, String) => String) extends FieldBasedAggregateOp {
@@ -190,6 +204,8 @@ class StringOpBuilder(val field: String, val op: (String, String) => String) ext
   override def result(): String = current.getOrElse("")
 
   override def toString: String = s"stringOp($field){current=$current}"
+
+  override def copy() = new StringOpBuilder(field, op)
 }
 
 class AverageBuilder(val field: String) extends FieldBasedAggregateOp {
@@ -205,6 +221,8 @@ class AverageBuilder(val field: String) extends FieldBasedAggregateOp {
   override def result(): String = if (count == 0) "" else (sum / count).toString
 
   override def toString: String = s"avg($field){sum=$sum,count=$count}"
+
+  override def copy() = new AverageBuilder(field)
 }
 
 /**
