@@ -9,12 +9,12 @@ object LogFieldExpr {
 
   def unapply(expr: String): Option[GroundedFieldExpr] = {
     Some(expr match {
-      case field@SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right@TimeFormatter(rightFormat))) => SubtractTwoTimesExpr(field, left, right, leftFormat, rightFormat)
-      case field@SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right)) => SubtractMillisFromTimeExpr(field, left, right, leftFormat)
-      case field@DivideOp(LogFieldExpr(left), LogFieldExpr(right)) => DivideExpr(field, left, right)
-      case field@ConvertOp(LogFieldExpr(child), from, to) => ConvertExpr(field, child, from, to)
+      case SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right@TimeFormatter(rightFormat))) => SubtractTwoTimesExpr(expr, left, right, leftFormat, rightFormat)
+      case SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right)) => SubtractMillisFromTimeExpr(expr, left, right, leftFormat)
+      case DivideOp(LogFieldExpr(left), LogFieldExpr(right)) => DivideExpr(expr, left, right)
+      case ConvertOp(LogFieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
       case "delay" => DelayFieldExpr
-      case field@AggregateOp(op) => AggregateFieldExpr(field, op)
+      case AggregateOp(op) => AggregateFieldExpr(expr, op)
       case s => DirectLogFieldExpr(s)
     })
   }
