@@ -52,4 +52,17 @@ class LogFilterTest extends FlatSpec with Matchers {
     filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "111"))) shouldBe true
     filter(AggregateLogLike(Map.empty, Seq("count(mti=0200)" -> "191"))) shouldBe false
   }
+
+  "Filters" should "compare equal for the same expression" in {
+    filterFor("lifespan=10") shouldEqual filterFor("lifespan=10")
+    filterFor("lifespan>10") shouldEqual filterFor("lifespan>10")
+    filterFor("lifespan<10") shouldEqual filterFor("lifespan<10")
+    filterFor("lifespan~10") shouldEqual filterFor("lifespan~10")
+  }
+
+  "Filters" should "compare not equal for different expressions" in {
+    filterFor("lifespan=10") shouldNot equal(filterFor("lifespan!=10"))
+    filterFor("lifespan=10") shouldNot equal(filterFor("lifespan=11"))
+    filterFor("lifespan=10") shouldNot equal(filterFor("delay=10"))
+  }
 }

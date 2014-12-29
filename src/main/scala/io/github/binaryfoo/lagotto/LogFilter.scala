@@ -53,10 +53,10 @@ object LogFilter {
     case MatchAsRegexPattern(LogFieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
     case LogFilterPattern(LogFieldExpr(expr), negation, operator, value) =>
       val op: MatchOp = operator match {
-        case "=" => deNull(_) == _
+        case "=" => equalsOp
         case ">" => greaterThanAsIntWithStringFallback
         case "<" => lessThanAsIntWithStringFallback
-        case "~" => deNull(_).toLowerCase contains _.toLowerCase
+        case "~" => containsOp
       }
       if (negation == "!") {
         Some(FieldOpFilter(expr, value, negation + operator, (a, b) => !op(a, b)))
@@ -73,9 +73,11 @@ object LogFilter {
 
   def deNull(s: String): String = if (s == null) "" else s
 
-  def greaterThanAsIntWithStringFallback(left: String, right: String): Boolean = compareAsIntWithStringFallback(left, right) >= 0
-
-  def lessThanAsIntWithStringFallback(left: String, right: String): Boolean = compareAsIntWithStringFallback(left, right) <= 0
+  // Need vals for LogFilter equality to work
+  val equalsOp = (a: String, b: String) => deNull(a) == b
+  val containsOp = (a: String, b: String) => deNull(a).toLowerCase contains b.toLowerCase
+  val greaterThanAsIntWithStringFallback = (left: String, right: String) => compareAsIntWithStringFallback(left, right) >= 0
+  val lessThanAsIntWithStringFallback = (left: String, right: String) => compareAsIntWithStringFallback(left, right) <= 0
 
   def compareAsIntWithStringFallback(left: String, right: String): Int = {
     val l = deNull(left)

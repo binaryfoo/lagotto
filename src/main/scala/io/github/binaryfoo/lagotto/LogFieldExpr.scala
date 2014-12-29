@@ -15,6 +15,17 @@ object LogFieldExpr {
       case s => DirectLogFieldExpr(s)
     })
   }
+
+  /**
+   * Unapply or die.
+   */
+  def expressionFor(expr: String): GroundedFieldExpr = unapply(expr).get
+
+  def expressionsFor(exprList: String): Seq[GroundedFieldExpr] = expressionsFor(exprList.split(","))
+
+  def expressionsFor(exprList: Seq[String]): Seq[GroundedFieldExpr] = {
+    exprList.map { case LogFieldExpr(e) => e }
+  }
 }
 
 /**

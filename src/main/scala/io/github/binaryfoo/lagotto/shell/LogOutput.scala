@@ -16,7 +16,7 @@ object FullText extends OutputFormat {
   override def footer(): Option[String] = None
 }
 
-case class Tabular(fields: Seq[GroundedFieldExpr], tableFormatter: TableFormatter) extends OutputFormat {
+case class Tabular(fields: Seq[GroundedFieldExpr], tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat {
   override def header(): Option[String] = tableFormatter.header(fields.map(_.toString()))
   override def apply(e: LogLike): Option[String] = tableFormatter.row(e.exprToSeq(fields))
   override def footer(): Option[String] = tableFormatter.footer()

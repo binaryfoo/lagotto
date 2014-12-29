@@ -36,9 +36,6 @@ Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
 * Warn about typos like count(exception)
 
-Bugs:
- * Same for something like count(time(mm:ss)=00:03)>N (aggregates)
-
 * Deploy artifact to maven central with fat .jar attachment
 * Codeship.io free account
 * bintray/sonatype snapshots for artifact hosting?

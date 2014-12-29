@@ -147,9 +147,11 @@ class Pipeline(val config: Config) {
 
   // Iterator instead of Stream to the same reason as filter()
   private def applyAggregation(v: Iterator[LogLike]): Stream[LogLike] = {
-    config.format match {
-      case Tabular(fields, _) => AggregateLogLike.aggregate(v, fields)
-      case _ => v.toStream
+    val aggregationConfig = config.aggregationConfig()
+    if (aggregationConfig.aggregates.isEmpty) {
+      v.toStream
+    } else {
+      AggregateLogLike.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     }
   }
 }

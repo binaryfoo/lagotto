@@ -43,14 +43,19 @@ object AggregateOp {
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
 
-  def operationFor(expr: String): Option[AggregateOp] = {
+  /**
+   * Unapply or die.
+   */
+  def operationFor(expr: String): AggregateOp = unapply(expr).get
+
+  def unapply(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
       case "count" => new CountBuilder
       case CountDistinct(field) => new CountDistinctBuilder(field)
       case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
-      case MinOp(field) => new TryLongOpBuilder(field, math.min, (l, r) => if (l <= r) l else r)
-      case MaxOp(field) => new TryLongOpBuilder(field, math.max, (l, r) => if (l >= r) l else r)
-      case SumOp(field) => new LongOpBuilder(field, _ + _)
+      case MinOp(field) => new TryLongOpBuilder(field, minLong, minString)
+      case MaxOp(field) => new TryLongOpBuilder(field, maxLong, maxString)
+      case SumOp(field) => new LongOpBuilder(field, addLongs)
       case AvgOp(field) => new AverageBuilder(field)
       case GroupConcat(field) => new GroupConcatBuilder(field)
       case _ => null
@@ -58,7 +63,12 @@ object AggregateOp {
     Option(op)
   }
 
-  def unapply(expr: String): Option[AggregateOp] = operationFor(expr)
+  // these need to be vals for equality to work between two AggregateOp instances
+  val minLong = (l: Long, r: Long) => math.min(l, r)
+  val maxLong = (l: Long, r: Long) => math.max(l, r)
+  val minString = (l: String, r: String) => if (l <= r) l else r
+  val maxString = (l: String, r: String) => if (l >= r) l else r
+  val addLongs = (l: Long, r: Long) => l + r
 }
 
 object AggregateLogLike {
@@ -66,30 +76,22 @@ object AggregateLogLike {
   /**
    * Apply aggregation 'decorator' if something in outputFields requires it.
    * @param s The stream of log entries that will be output.
-   * @param outputFields The set of fields that will be output.
+   * @param keyFields The set of fields identifying each group.
+   * @param aggregateFields The set of aggregates to calculate for each group.
    * @return The original stream s or a Stream[AggregateLogLike].
    */
-  def aggregate(s: Iterator[LogLike], outputFields: Seq[GroundedFieldExpr]): Stream[LogLike] = {
-    val (aggregateFields, keyFields) = outputFields.partition {
-      case HasAggregateExpressions(_) => true
-      case _ => false
+  def aggregate(s: Iterator[LogLike], keyFields: Seq[GroundedFieldExpr], aggregateFields: Seq[AggregateFieldExpr]): Stream[LogLike] = {
+    def keyFor(e: LogLike): Seq[(String, String)] = {
+      for {
+        k <- keyFields
+      } yield (k.field, k(e))
     }
-    if (aggregateFields.isEmpty) {
-      s.toStream
-    } else {
-      def keyFor(e: LogLike): Seq[(String, String)] = {
-        for {
-          k <- keyFields
-        } yield (k.field, k(e))
-      }
-      val prototypeAggregates = aggregateFields.flatMap { case HasAggregateExpressions(exprs) => exprs }
-      def newBuilder(k: Seq[(String, String)]) = {
-        // Each aggregate holds state so needs to be cloned for each new group
-        val aggregates = prototypeAggregates.map(e => (e.field, e.op.copy()))
-        new AggregateLogLikeBuilder(k.toMap, aggregates)
-      }
-      OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
+    def newBuilder(k: Seq[(String, String)]) = {
+      // Each aggregate holds state so needs to be cloned for each new group
+      val aggregates = aggregateFields.map(e => (e.field, e.op.copy()))
+      new AggregateLogLikeBuilder(k.toMap, aggregates)
     }
+    OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
   }
 
 }
@@ -109,7 +111,7 @@ trait FieldBasedAggregateOp extends AggregateOp {
 
 }
 
-class CountBuilder extends AggregateOp {
+case class CountBuilder() extends AggregateOp {
   
   private var count = 0
 
@@ -125,7 +127,7 @@ class CountBuilder extends AggregateOp {
   override def copy() = new CountBuilder
 }
 
-class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
+case class CountIfBuilder(condition: FieldFilter) extends AggregateOp {
   
   private var count = 0
   
@@ -143,7 +145,7 @@ class CountIfBuilder(val condition: FieldFilter) extends AggregateOp {
   override def copy() = new CountIfBuilder(condition)
 }
 
-class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
+case class CountDistinctBuilder(field: String) extends FieldBasedAggregateOp {
   
   private val distinctValues = mutable.HashSet[String]()
 
@@ -156,7 +158,7 @@ class CountDistinctBuilder(val field: String) extends FieldBasedAggregateOp {
   override def copy() = new CountDistinctBuilder(field)
 }
 
-class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
+case class GroupConcatBuilder(field: String) extends FieldBasedAggregateOp {
   
   private val values = mutable.ListBuffer[String]()
 
@@ -169,7 +171,7 @@ class GroupConcatBuilder(val field: String) extends FieldBasedAggregateOp {
   override def copy() = new GroupConcatBuilder(field)
 }
 
-class LongOpBuilder(val field: String, val op: (Long, Long) => Long) extends FieldBasedAggregateOp {
+case class LongOpBuilder(field: String, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
 
   private var current: Option[Long] = None
 
@@ -187,7 +189,7 @@ class LongOpBuilder(val field: String, val op: (Long, Long) => Long) extends Fie
   override def copy() = new LongOpBuilder(field, op)
 }
 
-class TryLongOpBuilder(val field: String, val op: (Long, Long) => Long, val fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
+case class TryLongOpBuilder(field: String, op: (Long, Long) => Long, fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
 
   private var useStringOp = false
   private var current: Option[Long] = None
@@ -231,7 +233,7 @@ class TryLongOpBuilder(val field: String, val op: (Long, Long) => Long, val fall
   override def copy() = new TryLongOpBuilder(field, op, fallbackOp)
 }
 
-class AverageBuilder(val field: String) extends FieldBasedAggregateOp {
+case class AverageBuilder(field: String) extends FieldBasedAggregateOp {
 
   private var sum = 0
   private var count = 0
