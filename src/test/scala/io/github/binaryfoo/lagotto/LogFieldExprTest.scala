@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.LogFieldExpr.expressionFor
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
-import org.joda.time.LocalTime
+import org.joda.time.{DateTime, LocalTime}
 import org.scalatest.{Matchers, FlatSpec}
 
 class LogFieldExprTest extends FlatSpec with Matchers {
@@ -62,6 +62,17 @@ class LogFieldExprTest extends FlatSpec with Matchers {
     diff shouldBe "1 year 2 months 2 days 01:01:11.111"
   }
 
+  "calc(timestamp-lifespan)" should "show when log event was created" in {
+    val loggedAt = new DateTime()
+    val expr = expressionFor("calc(timestamp-lifespan)")
+    expr(LogEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe DefaultDateTimeFormat.print(loggedAt.minusMillis(1000))
+  }
+
+  it should "work for aggregation output (different because the individual fields aren't available)" in {
+    val expr = expressionFor("calc(timestamp-lifespan)")
+    expr(AggregateLogLike(Map("calc(timestamp-lifespan)" -> "already computed"), Seq())) shouldBe "already computed"
+  }
+
   "Format expression (lifespan millis as period)" should "convert millis to a time period" in {
     val expr = expressionFor("(lifespan millis as period)")
     expr(LogEntry("lifespan" -> "3600000")) shouldBe "01:00:00.000"
@@ -86,5 +97,11 @@ class LogFieldExprTest extends FlatSpec with Matchers {
   "(time(HH:mm) as millis)" should "convert time to millis period" in {
     val expr = expressionFor("(time(HH:mm) as millis)")
     expr(LogEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
+  }
+
+  "Format expression (calc(time-lifespan) time as time(HH:mm:ss))" should "drop millis from the modified timestamp" in {
+    val loggedAt = new DateTime()
+    val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")
+    expr(LogEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe loggedAt.minusMillis(1000).toString("HH:mm:ss")
   }
 }

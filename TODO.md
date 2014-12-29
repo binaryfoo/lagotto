@@ -29,12 +29,13 @@
 * Can --pair idea by expanded to a SQL like join. One case for keeping memoized streams...
 * Graceful error reporting...
 * Other input log formats: log4j, httpd
-* calc(timestamp-lifespan)
+* Aggregates of expressions like max(calc(timestamp-lifespan))
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
 * Warn about typos like count(exception)
 * (max(lifespan as time(s)),(min(lifespan as time(s))) is not going to return anything. Did you mean (max(lifespan) as time(s))
+* Show progress by default if output is batched (not incremental). Disable progress with --no-progress?
 
 * Deploy artifact to maven central with fat .jar attachment
 * Codeship.io free account

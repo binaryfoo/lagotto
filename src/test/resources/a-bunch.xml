@@ -24,8 +24,8 @@
             </isomsg>
         </send>
     </log>
-    <log realm="some.channel/10.0.0.1:4322" at="Mon Nov 24 00:00:04 EST 2014.892">
-        <send>
+    <log realm="some.channel/10.0.0.1:4322" at="Mon Nov 24 00:00:04 EST 2014.892" lifespan="10ms">
+        <receive>
             <isomsg direction="outgoing">
                 <field id="0" value="0210"/>
                 <field id="39" value="01"/>
@@ -34,10 +34,10 @@
                     <field id="1" value="a-bunch.xml #3"/>
                 </isomsg>
             </isomsg>
-        </send>
+        </receive>
     </log>
-    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:04 EST 2014.992">
-        <send>
+    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:04 EST 2014.992" lifespan="100ms">
+        <receive>
             <isomsg direction="outgoing">
                 <field id="0" value="0210"/>
                 <field id="39" value="00"/>
@@ -46,6 +46,6 @@
                     <field id="1" value="a-bunch.xml #4"/>
                 </isomsg>
             </isomsg>
-        </send>
+        </receive>
     </log>
 </logger>

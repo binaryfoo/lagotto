@@ -74,6 +74,14 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  it should "group rows on reformatted calc() expression" in {
+    val output = run("--csv", "(calc(time-lifespan) time as time(HH:mm:ss)),count", testFile("a-bunch.xml"))
+    output shouldEqual """(calc(time-lifespan) time as time(HH:mm:ss)),count
+                          |,2
+                          |00:00:04,2
+                          |""".stripMargin
+  }
+
   it should "filter on group count with --field count>N" in {
     val output = run("--csv", "time(mm:ss),count", "--field", "count>2", testFile("a-bunch.xml"))
     output shouldEqual """time(mm:ss),count
@@ -126,6 +134,13 @@ class MainTest extends FlatSpec with Matchers {
                           |,
                           |""".stripMargin
   }
+// TODO: requires support for aggregate of an expression
+//  it should "group rows when max(calc(time-lifespan)) field included in --csv option" in {
+//    val output = run("--csv", "min(calc(time-lifespan))", testFile("a-pair.xml"))
+//    output shouldEqual """min(calc(time-lifespan))
+//                          |23:59:53.287
+//                          |""".stripMargin
+//  }
 
   it should "group rows when max(lifespan) field included in --jira-table option" in {
     val output = run("--jira-table", "ipAddress,max(lifespan)", testFile("a-pair.xml"))

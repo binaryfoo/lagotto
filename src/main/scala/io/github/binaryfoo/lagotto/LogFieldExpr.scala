@@ -9,7 +9,8 @@ object LogFieldExpr {
 
   def unapply(expr: String): Option[GroundedFieldExpr] = {
     Some(expr match {
-      case field@SubtractOp(LogFieldExpr(left), LogFieldExpr(right)) => SubtractTimeExpr(field, left, right)
+      case field@SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right@TimeFormatter(rightFormat))) => SubtractTwoTimesExpr(field, left, right, leftFormat, rightFormat)
+      case field@SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right)) => SubtractMillisFromTimeExpr(field, left, right, leftFormat)
       case field@DivideOp(LogFieldExpr(left), LogFieldExpr(right)) => DivideExpr(field, left, right)
       case field@ConvertOp(LogFieldExpr(child), from, to) => ConvertExpr(field, child, from, to)
       case "delay" => DelayFieldExpr
@@ -82,28 +83,59 @@ object HasAggregateExpressions {
   }
 }
 
-case class SubtractTimeExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends GroundedFieldExpr with CanRequireAggregates {
-
-  def apply(e: LogLike): String = {
-    val format = extractTimeFormat(left.field)
-    val leftTime = format.parseDateTime(left(e))
-    val rightTime = format.parseDateTime(right(e))
-    val period = new Period(rightTime, leftTime)
-    format.print(period)
+/**
+ * Handles the fact that the aggregation process does the calculation.
+ * Trying to perform the calculation on the output of aggregation would fail because the underlying fields are gone.
+ * Unless the calculation is happening over aggregated fields.
+ */
+trait CalculatedFieldExpr extends GroundedFieldExpr with CanRequireAggregates {
+  final def apply(e: LogLike): String = {
+    // TODO: currently fails if one field is an aggregate but the other not... Best solved statically in LogFieldExpr.unapply() ?
+    e match {
+      case aggregated: AggregateLogLike if aggregates().isEmpty => e(field)
+      case _ => calculate(e)
+    }
   }
+  def calculate(e: LogLike): String
+}
 
-  private val Aggregated = """^[^(]+\((.+)\)$""".r
+/**
+ * Show the difference between two timestamps as a period.
+ */
+case class SubtractTwoTimesExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr, leftFormat: TimeFormatter, rightFormat: TimeFormatter) extends CalculatedFieldExpr {
 
-  private def extractTimeFormat(field: String): TimeFormatter = field match {
-    case Aggregated(TimeFormatter(format)) => format
-    case TimeFormatter(format) => format
+  def calculate(e: LogLike): String = {
+    val leftTime = leftFormat.parseDateTime(left(e))
+    val rightTime = rightFormat.parseDateTime(right(e))
+    val period = new Period(rightTime, leftTime)
+    leftFormat.print(period)
   }
 
   override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
 }
 
-case class DivideExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends GroundedFieldExpr with CanRequireAggregates {
-  def apply(e: LogLike): String = {
+/**
+ * Show a new timestamp that a number of milliseconds (right) prior to the original (left).
+ */
+case class SubtractMillisFromTimeExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr, leftFormat: TimeFormatter) extends CalculatedFieldExpr {
+
+  def calculate(e: LogLike): String = {
+    val leftValue = left(e)
+    val rightValue = right(e)
+    if (leftValue == null || rightValue == null) {
+      null
+    }
+    else {
+      val leftTime = leftFormat.parseDateTime(leftValue)
+      leftFormat.print(leftTime.minusMillis(rightValue.toInt))
+    }
+  }
+
+  override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
+}
+
+case class DivideExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends CalculatedFieldExpr {
+  def calculate(e: LogLike): String = {
     val leftNumber = left(e).toDouble
     val rightNumber = right(e).toDouble
     (leftNumber / rightNumber).formatted("%.4f")
@@ -114,8 +146,8 @@ case class DivideExpr(field: String, left: GroundedFieldExpr, right: GroundedFie
 /**
  * A limited set of type conversions.
  */
-case class ConvertExpr(field: String, expr: GroundedFieldExpr, from: String, to: String) extends GroundedFieldExpr with CanRequireAggregates {
-  def apply(e: LogLike): String = {
+case class ConvertExpr(field: String, expr: GroundedFieldExpr, from: String, to: String) extends CalculatedFieldExpr {
+  def calculate(e: LogLike): String = {
     val value = expr(e)
     if (value == null || value == "")
       null
@@ -130,9 +162,11 @@ case class ConvertExpr(field: String, expr: GroundedFieldExpr, from: String, to:
         case (_, null, TimeFormatter(format)) =>
           val period = new Period(value.toLong)
           format.print(period)
-        case (TimeFormatter(format), null, "millis") =>
-          val utcDateTime = format.parseDateTime(value).withZoneRetainFields(DateTimeZone.UTC)
+        case (TimeFormatter(inputFormat), null, "millis") =>
+          val utcDateTime = inputFormat.parseDateTime(value).withZoneRetainFields(DateTimeZone.UTC)
           utcDateTime.getMillis.toString
+        case (_, "time", TimeFormatter(outputFormat)) =>
+          outputFormat.print(DefaultTimeFormat.parseDateTime(value))
     }
   }
 
