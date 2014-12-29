@@ -158,6 +158,14 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
+  "Conversion (min(lifespan) as time(ss)" should "show minimum lifespan in seconds" in {
+    val output = run("--csv", "ipAddress,(min(lifespan) as time(s))", testFile("a-pair.xml"))
+    output shouldEqual """ipAddress,(min(lifespan) as time(s))
+                         |10.0.0.1,1
+                         |,
+                         |""".stripMargin
+  }
+
   "calc(a-b)" should "output difference between two timestamps in custom format" in {
     val output = run("--csv", "calc(max(time(mm:ss))-min(time(mm:ss)))", testFile("a-bunch.xml"))
     output shouldEqual """calc(max(time(mm:ss))-min(time(mm:ss)))

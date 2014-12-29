@@ -27,10 +27,14 @@ class HumanTimeFormatter(val pattern: String) extends TimeFormatter {
 
 object EpochTimeFormatter extends TimeFormatter {
   override def print(timestamp: DateTime): String = timestamp.getMillis.toString
-
-  override def parseDateTime(s: String): DateTime = new DateTime(s.toLong)
-
   override def print(period: Period): String = new DateTime(0).withPeriodAdded(period, 1).getMillis.toString
+  override def parseDateTime(s: String): DateTime = new DateTime(s.toLong)
+}
+
+object EpochSecondsFormatter extends TimeFormatter {
+  override def print(timestamp: DateTime): String = (timestamp.getMillis/1000).toString
+  override def print(period: Period): String = (new DateTime(0).withPeriodAdded(period, 1).getMillis/1000).toString
+  override def parseDateTime(s: String): DateTime = new DateTime(s.toLong*1000)
 }
 
 object DefaultDateTimeFormat extends HumanTimeFormatter("yyyy-MM-dd HH:mm:ss.SSS")
@@ -45,10 +49,18 @@ object TimeFormatter {
     case "time" => Some(DefaultTimeFormat)
     case "timestamp" => Some(DefaultDateTimeFormat)
     case "date" => Some(DefaultDateFormat)
+    case "time(ms)" => Some(EpochTimeFormatter)
     case "time(millis)" => Some(EpochTimeFormatter)
+    case "time(s)" => Some(EpochSecondsFormatter)
+    case "time(seconds)" => Some(EpochSecondsFormatter)
     case TimeExpression(pattern) => Some(new HumanTimeFormatter(pattern))
     case _ => None
   }
+
+  /**
+   * Unapply or die.
+   */
+  def formatterFor(expr: String) = unapply(expr).get
 }
 
 object PeriodFormatTranslator {

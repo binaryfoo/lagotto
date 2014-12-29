@@ -30,11 +30,11 @@
 * Graceful error reporting...
 * Other input log formats: log4j, httpd
 * calc(timestamp-lifespan)
-* Allow aggregation like min(calc(timestamp-lifespan))
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
 * Warn about typos like count(exception)
+* (max(lifespan as time(s)),(min(lifespan as time(s))) is not going to return anything. Did you mean (max(lifespan) as time(s))
 
 * Deploy artifact to maven central with fat .jar attachment
 * Codeship.io free account

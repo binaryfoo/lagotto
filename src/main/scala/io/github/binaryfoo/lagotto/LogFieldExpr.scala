@@ -1,15 +1,17 @@
 package io.github.binaryfoo.lagotto
 
-import org.joda.time.Period
+import org.joda.time.{DateTimeZone, Period}
 
 object LogFieldExpr {
   val SubtractOp = """calc\((.+)-(.+)\)""".r
   val DivideOp = """calc\((.+)/(.+)\)""".r
+  val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
 
   def unapply(expr: String): Option[GroundedFieldExpr] = {
     Some(expr match {
       case field@SubtractOp(LogFieldExpr(left), LogFieldExpr(right)) => SubtractTimeExpr(field, left, right)
       case field@DivideOp(LogFieldExpr(left), LogFieldExpr(right)) => DivideExpr(field, left, right)
+      case field@ConvertOp(LogFieldExpr(child), from, to) => ConvertExpr(field, child, from, to)
       case "delay" => DelayFieldExpr
       case field@AggregateOp(op) => AggregateFieldExpr(field, op)
       case s => DirectLogFieldExpr(s)
@@ -107,4 +109,32 @@ case class DivideExpr(field: String, left: GroundedFieldExpr, right: GroundedFie
     (leftNumber / rightNumber).formatted("%.4f")
   }
   override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
+}
+
+/**
+ * A limited set of type conversions.
+ */
+case class ConvertExpr(field: String, expr: GroundedFieldExpr, from: String, to: String) extends GroundedFieldExpr with CanRequireAggregates {
+  def apply(e: LogLike): String = {
+    val value = expr(e)
+    if (value == null || value == "")
+      null
+    else
+      (expr.field, from, to) match {
+        case (_, "millis", "period") =>
+          val period = new Period(value.toLong)
+          DefaultDateTimeFormat.print(period)
+        case (_, "millis", TimeFormatter(format)) =>
+          val period = new Period(value.toLong)
+          format.print(period)
+        case (_, null, TimeFormatter(format)) =>
+          val period = new Period(value.toLong)
+          format.print(period)
+        case (TimeFormatter(format), null, "millis") =>
+          val utcDateTime = format.parseDateTime(value).withZoneRetainFields(DateTimeZone.UTC)
+          utcDateTime.getMillis.toString
+    }
+  }
+
+  override def children(): Seq[GroundedFieldExpr] = Seq(expr)
 }
