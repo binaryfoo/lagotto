@@ -1,6 +1,6 @@
-package io.github.binaryfoo.lagotto.gnuplot
+package io.github.binaryfoo.lagotto.output
 
-object GnuplotScriptAuthor {
+object GnuplotScriptWriter {
 
   def write(fields: Seq[String], csvFileName: String, baseName: String, xRange: (String, String)): String = {
     val timeFormat = fields.head match {

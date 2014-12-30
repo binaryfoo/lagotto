@@ -1,8 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
 import java.io.{File, FileOutputStream, FileWriter, PrintStream}
-
-import io.github.binaryfoo.lagotto.gnuplot.GnuplotScriptAuthor
+import io.github.binaryfoo.lagotto.output.GnuplotScriptWriter
 import io.github.binaryfoo.lagotto.{FieldExpr, LogLike}
 import org.HdrHistogram.Histogram
 
@@ -76,7 +75,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptAuthor.write(fields.map(_.field), csvFileName, baseName, xRange))
+    writer.write(GnuplotScriptWriter.write(fields.map(_.field), csvFileName, baseName, xRange))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)
