@@ -99,6 +99,12 @@ class LogFieldExprTest extends FlatSpec with Matchers {
     expr(LogEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
   }
 
+  "(time(HH:mm) as peanuts)" should "complain about unknown conversion" in {
+    the [IAmSorryDave] thrownBy {
+      LogFieldExpr.unapply("(time(HH:mm) as peanuts)")
+    } should have message "Unknown conversion (time(HH:mm) as peanuts)"
+  }
+
   "Format expression (calc(time-lifespan) time as time(HH:mm:ss))" should "drop millis from the modified timestamp" in {
     val loggedAt = new DateTime()
     val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")
@@ -120,5 +126,35 @@ class LogFieldExprTest extends FlatSpec with Matchers {
     val expr = expressionFor("calc(4/lifespan)")
     val percent = expr(LogEntry("4" -> "000000050", "lifespan" -> "200"))
     percent shouldBe "0.2500"
+  }
+
+  "calc(a-b)" should "whinge on an attempt use an aggregate and a direct field" in {
+    the [IAmSorryDave] thrownBy {
+      LogFieldExpr.unapply("calc(min(time)-lifespan)")
+    } should have message "In calc(left-right) both sides must be aggregate or direct operations. Left: min(time) and Right: lifespan are not compatible."
+
+    an [IAmSorryDave] should be thrownBy  {
+      LogFieldExpr.unapply("calc(time-min(lifespan))")
+    }
+  }
+
+  "calc(a/b)" should "whinge on an attempt to use an aggregate and a direct field" in {
+    the [IAmSorryDave] thrownBy {
+      LogFieldExpr.unapply("calc(avg(time)/lifespan)")
+    } should have message "In calc(left/right) both sides must be aggregate or direct operations. Left: avg(time) and Right: lifespan are not compatible."
+
+    an [IAmSorryDave] should be thrownBy  {
+      LogFieldExpr.unapply("calc(time/sum(lifespan))")
+    }
+  }
+
+  "calc(time()" should "whinge on an attempt to use an aggregate and a direct field" in {
+    the [IAmSorryDave] thrownBy {
+      LogFieldExpr.unapply("calc(avg(time)/lifespan)")
+    } should have message "In calc(left/right) both sides must be aggregate or direct operations. Left: avg(time) and Right: lifespan are not compatible."
+
+    an [IAmSorryDave] should be thrownBy  {
+      LogFieldExpr.unapply("calc(time/sum(lifespan))")
+    }
   }
 }
