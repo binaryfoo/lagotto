@@ -7,7 +7,7 @@ import org.scalatest.{Matchers, FlatSpec}
 
 class LogFieldExprTest extends FlatSpec with Matchers {
 
-  "Subtract expression" should "diff two times" in {
+  "calc(max(a)-min(a))" should "diff two times" in {
     val expr = expressionFor("calc(max(time)-min(time))")
     val diff = expr(AggregateLogLike(Map(), Seq("max(time)" -> "03:03:03.333", "min(time)" -> "02:02:02.222")))
     diff shouldBe "01:01:01.111"
@@ -103,5 +103,22 @@ class LogFieldExprTest extends FlatSpec with Matchers {
     val loggedAt = new DateTime()
     val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")
     expr(LogEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe loggedAt.minusMillis(1000).toString("HH:mm:ss")
+  }
+
+  it should "work for aggregation output (different because the individual fields aren't available)" in {
+    val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")
+    expr(AggregateLogLike(Map("(calc(time-lifespan) time as time(HH:mm:ss))" -> "already computed"), Seq())) shouldBe "already computed"
+  }
+
+  "calc(count(mti=0200)/count)" should "calculate percentage of 0200's" in {
+    val expr = expressionFor("calc(count(mti=0200)/count)")
+    val percent = expr(AggregateLogLike(Map(), Seq("count(mti=0200)" -> "50", "count" -> "100")))
+    percent shouldBe "0.5000"
+  }
+
+  "calc(4/lifespan)" should "perform a rather useless division" in {
+    val expr = expressionFor("calc(4/lifespan)")
+    val percent = expr(LogEntry("4" -> "000000050", "lifespan" -> "200"))
+    percent shouldBe "0.2500"
   }
 }

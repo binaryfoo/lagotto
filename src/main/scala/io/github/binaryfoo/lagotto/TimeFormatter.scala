@@ -43,11 +43,10 @@ object DefaultDateFormat extends HumanTimeFormatter("yyyy-MM-dd")
 
 object TimeFormatter {
 
-  private val Aggregated = """^[^(]+\((.+)\)$""".r
   private val TimeExpression = """time\((.*)\)""".r
 
   def unapply(expr: GroundedFieldExpr): Option[TimeFormatter] = expr.field match {
-    case Aggregated(TimeFormatter(format)) => Some(format)
+    case AggregateOp.OverExpression(TimeFormatter(format)) => Some(format)
     case TimeFormatter(format) => Some(format)
     case _ => None
   }
@@ -61,6 +60,7 @@ object TimeFormatter {
     case "time(s)" => Some(EpochSecondsFormatter)
     case "time(seconds)" => Some(EpochSecondsFormatter)
     case TimeExpression(pattern) => Some(new HumanTimeFormatter(pattern))
+    case MsgPairFieldAccess(_, TimeFormatter(formatter)) => Some(formatter)
     case _ => None
   }
 

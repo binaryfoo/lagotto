@@ -4,20 +4,18 @@ import io.github.binaryfoo.lagotto.Iso8583._
 import org.joda.time.DateTime
 
 import scala.collection.mutable
+import scala.util.matching.Regex
 
 /**
  * A single request paired with its response. Eg an auth (0200) and reply (0210).
  */
 case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with LogLike {
 
-  val Request = """(req|request)\.(.*)""".r
-  val Response = """(resp|response)\.(.*)""".r
-
   def apply(field: String): String = {
     field match {
       case "rtt" => rtt.toString
-      case Request(_, f) => request(f)
-      case Response(_, f) => response(f)
+      case MsgPairFieldAccess.Request(_, f) => request(f)
+      case MsgPairFieldAccess.Response(_, f) => response(f)
       case _ =>
         val v = request(field)
         if (v == null) response(field) else v
@@ -86,5 +84,17 @@ object MsgPair {
     catch {
       case e: NumberFormatException => s
     }
+  }
+}
+
+object MsgPairFieldAccess {
+
+  val Request = """(req|request)\.(.*)""".r
+  val Response = """(resp|response)\.(.*)""".r
+
+  def unapply(expr: String): Option[(String, String)] = expr match {
+    case Request(p, f) => Some((p, f))
+    case Response(p, f) => Some((p, f))
+    case _ => None
   }
 }

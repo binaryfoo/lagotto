@@ -166,10 +166,35 @@ class MainTest extends FlatSpec with Matchers {
                           |""".stripMargin
   }
 
-  it should "output difference between two timestamps with calc(a-b) in field list" in {
+  "calc(a-b)" should "output difference between two aggregate timestamps" in {
     val output = run("--csv", "calc(max(time)-min(time))", testFile("a-bunch.xml"))
     output shouldEqual """calc(max(time)-min(time))
                           |00:00:01.700
+                          |""".stripMargin
+  }
+
+  it should "output difference between two direct timestamps" in {
+    val output = run("--csv", "11,calc(resp.time-req.time)","--pair", testFile("a-bunch.xml"))
+    output shouldEqual """11,calc(resp.time-req.time)
+                         |2,00:00:00.600
+                         |1,00:00:01.700
+                         |""".stripMargin
+  }
+
+  it should "output difference between an aggregate timestamp and an aggregate millis value" in {
+    val output = run("--csv", "calc(max(time)-max(lifespan))", testFile("a-bunch.xml"))
+    output shouldEqual """calc(max(time)-max(lifespan))
+                          |00:00:04.892
+                          |""".stripMargin
+  }
+
+  it should "output difference between a direct timestamp and a direct millis value" in {
+    val output = run("--csv", "48.1,calc(time-lifespan)", testFile("a-bunch.xml"))
+    output shouldEqual """48.1,calc(time-lifespan)
+                          |a-bunch.xml #1,
+                          |a-bunch.xml #2,
+                          |a-bunch.xml #3,00:00:04.882
+                          |a-bunch.xml #4,00:00:04.892
                           |""".stripMargin
   }
 

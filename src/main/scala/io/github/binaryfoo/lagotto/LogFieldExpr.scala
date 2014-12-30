@@ -9,13 +9,31 @@ object LogFieldExpr {
 
   def unapply(expr: String): Option[GroundedFieldExpr] = {
     Some(expr match {
-      case SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right@TimeFormatter(rightFormat))) => SubtractTwoTimesExpr(expr, left, right, leftFormat, rightFormat)
-      case SubtractOp(LogFieldExpr(left@TimeFormatter(leftFormat)), LogFieldExpr(right)) => SubtractMillisFromTimeExpr(expr, left, right, leftFormat)
-      case DivideOp(LogFieldExpr(left), LogFieldExpr(right)) => DivideExpr(expr, left, right)
-      case ConvertOp(LogFieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
+      case SubtractOp(AggregateFieldExpr(left), AggregateFieldExpr(right)) =>
+        val leftFormat = left.field match {
+          case AggregateOp.OverExpression(TimeFormatter(format)) => format
+          case _ => throw new IAmSorryDave(s"In calc(left-right) left must be time expression. ${left.field} is not a time expression.")
+        }
+        right.field match {
+          case AggregateOp.OverExpression(TimeFormatter(rightFormat)) => SubtractTwoAggregateTimesExpr(expr, left, right, leftFormat, rightFormat)
+          case _ => SubtractAggregateMillisFromTimeExpr(expr, left, right, leftFormat)
+        }
+      case SubtractOp(DirectLogFieldExpr(left), DirectLogFieldExpr(right)) =>
+        val leftFormat = left.field match {
+          case TimeFormatter(format) => format
+          case _ => throw new IAmSorryDave(s"In calc(left-right) left must be time expression. ${left.field} is not a time expression.")
+        }
+        right.field match {
+          case TimeFormatter(rightFormat) => SubtractTwoDirectTimesExpr(expr, left, right, leftFormat, rightFormat)
+          case _ => SubtractDirectMillisFromTimeExpr(expr, left, right, leftFormat)
+        }
+      case DivideOp(AggregateFieldExpr(left), AggregateFieldExpr(right)) => DivideAggregatesExpr(expr, left, right)
+      case DivideOp(DirectLogFieldExpr(left), DirectLogFieldExpr(right)) => DivideDirectExpr(expr, left, right)
+      case ConvertOp(AggregateFieldExpr(child), from, to) => ConvertAggregateExpr(expr, child, from, to)
+      case ConvertOp(DirectLogFieldExpr(child), from, to) => ConvertDirectExpr(expr, child, from, to)
       case "delay" => DelayFieldExpr
       case AggregateOp(op) => AggregateFieldExpr(expr, op)
-      case s => DirectLogFieldExpr(s)
+      case s => PrimitiveLogFieldExpr(s)
     })
   }
 
@@ -31,6 +49,20 @@ object LogFieldExpr {
   }
 }
 
+object AggregateFieldExpr {
+  def unapply(expr: String): Option[AggregateFieldExpr] = expr match {
+    case AggregateOp(op) => Some(AggregateFieldExpr(expr, op))
+    case _ => None
+  }
+}
+
+object DirectLogFieldExpr {
+  def unapply(expr: String): Option[DirectLogFieldExpr] = LogFieldExpr.unapply(expr).flatMap {
+    case e: DirectLogFieldExpr => Some(e)
+    case _ => None
+  }
+}
+
 /**
  * Exists separately from LogFieldExpr to allow passing lambas to LogLike.toXsv(). Maybe misguided.
  */
@@ -39,11 +71,14 @@ trait GroundedFieldExpr extends LogFieldExpr {
   override def toString(): String = field
 }
 
-case class DirectLogFieldExpr(field: String) extends GroundedFieldExpr {
+/**
+ * Just access a field.
+ */
+case class PrimitiveLogFieldExpr(field: String) extends DirectLogFieldExpr {
   def apply(e: LogLike): String = e(field)
 }
 
-object DelayFieldExpr extends GroundedFieldExpr {
+object DelayFieldExpr extends DirectLogFieldExpr {
   val field = "delay"
   def apply(e: LogLike): String = {
     if (!e.isInstanceOf[DelayTimer]) {
@@ -53,6 +88,16 @@ object DelayFieldExpr extends GroundedFieldExpr {
   }
 }
 
+/**
+ * The opposite of an aggregate expression. The value can be obtained without running aggregation.
+ */
+trait DirectLogFieldExpr extends GroundedFieldExpr
+
+/**
+ * An expression that requires an aggregation operation to be performed in order to retrieve the value.
+ * @param field The expression to be calculated. Used as a lookup key for the aggregate value.
+ * @param op How to calculate the aggregate value.
+ */
 case class AggregateFieldExpr(field: String, op: AggregateOp) extends GroundedFieldExpr {
   override def apply(e: LogLike): String = {
     if (!e.isInstanceOf[AggregateLogLike]) {
@@ -62,25 +107,20 @@ case class AggregateFieldExpr(field: String, op: AggregateOp) extends GroundedFi
   }
 }
 
-trait CanRequireAggregates {
-  def aggregates(): Seq[AggregateFieldExpr] = {
-    children().collect {
-      case e: AggregateFieldExpr => e
-    }
-  }
-  def children(): Seq[GroundedFieldExpr]
-}
-
 object HasAggregateExpressions {
   def unapply(expr: GroundedFieldExpr): Option[Seq[AggregateFieldExpr]] = {
     expr match {
-      case e: CanRequireAggregates =>
-        val children = e.aggregates()
-        if (children.isEmpty) None else Some(children)
       case e: AggregateFieldExpr => Some(Seq(e))
+      case e: CalculationOverAggregates => Some(e.dependencies())
       case _ => None
     }
   }
+}
+
+trait CalculationOverAggregates extends GroundedFieldExpr {
+  final def apply(e: LogLike): String = calculate(e)
+  def calculate(e: LogLike): String
+  def dependencies(): Seq[AggregateFieldExpr]
 }
 
 /**
@@ -88,11 +128,10 @@ object HasAggregateExpressions {
  * Trying to perform the calculation on the output of aggregation would fail because the underlying fields are gone.
  * Unless the calculation is happening over aggregated fields.
  */
-trait CalculatedFieldExpr extends GroundedFieldExpr with CanRequireAggregates {
+trait DirectCalculationExpr extends DirectLogFieldExpr {
   final def apply(e: LogLike): String = {
-    // TODO: currently fails if one field is an aggregate but the other not... Best solved statically in LogFieldExpr.unapply() ?
     e match {
-      case aggregated: AggregateLogLike if aggregates().isEmpty => e(field)
+      case aggregated: AggregateLogLike => e(field)
       case _ => calculate(e)
     }
   }
@@ -102,7 +141,12 @@ trait CalculatedFieldExpr extends GroundedFieldExpr with CanRequireAggregates {
 /**
  * Show the difference between two timestamps as a period.
  */
-case class SubtractTwoTimesExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr, leftFormat: TimeFormatter, rightFormat: TimeFormatter) extends CalculatedFieldExpr {
+trait SubtractTwoTimesOperation {
+
+  def left: GroundedFieldExpr
+  def right: GroundedFieldExpr
+  def leftFormat: TimeFormatter
+  def rightFormat: TimeFormatter
 
   def calculate(e: LogLike): String = {
     val leftTime = leftFormat.parseDateTime(left(e))
@@ -110,14 +154,25 @@ case class SubtractTwoTimesExpr(field: String, left: GroundedFieldExpr, right: G
     val period = new Period(rightTime, leftTime)
     leftFormat.print(period)
   }
+}
 
-  override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
+case class SubtractTwoAggregateTimesExpr(field: String, left: AggregateFieldExpr, right: AggregateFieldExpr, leftFormat: TimeFormatter, rightFormat: TimeFormatter)
+  extends SubtractTwoTimesOperation with CalculationOverAggregates {
+  override def dependencies(): Seq[AggregateFieldExpr] = Seq(left, right)
+}
+
+case class SubtractTwoDirectTimesExpr(field: String, left: DirectLogFieldExpr, right: DirectLogFieldExpr, leftFormat: TimeFormatter, rightFormat: TimeFormatter)
+  extends SubtractTwoTimesOperation with DirectCalculationExpr {
 }
 
 /**
  * Show a new timestamp that a number of milliseconds (right) prior to the original (left).
  */
-case class SubtractMillisFromTimeExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr, leftFormat: TimeFormatter) extends CalculatedFieldExpr {
+trait SubtractMillisFromTimeOperation {
+
+  def left: GroundedFieldExpr
+  def right: GroundedFieldExpr
+  def leftFormat: TimeFormatter
 
   def calculate(e: LogLike): String = {
     val leftValue = left(e)
@@ -131,22 +186,46 @@ case class SubtractMillisFromTimeExpr(field: String, left: GroundedFieldExpr, ri
     }
   }
 
-  override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
 }
 
-case class DivideExpr(field: String, left: GroundedFieldExpr, right: GroundedFieldExpr) extends CalculatedFieldExpr {
+case class SubtractAggregateMillisFromTimeExpr(field: String, left: AggregateFieldExpr, right: AggregateFieldExpr, leftFormat: TimeFormatter)
+  extends SubtractMillisFromTimeOperation with CalculationOverAggregates {
+  override def dependencies(): Seq[AggregateFieldExpr] = Seq(left, right)
+}
+
+case class SubtractDirectMillisFromTimeExpr(field: String, left: DirectLogFieldExpr, right: DirectLogFieldExpr, leftFormat: TimeFormatter)
+  extends SubtractMillisFromTimeOperation with DirectCalculationExpr {
+}
+
+trait DivideOperation {
+  def left: GroundedFieldExpr
+  def right: GroundedFieldExpr
+
   def calculate(e: LogLike): String = {
     val leftNumber = left(e).toDouble
     val rightNumber = right(e).toDouble
     (leftNumber / rightNumber).formatted("%.4f")
   }
-  override def children(): Seq[GroundedFieldExpr] = Seq(left, right)
+}
+
+case class DivideAggregatesExpr(field: String, left: AggregateFieldExpr, right: AggregateFieldExpr)
+  extends DivideOperation with CalculationOverAggregates {
+  override def dependencies(): Seq[AggregateFieldExpr] = Seq(left, right)
+}
+
+case class DivideDirectExpr(field: String, left: DirectLogFieldExpr, right: DirectLogFieldExpr)
+  extends DivideOperation with DirectCalculationExpr {
 }
 
 /**
  * A limited set of type conversions.
  */
-case class ConvertExpr(field: String, expr: GroundedFieldExpr, from: String, to: String) extends CalculatedFieldExpr {
+trait ConvertOperation {
+
+  def expr: GroundedFieldExpr
+  def from: String
+  def to: String
+
   def calculate(e: LogLike): String = {
     val value = expr(e)
     if (value == null || value == "")
@@ -169,6 +248,13 @@ case class ConvertExpr(field: String, expr: GroundedFieldExpr, from: String, to:
           outputFormat.print(DefaultTimeFormat.parseDateTime(value))
     }
   }
+}
 
-  override def children(): Seq[GroundedFieldExpr] = Seq(expr)
+case class ConvertAggregateExpr(field: String, expr: AggregateFieldExpr, from: String, to: String)
+  extends ConvertOperation with CalculationOverAggregates {
+  override def dependencies(): Seq[AggregateFieldExpr] = Seq(expr)
+}
+
+case class ConvertDirectExpr(field: String, expr: DirectLogFieldExpr, from: String, to: String)
+  extends ConvertOperation with DirectCalculationExpr {
 }

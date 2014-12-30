@@ -45,4 +45,11 @@ class TimeFormatterTest extends FlatSpec with Matchers {
     val format = formatterFor("time(seconds)")
     format.parseDateTime("61") shouldBe new DateTime(61000)
   }
+
+  "MsgPair item .time" should "match default time format" in {
+    formatterFor("req.time") shouldBe DefaultTimeFormat
+    formatterFor("request.time") shouldBe DefaultTimeFormat
+    formatterFor("resp.time") shouldBe DefaultTimeFormat
+    formatterFor("response.time") shouldBe DefaultTimeFormat
+  }
 }

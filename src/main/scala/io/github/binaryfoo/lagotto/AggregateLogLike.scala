@@ -3,7 +3,6 @@ package io.github.binaryfoo.lagotto
 import org.joda.time.DateTime
 
 import scala.collection.mutable
-import scala.util.Try
 
 /**
  * Like a row in the output of a SQL query with a GROUP BY clause. Has a group key and a set of aggregate values
@@ -35,6 +34,7 @@ trait AggregateOp extends mutable.Builder[LogLike, String] {
 
 object AggregateOp {
 
+  val OverExpression = """^[^(]+\((.+)\)$""".r
   val MinOp = """min\((.*)\)""".r
   val MaxOp = """max\((.*)\)""".r
   val SumOp = """sum\((.*)\)""".r
