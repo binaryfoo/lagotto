@@ -311,8 +311,7 @@ trait ConvertExpr {
     if (value == null || value == "") {
       null
     } else {
-      val conversion = op
-      conversion(value, input, output)
+      op.apply(value, input, output)
     }
   }
 }
