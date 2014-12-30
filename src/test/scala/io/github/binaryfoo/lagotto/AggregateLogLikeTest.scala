@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto
 
+import org.joda.time.DateTime
+import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import org.scalatest.{Matchers, FlatSpec}
 
 class AggregateLogLikeTest extends FlatSpec with Matchers {
@@ -44,6 +46,38 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
     aggregateToCsv(threeStans, "mti", "group_concat(11)") shouldBe List("0200,1,2", "0210,3")
   }
 
+  val now = new DateTime()
+  val threeLifespans = Stream(
+    LogEntry("at" -> now.asJposAt, "lifespan" -> "1000"),
+    LogEntry("at" -> now.asJposAt, "lifespan" -> "2000"),
+    LogEntry("at" -> now.asJposAt, "lifespan" -> "3000"))
+
+  "Aggregation over a calculation" should "support max" in {
+    aggregateToCsv(threeLifespans, "max(calc(timestamp-lifespan))") shouldBe Seq(DefaultDateTimeFormat.print(now.minusMillis(1000)))
+  }
+
+  it should "support min" in {
+    aggregateToCsv(threeLifespans, "min(calc(timestamp-lifespan))") shouldBe Seq(DefaultDateTimeFormat.print(now.minusMillis(3000)))
+  }
+
+  it should "support avg" in {
+    aggregateToCsv(threeLifespans, "avg(calc((time as millis)/(time as millis)))") shouldBe Seq("1")
+  }
+
+  it should "support sum" in {
+    val expectedSum = threeLifespans.map(_.timestamp.getMillisOfDay).sum - 6000
+    aggregateToCsv(threeLifespans, "sum((calc(timestamp-lifespan) time as millis))") shouldBe Seq(expectedSum.toString)
+  }
+
+  it should "support group_concat" in {
+    val expectedGroup = (1 to 3).map(v => now.minusMillis(v * 1000).toString("HH:mm:ss")).mkString(",")
+    aggregateToCsv(threeLifespans, "group_concat(calc(time(HH:mm:ss)-lifespan))") shouldBe Seq(expectedGroup)
+  }
+
+  it should "support count(distinct)" in {
+    aggregateToCsv(threeLifespans, "count(distinct(calc(time(HH:mm:ss)-lifespan)))") shouldBe Seq("3")
+  }
+
   private val twoStrings = Stream(
     LogEntry("48" -> "a"),
     LogEntry("48" -> "b"))
@@ -58,14 +92,14 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
   }
 
   private def aggregate(field: String): List[String] = {
-    val aggregationConfig = AggregationSpec.fromExpressions(LogFieldExpr.expressionsFor(field))
-    val aggregated = AggregateLogLike.aggregate(twoLifespans.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
+    val aggregationConfig = AggregationSpec.fromExpressions(FieldExpr.expressionsFor(field))
+    val aggregated = AggregateExpr.aggregate(twoLifespans.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     aggregated.map(_(field)).toList
   }
 
   private def aggregateToCsv(raw: Stream[LogLike], fields: String*): List[String] = {
-    val aggregationConfig = AggregationSpec.fromExpressions(LogFieldExpr.expressionsFor(fields))
-    val aggregated = AggregateLogLike.aggregate(raw.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
+    val aggregationConfig = AggregationSpec.fromExpressions(FieldExpr.expressionsFor(fields))
+    val aggregated = AggregateExpr.aggregate(raw.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     aggregated.map(_.toCsv(fields)).toList
   }
 }

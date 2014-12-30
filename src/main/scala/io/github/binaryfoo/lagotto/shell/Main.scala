@@ -39,7 +39,7 @@ object Main extends App {
   }
 }
 
-case class SortOrder(afterGrouping: Option[GroundedFieldExpr] = None, beforeGrouping: Option[GroundedFieldExpr] = None)
+case class SortOrder(afterGrouping: Option[FieldExpr] = None, beforeGrouping: Option[FieldExpr] = None)
 
 case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Seq(), paired: Seq[LogFilter] = Seq())
 
@@ -71,7 +71,7 @@ class Pipeline(val config: Config) {
   def partitionSortKey(): SortOrder = {
     config.sortBy.map {
       case key@HasAggregateExpressions(_) => SortOrder(afterGrouping = Some(key))
-      case DelayFieldExpr => SortOrder(afterGrouping = Some(DelayFieldExpr))
+      case DelayExpr => SortOrder(afterGrouping = Some(DelayExpr))
       case k => SortOrder(beforeGrouping = Some(k))
     }.getOrElse(SortOrder())
   }
@@ -81,7 +81,7 @@ class Pipeline(val config: Config) {
       case f@FieldFilterOn(HasAggregateExpressions(_)) => f
     }
     val delay = config.filters.collect {
-      case f@FieldFilterOn(DelayFieldExpr) => f
+      case f@FieldFilterOn(DelayExpr) => f
     }
     val paired = config.filters.diff(aggregate ++ delay)
     Filters(aggregate, delay, paired)
@@ -123,7 +123,7 @@ class Pipeline(val config: Config) {
   }
 
   // not always going to work in a bounded amount of memory
-  private def sort(v: Stream[LogLike], sortBy: Option[GroundedFieldExpr], descending: Boolean): Stream[LogLike] = {
+  private def sort(v: Stream[LogLike], sortBy: Option[FieldExpr], descending: Boolean): Stream[LogLike] = {
     if (sortBy.isEmpty) {
       v
     } else {
@@ -140,9 +140,9 @@ class Pipeline(val config: Config) {
 
   private def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
     if (config.requiresDelayCalculation())
-      DelayTimer.calculateDelays(v)
+      DelayExpr.calculateDelays(v)
     else
-    v
+      v
   }
 
   // Iterator instead of Stream to the same reason as filter()
@@ -151,7 +151,7 @@ class Pipeline(val config: Config) {
     if (aggregationConfig.aggregates.isEmpty) {
       v.toStream
     } else {
-      AggregateLogLike.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
+      AggregateExpr.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     }
   }
 }

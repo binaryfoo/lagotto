@@ -32,7 +32,7 @@ trait LogLike {
     }.toSeq
   }
 
-  def exprToSeq(ids: Iterable[LogFieldExpr]): Seq[String] = {
+  def exprToSeq(ids: Iterable[FieldAccessor]): Seq[String] = {
     ids.map { id =>
       val value = id(this)
       if (value == null) "" else value
@@ -47,7 +47,7 @@ trait LogLike {
 
   def toTsv(ids: Iterable[String]): String = Xsv.toTsv(toSeq(ids))
 
-  def toXsv(separator: String, ids: LogFieldExpr*): String = Xsv.toXsv(separator, exprToSeq(ids))
+  def toXsv(separator: String, ids: FieldAccessor*): String = Xsv.toXsv(separator, exprToSeq(ids))
 
   def toXsv(separator: String, ids: Iterable[String]): String = Xsv.toXsv(separator, toSeq(ids))
 
@@ -67,5 +67,5 @@ object LogLike {
 
   }
 
-  implicit def stringAsLogFieldExpr(s: String): LogFieldExpr = { e: LogLike => e(s) }
+  implicit def stringAsFieldAccessor(s: String): FieldAccessor = { e: LogLike => e(s) }
 }

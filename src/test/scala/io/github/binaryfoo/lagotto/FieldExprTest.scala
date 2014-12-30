@@ -1,11 +1,11 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.LogFieldExpr.expressionFor
+import io.github.binaryfoo.lagotto.FieldExpr.expressionFor
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import org.joda.time.{DateTime, LocalTime}
 import org.scalatest.{Matchers, FlatSpec}
 
-class LogFieldExprTest extends FlatSpec with Matchers {
+class FieldExprTest extends FlatSpec with Matchers {
 
   "calc(max(a)-min(a))" should "diff two times" in {
     val expr = expressionFor("calc(max(time)-min(time))")
@@ -99,9 +99,14 @@ class LogFieldExprTest extends FlatSpec with Matchers {
     expr(LogEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
   }
 
+  "(calc(timestamp-lifespan) as millis)" should "convert the calc output to millis period" in {
+    val expr = expressionFor("(calc(timestamp-lifespan) time as millis)")
+    expr(LogEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt, "lifespan" -> "60000")) shouldBe "3540000"
+  }
+
   "(time(HH:mm) as peanuts)" should "complain about unknown conversion" in {
     the [IAmSorryDave] thrownBy {
-      LogFieldExpr.unapply("(time(HH:mm) as peanuts)")
+      FieldExpr.unapply("(time(HH:mm) as peanuts)")
     } should have message "Unknown conversion (time(HH:mm) as peanuts)"
   }
 
@@ -130,31 +135,31 @@ class LogFieldExprTest extends FlatSpec with Matchers {
 
   "calc(a-b)" should "whinge on an attempt use an aggregate and a direct field" in {
     the [IAmSorryDave] thrownBy {
-      LogFieldExpr.unapply("calc(min(time)-lifespan)")
+      FieldExpr.unapply("calc(min(time)-lifespan)")
     } should have message "In calc(left-right) both sides must be aggregate or direct operations. Left: min(time) and Right: lifespan are not compatible."
 
     an [IAmSorryDave] should be thrownBy  {
-      LogFieldExpr.unapply("calc(time-min(lifespan))")
+      FieldExpr.unapply("calc(time-min(lifespan))")
     }
   }
 
   "calc(a/b)" should "whinge on an attempt to use an aggregate and a direct field" in {
     the [IAmSorryDave] thrownBy {
-      LogFieldExpr.unapply("calc(avg(time)/lifespan)")
+      FieldExpr.unapply("calc(avg(time)/lifespan)")
     } should have message "In calc(left/right) both sides must be aggregate or direct operations. Left: avg(time) and Right: lifespan are not compatible."
 
     an [IAmSorryDave] should be thrownBy  {
-      LogFieldExpr.unapply("calc(time/sum(lifespan))")
+      FieldExpr.unapply("calc(time/sum(lifespan))")
     }
   }
 
   "calc(time()" should "whinge on an attempt to use an aggregate and a direct field" in {
     the [IAmSorryDave] thrownBy {
-      LogFieldExpr.unapply("calc(avg(time)/lifespan)")
+      FieldExpr.unapply("calc(avg(time)/lifespan)")
     } should have message "In calc(left/right) both sides must be aggregate or direct operations. Left: avg(time) and Right: lifespan are not compatible."
 
     an [IAmSorryDave] should be thrownBy  {
-      LogFieldExpr.unapply("calc(time/sum(lifespan))")
+      FieldExpr.unapply("calc(time/sum(lifespan))")
     }
   }
 }

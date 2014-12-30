@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.LogFieldExpr._
+import io.github.binaryfoo.lagotto.FieldExpr._
 import io.github.binaryfoo.lagotto.LogFilter._
 import org.scalatest.{FlatSpec, Matchers}
 

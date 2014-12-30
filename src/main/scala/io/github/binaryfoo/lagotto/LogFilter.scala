@@ -8,11 +8,11 @@ trait LogFilter extends Function[LogLike, Boolean] {
 
 trait FieldFilter extends LogFilter {
   def field: String = expr.toString()
-  def expr: GroundedFieldExpr
+  def expr: FieldExpr
 }
 
 object FieldFilterOn {
-  def unapply(f: FieldFilter): Option[GroundedFieldExpr] = Some(f.expr)
+  def unapply(f: FieldFilter): Option[FieldExpr] = Some(f.expr)
 }
 
 case class GrepFilter(pattern: String) extends LogFilter {
@@ -25,14 +25,14 @@ case class NegativeGrepFilter(pattern: String) extends LogFilter {
   override def toString(): String = s"grep!($pattern)"
 }
 
-case class FieldOpFilter(expr: GroundedFieldExpr, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
+case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
     op(expr(entry), desired)
   }
   override def toString(): String = s"$expr$operatorSymbol$desired"
 }
 
-case class RegexFilter(expr: GroundedFieldExpr, pattern: Regex, positive: Boolean = true) extends FieldFilter {
+case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
     val value = expr(entry)
     value != null && pattern.findFirstMatchIn(value).isDefined == positive
@@ -50,8 +50,8 @@ object LogFilter {
   val MatchAsRegexPattern = "(.+?)(!?)~/(.+)/".r
 
   def unapply(s: String): Option[FieldFilter] = s match {
-    case MatchAsRegexPattern(LogFieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
-    case LogFilterPattern(LogFieldExpr(expr), negation, operator, value) =>
+    case MatchAsRegexPattern(FieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
+    case LogFilterPattern(FieldExpr(expr), negation, operator, value) =>
       val op: MatchOp = operator match {
         case "=" => equalsOp
         case ">" => greaterThanAsIntWithStringFallback

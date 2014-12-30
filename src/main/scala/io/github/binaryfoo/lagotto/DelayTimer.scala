@@ -17,18 +17,3 @@ case class DelayTimer(current: LogLike, previous: Option[LogLike]) extends LogLi
     current.timestamp.getMillis - p.timestamp.getMillis
   }
 }
-
-object DelayTimer {
-  def calculateDelays(s: Stream[LogLike]): Stream[DelayTimer] = {
-    var previous: Option[LogLike] = None
-    s.map { e =>
-      val next = DelayTimer(e, previous)
-      previous = Some(e)
-      next
-    }
-  }
-
-  implicit class RichLogLikeStream(val v: Stream[LogLike]) extends AnyVal {
-    def withDelays(): Stream[LogLike] = calculateDelays(v)
-  }
-}

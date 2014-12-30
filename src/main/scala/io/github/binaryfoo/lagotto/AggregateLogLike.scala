@@ -51,13 +51,13 @@ object AggregateOp {
   def unapply(expr: String): Option[AggregateOp] = {
     val op: AggregateOp = expr match {
       case "count" => new CountBuilder
-      case CountDistinct(field) => new CountDistinctBuilder(field)
+      case CountDistinct(DirectExpr(field)) => new CountDistinctBuilder(field)
       case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
-      case MinOp(field) => new TryLongOpBuilder(field, minLong, minString)
-      case MaxOp(field) => new TryLongOpBuilder(field, maxLong, maxString)
-      case SumOp(field) => new LongOpBuilder(field, addLongs)
-      case AvgOp(field) => new AverageBuilder(field)
-      case GroupConcat(field) => new GroupConcatBuilder(field)
+      case MinOp(DirectExpr(field)) => new TryLongOpBuilder(field, minLong, minString)
+      case MaxOp(DirectExpr(field)) => new TryLongOpBuilder(field, maxLong, maxString)
+      case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
+      case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
+      case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
       case _ => null
     }
     Option(op)
@@ -71,38 +71,14 @@ object AggregateOp {
   val addLongs = (l: Long, r: Long) => l + r
 }
 
-object AggregateLogLike {
-
-  /**
-   * Apply aggregation 'decorator' if something in outputFields requires it.
-   * @param s The stream of log entries that will be output.
-   * @param keyFields The set of fields identifying each group.
-   * @param aggregateFields The set of aggregates to calculate for each group.
-   * @return The original stream s or a Stream[AggregateLogLike].
-   */
-  def aggregate(s: Iterator[LogLike], keyFields: Seq[GroundedFieldExpr], aggregateFields: Seq[AggregateFieldExpr]): Stream[LogLike] = {
-    def keyFor(e: LogLike): Seq[(String, String)] = {
-      for {
-        k <- keyFields
-      } yield (k.field, k(e))
-    }
-    def newBuilder(k: Seq[(String, String)]) = {
-      // Each aggregate holds state so needs to be cloned for each new group
-      val aggregates = aggregateFields.map(e => (e.field, e.op.copy()))
-      new AggregateLogLikeBuilder(k.toMap, aggregates)
-    }
-    OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
-  }
-
-}
-
 trait FieldBasedAggregateOp extends AggregateOp {
 
-  def field: String
+  def expr: DirectExpr
+  def field = expr.field
   def add(v: String)
 
   final override def +=(elem: LogLike) = {
-    val v = elem(field)
+    val v = expr(elem)
     if (v != null) {
       add(v)
     }
@@ -145,7 +121,7 @@ case class CountIfBuilder(condition: FieldFilter) extends AggregateOp {
   override def copy() = new CountIfBuilder(condition)
 }
 
-case class CountDistinctBuilder(field: String) extends FieldBasedAggregateOp {
+case class CountDistinctBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   
   private val distinctValues = mutable.HashSet[String]()
 
@@ -155,10 +131,10 @@ case class CountDistinctBuilder(field: String) extends FieldBasedAggregateOp {
 
   override def toString: String = s"count(distinct($field)){count=${distinctValues.size}}"
 
-  override def copy() = new CountDistinctBuilder(field)
+  override def copy() = new CountDistinctBuilder(expr)
 }
 
-case class GroupConcatBuilder(field: String) extends FieldBasedAggregateOp {
+case class GroupConcatBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   
   private val values = mutable.ListBuffer[String]()
 
@@ -168,10 +144,10 @@ case class GroupConcatBuilder(field: String) extends FieldBasedAggregateOp {
 
   override def toString: String = s"group_concat($field){values=$values}"
 
-  override def copy() = new GroupConcatBuilder(field)
+  override def copy() = new GroupConcatBuilder(expr)
 }
 
-case class LongOpBuilder(field: String, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
+case class LongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
 
   private var current: Option[Long] = None
 
@@ -186,10 +162,10 @@ case class LongOpBuilder(field: String, op: (Long, Long) => Long) extends FieldB
 
   override def toString: String = s"longOp($field){current=$current}"
 
-  override def copy() = new LongOpBuilder(field, op)
+  override def copy() = new LongOpBuilder(expr, op)
 }
 
-case class TryLongOpBuilder(field: String, op: (Long, Long) => Long, fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
+case class TryLongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long, fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
 
   private var useStringOp = false
   private var current: Option[Long] = None
@@ -230,24 +206,24 @@ case class TryLongOpBuilder(field: String, op: (Long, Long) => Long, fallbackOp:
 
   override def toString: String = s"tryIntegerOp($field){current=$current,currentFallback=$currentFallback}"
 
-  override def copy() = new TryLongOpBuilder(field, op, fallbackOp)
+  override def copy() = new TryLongOpBuilder(expr, op, fallbackOp)
 }
 
-case class AverageBuilder(field: String) extends FieldBasedAggregateOp {
+case class AverageBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
 
-  private var sum = 0
+  private var sum = 0d
   private var count = 0
 
   override def add(v: String) = {
-    sum += v.toInt
+    sum += v.toDouble
     count += 1
   }
 
-  override def result(): String = if (count == 0) "" else (sum / count).toString
+  override def result(): String = if (count == 0) "" else (sum / count).toLong.toString
 
   override def toString: String = s"avg($field){sum=$sum,count=$count}"
 
-  override def copy() = new AverageBuilder(field)
+  override def copy() = new AverageBuilder(expr)
 }
 
 /**

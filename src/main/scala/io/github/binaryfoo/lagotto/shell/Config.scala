@@ -12,7 +12,7 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    header: Boolean = true,
                    beforeContext: Int = 0,
                    afterContext: Int = 0,
-                   sortBy: Option[GroundedFieldExpr] = None,
+                   sortBy: Option[FieldExpr] = None,
                    sortDescending: Boolean = false,
                    strict: Boolean = false,
                    progressMeter: ProgressMeter = NullProgressMeter,
@@ -23,14 +23,14 @@ case class Config (filters: Seq[LogFilter] = Seq(),
   
   def includesDelayInFieldList() = {
     format match {
-      case Tabular(fields, _) if fields.contains(DelayFieldExpr) => true
+      case Tabular(fields, _) if fields.contains(DelayExpr) => true
       case _ => false
     }
   }
   
   def includesDelayInFilters(): Boolean = {
     filters.collectFirst {
-      case FieldFilterOn(DelayFieldExpr) => true 
+      case FieldFilterOn(DelayExpr) => true
     }.isDefined
   }
 

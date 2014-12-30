@@ -20,7 +20,7 @@ object JposTimestamp {
     }
   }
 
-  def format(d: DateTime): String = d.toString(FORMAT) + "." + (d.getMillis % 1000)
+  def format(d: DateTime): String = d.toString(FORMAT) + "." + d.getMillisOfSecond
 
   implicit class DateTimeExtension(val d: DateTime) extends AnyVal {
     def asJposAt: String = format(d)

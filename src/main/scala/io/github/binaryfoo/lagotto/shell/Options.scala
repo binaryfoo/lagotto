@@ -78,11 +78,11 @@ object Options {
       } text "Like -C in grep"
 
       opt[String]("sort") action {(field,c) =>
-        c.copy(sortBy = LogFieldExpr.unapply(field))
+        c.copy(sortBy = FieldExpr.unapply(field))
       } text "Sort output by field. Prevents incremental output"
 
       opt[String]("sort-desc") action {(field,c) =>
-        c.copy(sortBy = LogFieldExpr.unapply(field), sortDescending = true)
+        c.copy(sortBy = FieldExpr.unapply(field), sortDescending = true)
       } text "Sort output descending by field. Prevents incremental output"
 
       opt[String]("gnuplot") action {(fileName,c) =>
@@ -101,8 +101,8 @@ object Options {
     parser.parse(args, Config())
   }
 
-  def parseFields(fields: String): Seq[GroundedFieldExpr] = {
-    fields.split(",").map { case LogFieldExpr(e) => e }
+  def parseFields(fields: String): Seq[FieldExpr] = {
+    fields.split(",").map { case FieldExpr(e) => e }
   }
 
   implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {
