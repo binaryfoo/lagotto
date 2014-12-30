@@ -53,6 +53,10 @@ object Options {
         c.copy(format = Tabular(parseFields(fields), new IncrementalAsciiTableFormat()))
       } text "Output an ASCII table incrementally. Can be messy."
 
+      opt[Unit]("json") action { (_, c) =>
+        c.copy(format = JSONOutput)
+      } text "Output a line of JSON per log entry."
+
       opt[String]("histogram") action { (fields, c) =>
         c.copy(histogramFields = fields.split(","))
       } text "Output a histogram"

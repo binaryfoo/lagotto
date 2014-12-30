@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
+import io.github.binaryfoo.lagotto.output.DeadSimpleJsonWriter
 import io.github.binaryfoo.lagotto.{FieldExpr, LogLike}
 
 import scala.collection.mutable
@@ -13,6 +14,12 @@ trait OutputFormat {
 object FullText extends OutputFormat {
   override def header(): Option[String] = None
   override def apply(e: LogLike): Option[String] = Some(e.lines)
+  override def footer(): Option[String] = None
+}
+
+object JSONOutput extends OutputFormat {
+  override def header(): Option[String] = None
+  override def apply(e: LogLike): Option[String] = Some(DeadSimpleJsonWriter.toJson(e.toMap))
   override def footer(): Option[String] = None
 }
 

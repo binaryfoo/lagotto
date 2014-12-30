@@ -51,6 +51,7 @@ trait LogLike {
 
   def toXsv(separator: String, ids: Iterable[String]): String = Xsv.toXsv(separator, toSeq(ids))
 
+  def toMap: Map[String, String]
 }
 
 object LogLike {

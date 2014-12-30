@@ -31,6 +31,8 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
   override def toString: String = s"Pair(req=${request.fields.mkString("{", ",", "}")},resp=${response.fields.mkString("{", ",", "}")})"
 
   override lazy val lines: String = "<pair>\n" + request.lines + "\n" + response.lines + "\n</pair>"
+
+  override def toMap: Map[String, String] = request.toMap ++ response.toMap
 }
 
 object MsgPair {

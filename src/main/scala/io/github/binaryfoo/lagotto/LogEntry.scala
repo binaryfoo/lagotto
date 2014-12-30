@@ -79,6 +79,8 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
   def lifespan: Option[Int] = fields.get("lifespan").map {
     case s: String => s.toInt
   }
+
+  override def toMap: Map[String, String] = _fields
 }
 
 object LogEntry {

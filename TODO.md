@@ -1,17 +1,18 @@
-* Should grep be case insensitive?
+* Should grep be case insensitive? Cost? --igrep?
 * Translate field numbers into names on output
  - needs a data dictionary. perhaps use ISO 8583 defaults (public spec?)
 * Dictionary could be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
+* Type dictionary/schema?
+ - mti, timestamp (with format), number
 * Tail mode (-F)
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
 * Add --splitBy field to Main? Use case would be ip address or transaction id or link
  - using scalaz streams?
-* JSON output format
+* JSON output format. One record per line. Might be an easy first format for Spark SQL.
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
-* Output with gnuplot header?
-* Can LogFieldExpr allow access to more specific type
+* Can FieldAccessor allow access to more specific type
  * Override toXsv() on LogEntry?
 * Output as
  - HTML table
@@ -29,7 +30,8 @@
 * Can --pair idea by expanded to a SQL like join. One case for keeping memoized streams...
 * Graceful error reporting...
 * Other input log formats: log4j, httpd
-* Aggregates of expressions like max(calc(timestamp-lifespan))
+* Split some pieces like ascii table and gnuplot out. Could run independently.
+ - Eg csv -> ascii, csv -> gnuplot per column, csv -> jira table, csv -> html
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC

@@ -16,4 +16,6 @@ case class DelayTimer(current: LogLike, previous: Option[LogLike]) extends LogLi
   def delay: Option[Long] = previous.map { p =>
     current.timestamp.getMillis - p.timestamp.getMillis
   }
+
+  override def toMap: Map[String, String] = current.toMap + ("delay" -> delay.map(_.toString).getOrElse(""))
 }
