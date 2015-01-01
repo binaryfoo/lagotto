@@ -22,7 +22,6 @@
 * More icons: session start and end, error
 * Add row number field
 * Value in multiple threads? actually CPU bound
-* Remove unicode dog. Not well supported...
 * Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
 * Ascii bar chart
 * Validate only one of delay or count is passed

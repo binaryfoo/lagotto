@@ -9,14 +9,13 @@ object Options {
   def parse(args: Array[String]): Option[Config] = {
 
     val parser = new scopt.OptionParser[Config]("plog") {
-      val dog = "\uD83D\uDC15"
-      head(s"lagotto $dog ", "1.0")
+      head(s"lagotto", "0.1")
 
       help("help") text "Show usage"
 
       arg[String]("<log-file>...") unbounded() optional() action { (f, c) =>
         c.copy(input = c.input :+ f)
-      } text "Optional list of log files"
+      } text "Optional list of log files. Otherwise read stdin."
 
       opt[String]('g', "grep") unbounded() action { (expr, c) =>
         c.copy(filters = c.filters :+ GrepFilter(expr))
@@ -28,7 +27,7 @@ object Options {
 
       opt[FieldFilter]('f', "field") unbounded() action { case (filter, c) =>
           c.copy(filters = c.filters :+ filter)
-      } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value"
+      } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"
 
       opt[String]('t', "tsv") action { (fields, c) =>
         c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat("\t")))
