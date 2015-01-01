@@ -1,0 +1,49 @@
+lagotto 0.1
+Usage: plog [options] [<log-file>...]
+
+  --help
+        Show usage
+  <log-file>...
+        Optional list of log files. Otherwise read stdin.
+  -g <value> | --grep <value>
+        Filter by messages including text
+  --grep! <value>
+        Exclude messages containing text
+  -f:path=value | --field:path=value
+        Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/
+  -t <value> | --tsv <value>
+        Output tab separated values
+  -c <value> | --csv <value>
+        Output comma separated values
+  -j <value> | --jira-table <value>
+        Output a table that can be pasted into Jira
+  --html <value>
+        Output an HTML table
+  --ascii <value>
+        Output an ASCII table
+  --live-ascii <value>
+        Output an ASCII table incrementally. Can be messy.
+  --json
+        Output a line of JSON per log entry.
+  --histogram <value>
+        Output a histogram
+  --pair
+        Match requests with responses
+  --no-header
+        Don't print the tsv/csv header row
+  -B <value> | --before-context <value>
+        Like -B in grep
+  -A <value> | --after-context <value>
+        Like -A in grep
+  -C <value> | --context <value>
+        Like -C in grep
+  --sort <value>
+        Sort output by field. Prevents incremental output
+  --sort-desc <value>
+        Sort output descending by field. Prevents incremental output
+  --gnuplot <value>
+        Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --tsv.
+  --strict
+        Fail on rubbish input instead the default of continuing to read
+  --progress
+        Print progress to standard error. Only really sane if standard out is redirected.
