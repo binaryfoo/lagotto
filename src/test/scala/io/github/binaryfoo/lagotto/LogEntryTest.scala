@@ -1,13 +1,8 @@
 package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
-import scala.collection.immutable.ListMap
-import scala.collection.mutable
-import org.scalatest.{FlatSpec, Matchers}
 
-import scala.io.Source
-
-class LogEntryTest extends FlatSpec with Matchers {
+class LogEntryTest extends LagoTest {
 
   val timestamp = "Mon Nov 24 16:59:03 EST 2014.292"
   val realm = "some.channel/10.0.0.1:4321"
@@ -111,12 +106,12 @@ class LogEntryTest extends FlatSpec with Matchers {
   }
 
   it should "expose log contents via xpath" in {
-    val entry = LogEntry.fromLines(Source.fromFile("src/test/resources/pool-exhaustion.xml").getLines().toSeq)
+    val entry = LogEntry.fromLines(sourceFrom("pool-exhaustion.xml").getLines().toSeq)
     entry("xpath(//jobs[text()])") shouldEqual "12413"
   }
 
   it should "report a <warn> in msgType" in {
-    val entry = LogEntry.fromLines(Source.fromFile("src/test/resources/pool-exhaustion.xml").getLines().toSeq)
+    val entry = LogEntry.fromLines(sourceFrom("pool-exhaustion.xml").getLines().toSeq)
     entry("msgType") shouldEqual "warn"
   }
 
@@ -165,7 +160,7 @@ class LogEntryTest extends FlatSpec with Matchers {
   }
 
   "An <exception> element" should "be extracted" in {
-    val entry = LogEntry.fromLines(Source.fromFile("src/test/resources/exception.xml").getLines().toSeq)
+    val entry = LogEntry.fromLines(sourceFrom("exception.xml").getLines().toSeq)
     entry("exception") shouldEqual "Remote host closed connection during handshake"
   }
 

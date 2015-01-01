@@ -1,10 +1,6 @@
 package io.github.binaryfoo.lagotto
 
-import org.scalatest.{Matchers, FlatSpec}
-
-import scala.io.Source
-
-class XPathEvalTest extends FlatSpec with Matchers with TestInput {
+class XPathEvalTest extends LagoTest {
 
   it should "evaluate an xpath expression" in {
     val xml = contentsOf("pool-exhaustion.xml")

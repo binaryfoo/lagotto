@@ -2,37 +2,34 @@ package io.github.binaryfoo.lagotto
 
 import java.io.File
 
-import org.scalatest.{Matchers, FlatSpec}
 import io.github.binaryfoo.lagotto.LogLike.IterableOfLogLike
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 
-import scala.io.Source
-
-class LogReaderTest extends FlatSpec with Matchers {
+class LogReaderTest extends LagoTest {
 
   "A log reader" should "read a single entry" in {
-    val entries = LogReader().read(Source.fromFile("src/test/resources/basic.xml"))
+    val entries = LogReader().read(sourceFrom("basic.xml"))
     val head = entries.head
     head.at shouldEqual "Mon Nov 24 00:00:03 EST 2014.292"
     head("7") shouldEqual "1124000003"
   }
 
   it should "support conversion of pairs to a .csv file" in {
-    val entries = LogReader().read(Source.fromFile("src/test/resources/a-pair.xml"))
+    val entries = LogReader().read(sourceFrom("a-pair.xml"))
     val csv = MsgPair.pair(entries).toCsv("time", "mti", "11", "rtt")
 
     csv shouldEqual "00:00:03.292,0800,28928,808"
   }
 
   it should "support conversion of pairs to a .csv file succinctly" in {
-    val entries = LogReader().read(Source.fromFile("src/test/resources/a-pair.xml"))
+    val entries = LogReader().read(sourceFrom("a-pair.xml"))
     val csv = MsgPair.pair(entries).toCsv("time", "mti", "11", "rtt")
 
     csv shouldEqual "00:00:03.292,0800,28928,808"
   }
 
   it should "support conversion of entries to a .csv file" in {
-    val entries = LogReader().read(Source.fromFile("src/test/resources/a-pair.xml"))
+    val entries = LogReader().read(sourceFrom("a-pair.xml"))
     val csv = entries.toCsv("time", "mti", "11")
 
     csv shouldEqual
@@ -42,7 +39,7 @@ class LogReaderTest extends FlatSpec with Matchers {
   }
 
   it should "support conversion of entries to a .csv file succinctly" in {
-    val entries = LogReader().read(Source.fromFile("src/test/resources/a-pair.xml"))
+    val entries = LogReader().read(sourceFrom("a-pair.xml"))
     val csv = entries.toCsv("time", "mti", "11")
 
     csv shouldEqual
@@ -52,7 +49,7 @@ class LogReaderTest extends FlatSpec with Matchers {
   }
 
   it should "support conversion of two paired entries to a .csv file" in {
-    val entries = LogReader().read(Source.fromFile("src/test/resources/a-bunch.xml"))
+    val entries = LogReader().read(sourceFrom("a-bunch.xml"))
     val csv = entries.pair().toCsv("time", "mti", "11", "4", "39", "rtt")
 
     csv shouldEqual
@@ -61,7 +58,7 @@ class LogReaderTest extends FlatSpec with Matchers {
   }
 
   "Reading 2 files" should "read records in order" in {
-    val entries = LogReader().read(List("src/test/resources/a-bunch.xml", "src/test/resources/a-second-bunch.xml").map(new File(_)))
+    val entries = LogReader().read(List("a-bunch.xml", "a-second-bunch.xml").map(f => new File(testFile(f))))
     val csv = entries.toCsv("time", "48.1")
     csv shouldEqual """00:00:03.292,a-bunch.xml #1
                       |00:00:04.292,a-bunch.xml #2
