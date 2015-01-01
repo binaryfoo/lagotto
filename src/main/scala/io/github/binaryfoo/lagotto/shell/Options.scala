@@ -9,7 +9,7 @@ object Options {
   def parse(args: Array[String]): Option[Config] = {
 
     val parser = new scopt.OptionParser[Config]("plog") {
-      head(s"lagotto", "0.1")
+      head(s"lagotto", "0.0.1")
 
       help("help") text "Show usage"
 

@@ -1,4 +1,4 @@
-lagotto 0.1
+lagotto 0.0.1
 Usage: plog [options] [<log-file>...]
 
   --help

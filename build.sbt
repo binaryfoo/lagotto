@@ -2,7 +2,7 @@ name := "lagotto"
 
 organization := "io.github.binaryfoo"
 
-version := "0.1-SNAPSHOT"
+version := "0.0.1-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 
