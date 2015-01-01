@@ -2,11 +2,10 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.ByteArrayOutputStream
 
+import io.github.binaryfoo.lagotto.TestInput
 import org.scalatest.{FlatSpec, Matchers}
 
-class MainTest extends FlatSpec with Matchers {
-
-  def testFile(f: String): String = s"src/test/resources/$f"
+class MainTest extends FlatSpec with Matchers with TestInput {
 
   "Main" should "produce tab separated output with --tsv option" in {
     val output = run("--tsv", "time,mti,11", testFile("a-bunch.xml"))

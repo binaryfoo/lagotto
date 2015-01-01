@@ -131,6 +131,12 @@ class LogEntryTest extends FlatSpec with Matchers {
     xsv shouldEqual "16:59:00,1124000003"
   }
 
+  it should "accept expressions accessing subtype fields when converting to a .csv row" in {
+    val entry = LogEntry.fromLines(lines)
+    val xsv = entry.toXsv(",", { _.xpath("""//field[@id="7"]/@value""") }, "7")
+    xsv shouldEqual "1124000003,1124000003"
+  }
+
   "A trio of entries" should "be coalescable" in {
     val one = LogEntry("11" -> "1", "53" -> "2")
     val four = LogEntry("11" -> "4", "53" -> "1")

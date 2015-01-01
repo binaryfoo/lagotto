@@ -40,7 +40,7 @@ object XPathEval {
     builder.parse(new ByteArrayInputStream(xml.getBytes))
   }
 
-  val NodeReference = ".*/(.*)[\\[/].*".r
+  val NodeReference = "/+([^\\[/]*)[\\[/].*".r
 
 }
 

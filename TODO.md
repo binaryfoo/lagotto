@@ -13,8 +13,6 @@
  - using scalaz streams?
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
-* Can FieldAccessor allow access to more specific type
- * Override toXsv() on LogEntry?
 * Output as
  - HTML table
   - colour rows by a field like socket

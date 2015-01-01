@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto
 
+import io.github.binaryfoo.lagotto.output.Xsv
 import org.joda.time.DateTime
 
 import scala.language.implicitConversions
@@ -32,7 +33,7 @@ trait LogLike {
     }.toSeq
   }
 
-  def exprToSeq(ids: Iterable[FieldAccessor]): Seq[String] = {
+  def exprToSeq(ids: Iterable[FieldAccessor[this.type]]): Seq[String] = {
     ids.map { id =>
       val value = id(this)
       if (value == null) "" else value
@@ -47,7 +48,7 @@ trait LogLike {
 
   def toTsv(ids: Iterable[String]): String = Xsv.toTsv(toSeq(ids))
 
-  def toXsv(separator: String, ids: FieldAccessor*): String = Xsv.toXsv(separator, exprToSeq(ids))
+  def toXsv[T <: LogLike](separator: String, ids: FieldAccessor[this.type]*): String = Xsv.toXsv(separator, exprToSeq(ids))
 
   def toXsv(separator: String, ids: Iterable[String]): String = Xsv.toXsv(separator, toSeq(ids))
 
@@ -68,5 +69,5 @@ object LogLike {
 
   }
 
-  implicit def stringAsFieldAccessor(s: String): FieldAccessor = { e: LogLike => e(s) }
+  implicit def stringAsFieldAccessor[T <: LogLike](s: String): FieldAccessor[T] = { e: T => e(s) }
 }

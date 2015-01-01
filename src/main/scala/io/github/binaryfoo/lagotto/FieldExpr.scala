@@ -33,7 +33,7 @@ object FieldExpr {
 /**
  * Exists separately from FieldAccessor to allow passing lambdas to LogLike.toXsv(). Maybe misguided.
  */
-trait FieldExpr extends FieldAccessor {
+trait FieldExpr extends FieldAccessor[LogLike] {
   /**
    * The source text of this expression.
    */
