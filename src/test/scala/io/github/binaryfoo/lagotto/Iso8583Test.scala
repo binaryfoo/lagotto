@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.Iso8583.invertMTI
+import io.github.binaryfoo.lagotto.Iso8583.{invertMTI, isRequestMTI, isResponseMTI}
 import org.scalatest.{FlatSpec, Matchers}
 
 class Iso8583Test extends FlatSpec with Matchers {
@@ -22,5 +22,15 @@ class Iso8583Test extends FlatSpec with Matchers {
     invertMTI("") shouldEqual ""
     invertMTI("020") shouldEqual "020"
     invertMTI("02300") shouldEqual "02300"
+  }
+
+  it should "match request MTIs" in {
+    isRequestMTI("0200") shouldBe true
+    isRequestMTI("0210") shouldBe false
+  }
+
+  it should "match response MTIs" in {
+    isResponseMTI("0210") shouldBe true
+    isResponseMTI("0200") shouldBe false
   }
 }

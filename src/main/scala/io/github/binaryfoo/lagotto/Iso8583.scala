@@ -15,6 +15,8 @@ object Iso8583 {
 
   def isResponseMTI(mti: String): Boolean = mti(2).toInt % 2 == 1
 
+  def isRequestMTI(mti: String): Boolean = mti(2).toInt % 2 == 0
+
   def toRequestMti(mti: String): String = {
     val characters = mti.toCharArray
     characters(2) = (mti(2).toInt - 1).toChar

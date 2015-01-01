@@ -77,11 +77,7 @@ class AsciiTableFormat extends TableFormatter {
       .toString())
   }
 
-  private def maximumWidths(): Seq[Int] = {
-    val zeroes = Seq.fill(fields.length)(0)
-    val headerAndRows = fields :: rows.toList
-    headerAndRows.foldLeft(zeroes) { (maxes, row) => AsciiTable.reviseColumnWidths(row, maxes) }
-  }
+  private def maximumWidths(): Seq[Int] = AsciiTable.maximumWidths(fields :: rows.toList)
 }
 
 /**

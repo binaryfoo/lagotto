@@ -48,6 +48,20 @@ class AsciiTable(val columnWidths: Seq[Int], val rowCount: Int = 0) {
 }
 
 object AsciiTable {
+
+  def from(header: Seq[String], rows: Seq[Seq[String]]): AsciiTable = {
+    val table = new AsciiTable(maximumWidths(Seq(header) ++ rows))
+    table.addHeader(header)
+    rows.foreach(table.addRow)
+    table.addFooter()
+    table
+  }
+
+  def maximumWidths(rows: Seq[Seq[String]]): Seq[Int] = {
+    val zeroes = Seq.fill(rows.head.length)(0)
+    rows.foldLeft(zeroes) { (maxes, row) => reviseColumnWidths(row, maxes) }
+  }
+
   def reviseColumnWidths(row: Seq[String], currentWidths: Seq[Int]): Seq[Int] = {
     row.map(_.length).zip(currentWidths).map { case (w, max) => math.max(w, max)}
   }
