@@ -1,7 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.shell.output.{IncrementalAsciiTableFormat, AsciiTableFormat, JSONOutput}
+import io.github.binaryfoo.lagotto.shell.output.{DigestedFormat, IncrementalAsciiTableFormat, AsciiTableFormat, JSONOutput}
 import scopt.Read
 
 object Options {
@@ -56,6 +56,10 @@ object Options {
       opt[Unit]("json") action { (_, c) =>
         c.copy(format = JSONOutput)
       } text "Output a line of JSON per log entry."
+
+      opt[Unit]("digest") action { (_, c) =>
+        c.copy(format = DigestedFormat)
+      } text "Output full message in a compact format."
 
       opt[String]("histogram") action { (fields, c) =>
         c.copy(histogramFields = fields.split(","))

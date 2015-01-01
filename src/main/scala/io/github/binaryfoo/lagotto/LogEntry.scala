@@ -2,7 +2,8 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
-import scala.collection.immutable.ListMap
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
  * A single &lt;log&gt; entry from a jPOS log.
@@ -11,7 +12,7 @@ import scala.collection.immutable.ListMap
  * @param lines Full text of the entry
  * @param source Where the entry was read from
  */
-case class LogEntry(private val _fields: Map[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with LogLike {
+case class LogEntry(private val _fields: mutable.LinkedHashMap[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with LogLike {
 
   val fields = _fields.withDefault {
     case "mti" => mti
@@ -45,7 +46,9 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
    * @param pattern
    * @return Timestamp as string
    */
-  def timestampAs(pattern: String): String = new HumanTimeFormatter(pattern).print(timestamp)
+  def timestampAs(pattern: String): String = timestampAs(new HumanTimeFormatter(pattern))
+
+  def timestampAs(format: TimeFormatter): String = format.print(timestamp)
 
   def xpath(path: String): String = XPathEval(lines, path)
 
@@ -82,16 +85,17 @@ case class LogEntry(private val _fields: Map[String, String], lines: String = ""
     case s: String => s.toInt
   }
 
-  override def toMap: Map[String, String] = _fields
+  override def exportAsSeq: Seq[(String, String)] = _fields.toSeq
 }
 
 object LogEntry {
 
   import io.github.binaryfoo.lagotto.TagType._
 
-  def extractFields(lines: Seq[String]): Map[String, String] = {
-    var fields = List[(String, String)]()
+  def extractFields(lines: Seq[String]): mutable.LinkedHashMap[String, String] = {
+    var fields = new ArrayBuffer[(String, String)](lines.size + 2)
     var path = ""
+    var msgType: String = null
 
     def pathTo(id: String) = if (path.isEmpty) id else path + "." + id
 
@@ -114,7 +118,7 @@ object LogEntry {
       tagNameAndType(line) match {
         case ("field", Start) =>
           val (id, value) = extractIdAndValue(line)
-          fields = (pathTo(id), value) :: fields
+          fields += ((pathTo(id), value))
         case ("isomsg", Start) =>
           val (_, id) = extractId(line)
           if (id != null)
@@ -122,20 +126,21 @@ object LogEntry {
         case ("isomsg", End) if path.nonEmpty =>
           popPath()
         case ("log", Start) =>
-          fields = extractAttributes(line).map {
+          fields ++= extractAttributes(line).map {
             case (name, value) if name == "lifespan" => (name, value.replace("ms", ""))
             case a => a
-          } ::: fields
+          }
         case ("exception", Start) =>
           val ("name", value) :: _ = extractAttributes(line)
-          fields = ("exception", value) :: fields
-        case (name, Start) if !msgTypeBlackList.contains(name) =>
-          fields = ("msgType", name) :: fields
+          fields += (("exception", value))
+        case (name, Start) if !msgTypeBlackList.contains(name) && msgType == null =>
+          fields += (("msgType", name))
+          msgType = name
         case _ =>
       }
     }
 
-    fields.toMap
+    mutable.LinkedHashMap(fields :_*)
   }
   
   def fromLines(lines: Seq[String], source: SourceRef = null): LogEntry = {
@@ -146,7 +151,7 @@ object LogEntry {
     LogEntry(extractFields(s.split('\n')), s, source)
   }
 
-  val msgTypeBlackList = Set("field", "isomsg", "log", "!--")
+  val msgTypeBlackList = Set("log", "!--")
 
   def tagNameAndType(line: String): (String, TagType) = {
     var startIndex = line.indexOf('<')
@@ -240,7 +245,7 @@ object LogEntry {
   }
 
   def apply(fields: (String, String)*): LogEntry = {
-    LogEntry(ListMap(fields :_*))
+    LogEntry(mutable.LinkedHashMap(fields :_*))
   }
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
@@ -300,4 +305,6 @@ case class Realm(raw: String) {
       case _ => ""
     }
   }
+
+  override def toString: String = raw
 }

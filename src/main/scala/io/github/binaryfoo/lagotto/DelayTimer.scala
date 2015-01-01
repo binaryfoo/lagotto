@@ -17,5 +17,5 @@ case class DelayTimer(current: LogLike, previous: Option[LogLike]) extends LogLi
     current.timestamp.getMillis - p.timestamp.getMillis
   }
 
-  override def toMap: Map[String, String] = current.toMap + ("delay" -> delay.map(_.toString).getOrElse(""))
+  override def exportAsSeq: Seq[(String, String)] = current.exportAsSeq :+ ("delay", delay.map(_.toString).getOrElse(""))
 }

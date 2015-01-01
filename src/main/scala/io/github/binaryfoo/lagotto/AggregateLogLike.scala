@@ -21,7 +21,7 @@ case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, S
     aggregates.collectFirst { case (k, v) if k == id => v}.orNull
   })
 
-  override def toMap: Map[String, String] = key ++ aggregates
+  override def exportAsSeq: Seq[(String, String)] = key.toSeq ++ aggregates
 }
 
 trait AggregateOp extends mutable.Builder[LogLike, String] {

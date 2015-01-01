@@ -32,7 +32,7 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
 
   override lazy val lines: String = "<pair>\n" + request.lines + "\n" + response.lines + "\n</pair>"
 
-  override def toMap: Map[String, String] = request.toMap ++ response.toMap
+  override def exportAsSeq: Seq[(String, String)] = request.exportAsSeq ++ response.exportAsSeq
 }
 
 object MsgPair {

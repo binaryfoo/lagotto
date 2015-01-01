@@ -29,7 +29,7 @@ object JSONOutput extends OutputFormat {
     if (timestamp != null)
       writer.add("at", ISO8601TimeFormat.print(timestamp))
 
-    e.toMap.foreach { case (k, v) =>
+    e.exportAsSeq.foreach { case (k, v) =>
       k match {
         case "at" => // ignore
         case _ if integerFields.contains(k) => writer.addAsInt(dictionary(k), v)
