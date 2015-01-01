@@ -38,6 +38,7 @@ object EpochSecondsFormatter extends TimeFormatter {
 }
 
 object DefaultDateTimeFormat extends HumanTimeFormatter("yyyy-MM-dd HH:mm:ss.SSS")
+object ISO8601TimeFormat extends HumanTimeFormatter("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
 object DefaultTimeFormat extends HumanTimeFormatter("HH:mm:ss.SSS")
 object DefaultDateFormat extends HumanTimeFormatter("yyyy-MM-dd")
 

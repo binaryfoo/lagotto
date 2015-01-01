@@ -4,12 +4,13 @@
 * Dictionary could be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
 * Type dictionary/schema?
  - mti, timestamp (with format), number
+ - 11,lifespan,rtt,delay = number, timestamp,7 = datetime
+ - Having the datatype propagated into Spark would max it easier to do things like max(lifespan) there
 * Tail mode (-F)
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
 * Add --splitBy field to Main? Use case would be ip address or transaction id or link
  - using scalaz streams?
-* JSON output format. One record per line. Might be an easy first format for Spark SQL.
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
 * Can FieldAccessor allow access to more specific type
@@ -32,6 +33,7 @@
 * Other input log formats: log4j, httpd
 * Split some pieces like ascii table and gnuplot out. Could run independently.
  - Eg csv -> ascii, csv -> gnuplot per column, csv -> jira table, csv -> html
+* Would interning some strings help performance?
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
@@ -64,3 +66,9 @@ use cases:
 * stalls -> max delay between messages
 * throughput: incoming/sec outgoing/sec
 * HDR histogram: use cases other than rtt and lifespan?
+
+spark:
+* Add header row to ascii table from schema
+* Expose other table formats: xsv, jira, html, hdr histogram, gnuplot?
+* Publish UI from shell to something like Zeppelin. Means you still have tab completion. Why no tab completion in zeppelin?
+ - Could use schema.toJSON

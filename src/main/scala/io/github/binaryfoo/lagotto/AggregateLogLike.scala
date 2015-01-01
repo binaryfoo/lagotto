@@ -13,9 +13,9 @@ import scala.collection.mutable
  */
 case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, String)]) extends LogLike {
 
-  override def timestamp: DateTime = ???
+  override def timestamp: DateTime = null
 
-  override def lines: String =  ???
+  override def lines: String =  ""
 
   override def apply(id: String): String = key.getOrElse(id, {
     aggregates.collectFirst { case (k, v) if k == id => v}.orNull
@@ -25,7 +25,7 @@ case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, S
 }
 
 trait AggregateOp extends mutable.Builder[LogLike, String] {
-  override def clear() = ???
+  override def clear() = throw new AbstractionFail
 
   /**
    * Create a new empty builder of the same type. Don't copy the current builder state.
@@ -239,5 +239,7 @@ class AggregateLogLikeBuilder(key: Map[String, String], values: Seq[(String, Agg
 
   override def result(): AggregateLogLike = AggregateLogLike(key, values.map { case (k, v) => (k, v.result()) })
 
-  override def clear(): Unit = ???
+  override def clear(): Unit = throw new AbstractionFail
 }
+
+class AbstractionFail extends Exception("Not needed to date. Found a need?")

@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.shell.output.{IncrementalAsciiTableFormat, AsciiTableFormat, JSONOutput}
 import scopt.Read
 
 object Options {

@@ -7,16 +7,41 @@ package io.github.binaryfoo.lagotto.output
 object DeadSimpleJsonWriter {
 
   def toJson(data: Map[String, String]): String = {
-    val b = new StringBuilder("{")
-    var first = true
-
-    data.foreach { case (k, v) =>
-      if (!first) b.append(',')
-      else first = false
-      b.append('"').append(k).append("\":\"").append(v).append('"')
-    }
-    b.append('}')
-
-    b.toString()
+    val w = new DeadSimpleJsonWriter()
+    data.foreach { case (k, v) => w.add(k, v) }
+    w.done()
+    w.toString()
   }
+}
+
+/**
+ * Not quite as simple as where it started...
+ */
+class DeadSimpleJsonWriter() {
+
+  private val b = new StringBuilder("{")
+  private var first = true
+  
+  type ValueAppender = (String) => Unit
+  
+  val stringAppender: ValueAppender = b.append('"').append(_).append('"')
+  val integerAppender: ValueAppender = b.append(_)
+
+  def addAsInt(key: String, value: String): DeadSimpleJsonWriter = add(key, value.toLong.toString, integerAppender)
+  def add(key: String, value: String): DeadSimpleJsonWriter = add(key, value, stringAppender)
+
+  def add(key: String, value: String, appender: ValueAppender): DeadSimpleJsonWriter = {
+    if (!first) b.append(',')
+    else first = false
+    b.append('"').append(key).append("\":")
+    appender(value)
+    this
+  }
+
+  def done(): DeadSimpleJsonWriter = {
+    b.append('}')
+    this
+  }
+
+  override def toString: String = b.toString()
 }

@@ -2,6 +2,8 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
+import scala.collection.immutable.ListMap
+
 /**
  * A single &lt;log&gt; entry from a jPOS log.
  *
@@ -238,7 +240,7 @@ object LogEntry {
   }
 
   def apply(fields: (String, String)*): LogEntry = {
-    LogEntry(fields.toMap)
+    LogEntry(ListMap(fields :_*))
   }
 
   def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
