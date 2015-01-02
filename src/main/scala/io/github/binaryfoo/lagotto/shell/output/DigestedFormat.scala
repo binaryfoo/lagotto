@@ -1,9 +1,8 @@
 package io.github.binaryfoo.lagotto.shell.output
 
+import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import io.github.binaryfoo.lagotto.shell.OutputFormat
 import io.github.binaryfoo.lagotto.{DefaultDateTimeFormat, LogEntry, LogLike}
-
-import scala.StringBuilder
 
 object DigestedFormat extends OutputFormat {
 
@@ -19,8 +18,8 @@ object DigestedFormat extends OutputFormat {
   }
 
   def format(e: LogEntry): String = {
-    e.exportAsSeq.collect {
-      case (k, v) if !headerAttributes.contains(k) => s"  $k: $v"
+    e.exportAsSeq.collect { case (k, v) if !headerAttributes.contains(k) =>
+      DataDictionary.englishNameOf(k, e).map(name => s"  $k ($name): $v").getOrElse(s"  $k: $v")
     }.mkString(entryHeading(e), "\n", "")
   }
 

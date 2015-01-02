@@ -130,11 +130,9 @@ class Pipeline(val config: Config) {
       val key = sortBy.get
       // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
       // Options: could try to guess from they name of the key or write an Ordering[Any]?
-      if (descending) {
-        Try(v.sortBy(key(_).toInt).reverse).getOrElse(v.sortBy(key(_)).reverse)
-      } else {
-        Try(v.sortBy(key(_).toInt)).getOrElse(v.sortBy(key(_)))
-      }
+      val sorted = Try(v.sortBy(key(_).toInt)).getOrElse(v.sortBy(key(_)))
+      if (descending) sorted.reverse
+      else sorted
     }
   }
 

@@ -69,3 +69,8 @@ spark:
 * Expose other table formats: xsv, jira, html, hdr histogram, gnuplot?
 * Publish UI from shell to something like Zeppelin. Means you still have tab completion. Why no tab completion in zeppelin?
  - Could use schema.toJSON
+
+charting options:
+* http://code.shutterstock.com/rickshaw/
+* http://beakernotebook.com/
+* https://github.com/andypetrella/spark-notebook

@@ -49,9 +49,20 @@ class AsciiTable(val columnWidths: Seq[Int], val rowCount: Int = 0) {
 
 object AsciiTable {
 
-  def from(header: Seq[String], rows: Seq[Seq[String]]): AsciiTable = {
-    val table = new AsciiTable(maximumWidths(Seq(header) ++ rows))
-    table.addHeader(header)
+  def from(header: Seq[String] = Seq(), rows: Seq[Seq[String]]): AsciiTable = {
+    val allRows = if (header.nonEmpty) Seq(header) ++ rows else rows
+    val table = new AsciiTable(maximumWidths(allRows))
+    if (header.nonEmpty) {
+      table.addHeader(header)
+    }
+    rows.foreach(table.addRow)
+    table.addFooter()
+    table
+  }
+
+  def from(rows: Seq[Seq[String]]): AsciiTable = {
+    val table = new AsciiTable(maximumWidths(rows))
+    table.addBar()
     rows.foreach(table.addRow)
     table.addFooter()
     table

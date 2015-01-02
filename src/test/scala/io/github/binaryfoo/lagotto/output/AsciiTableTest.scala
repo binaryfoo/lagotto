@@ -15,4 +15,11 @@ class AsciiTableTest extends FlatSpec with Matchers {
                      |""".stripMargin
   }
 
+  it should "handle having no header" in {
+    val table = AsciiTable.from(Seq(Seq("one", "two"))).toString
+    table shouldBe """=============
+                     || one | two |
+                     |=============
+                     |""".stripMargin
+  }
 }

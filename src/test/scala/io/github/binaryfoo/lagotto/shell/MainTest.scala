@@ -498,15 +498,15 @@ class MainTest extends FlatSpec with Matchers with TestInput {
   "--digest" should "show full log with fewer characters" in {
     val output = run("--digest", testFile("a-pair.xml"))
     output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="send" lifespan="10005">
-                      |  0: 0800
-                      |  7: 1124000003
-                      |  11: 28928
-                      |  24: 831
+                      |  0 (mti): 0800
+                      |  7 (Transmission date and time): 1124000003
+                      |  11 (System trace audit number): 28928
+                      |  24 (Function code): 831
                       |<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:04.100" type="receive" lifespan="1000">
-                      |  0: 0810
-                      |  7: 1124000003
-                      |  11: 28928
-                      |  24: 831
+                      |  0 (mti): 0810
+                      |  7 (Transmission date and time): 1124000003
+                      |  11 (System trace audit number): 28928
+                      |  24 (Function code): 831
                       |  48.1: subfield 48.1
                       |<log realm="rotate-log-listener" at="2014-11-24 13:10:55.000">
                       |
@@ -515,8 +515,8 @@ class MainTest extends FlatSpec with Matchers with TestInput {
 
   "--json" should "dump each record as a line of JSON" in {
     val output = run("--json", testFile("a-pair.xml"))
-    output shouldBe """{"at":"2014-11-24T00:00:03.292+1100","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","7":"1124000003","stan":28928,"24":"831"}
-                      |{"at":"2014-11-24T00:00:04.100+1100","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","7":"1124000003","stan":28928,"24":"831","48.1":"subfield 48.1"}
+    output shouldBe """{"at":"2014-11-24T00:00:03.292+1100","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831"}
+                      |{"at":"2014-11-24T00:00:04.100+1100","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831","48.1":"subfield 48.1"}
                       |{"at":"2014-11-24T13:10:55.000+1100","realm":"rotate-log-listener"}
                       |""".stripMargin
   }
