@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.{AggregateLogLike, LogEntry}
+import io.github.binaryfoo.lagotto.{AndFilter, AggregateLogLike, LogEntry}
 import io.github.binaryfoo.lagotto.LogFilter.filterFor
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -64,5 +64,23 @@ class LogFilterTest extends FlatSpec with Matchers {
     filterFor("lifespan=10") shouldNot equal(filterFor("lifespan!=10"))
     filterFor("lifespan=10") shouldNot equal(filterFor("lifespan=11"))
     filterFor("lifespan=10") shouldNot equal(filterFor("delay=10"))
+  }
+
+  "AndFilter" should "pass when all children pass" in {
+    val filter = AndFilter.from("0=0200,realm=scheme")
+    filter(LogEntry("0" -> "0200", "realm" -> "scheme")) shouldBe true
+  }
+
+  it should "pass fail when a children fails" in {
+    val filter = AndFilter.from("0=0200,realm=scheme")
+    filter(LogEntry("0" -> "0210", "realm" -> "scheme")) shouldBe false
+    filter(LogEntry("0" -> "0200", "realm" -> "silly")) shouldBe false
+
+  }
+
+  it should "work with only one child" in {
+    val filter = AndFilter.from("0=0210")
+    filter(LogEntry("0" -> "0200")) shouldBe false
+    filter(LogEntry("0" -> "0210")) shouldBe true
   }
 }

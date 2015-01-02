@@ -4,7 +4,7 @@ import java.io.{File, FilenameFilter}
 
 import com.typesafe.config.ConfigFactory
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
-import io.github.binaryfoo.lagotto.{LogFilter, LogLike}
+import io.github.binaryfoo.lagotto.{IAmSorryDave, AndFilter, LogFilter, LogLike}
 
 /**
  * Field number to human name translation.
@@ -50,7 +50,8 @@ case class RootDataDictionary(customDirectory: File = new File(System.getPropert
   def loadCustomDictionaries(directory: File): Map[LogFilter, DataDictionary] = {
     customDictionaryFiles(directory).map { f =>
       val custom = ConfigFactory.parseFile(f)
-      val filter = LogFilter.unapply(custom.getString("filter")).get
+      val filterText = custom.getString("filter")
+      val filter = AndFilter.unapply(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from ${f.getName}"))
       filter -> ConfigDataDictionary(custom, f.getName)
     }.toMap
   }

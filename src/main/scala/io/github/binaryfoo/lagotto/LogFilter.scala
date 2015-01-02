@@ -32,6 +32,11 @@ case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: Strin
   override def toString(): String = s"$expr$operatorSymbol$desired"
 }
 
+case class AndFilter(filters: Seq[LogFilter]) extends LogFilter {
+  override def apply(entry: LogLike): Boolean = filters.forall(_.apply(entry))
+  override def toString(): String = filters.mkString(",")
+}
+
 case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
     val value = expr(entry)
@@ -89,4 +94,15 @@ object LogFilter {
       case e: NumberFormatException => l compare r
     }
   }
+}
+
+object AndFilter {
+
+  def unapply(commaSeparated: String): Option[AndFilter] = {
+    val children = commaSeparated.split(',').flatMap(LogFilter.unapply)
+    if (children.isEmpty) None
+    else Some(AndFilter(children))
+  }
+
+  def from(commaSeparated: String): AndFilter = unapply(commaSeparated).get
 }

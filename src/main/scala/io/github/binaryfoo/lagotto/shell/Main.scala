@@ -97,7 +97,7 @@ class Pipeline(val config: Config) {
   // need an Iterator instead of Stream to prevent a call to filter() or flatMap() pinning the whole stream
   // in memory until the first match (if any)
   private def filter(v: Iterator[LogLike], filters: Seq[LogFilter]): Stream[LogLike] = {
-    val shouldInclude = (m: LogLike) => filters.forall(_(m))
+    val shouldInclude = AndFilter(filters)
 
     if (filters.isEmpty) {
       v.toStream
