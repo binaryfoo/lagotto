@@ -23,6 +23,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   val englishNames = loadEnglishNames(config)
   lazy val exportNames = englishNames.mapValues(CamelCase.toCamelCase)
   val shortNames = loadShortNames(config)
+  lazy val reverseShortNames = shortNames.map { case (k, v) => v -> k }
   val types = loadTypes(config)
   val translations = loadTranslations(config)
 
@@ -57,6 +58,10 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
       case Translations(f, filter, t) if f == field && filter(context) => t
     }
     table.flatMap(_.get(value))
+  }
+
+  override def fieldForShortName(name: String, context: LogLike): Option[String] = {
+    reverseShortNames.get(name)
   }
 
   private def loadEnglishNames(config: Config): Map[String, String] = {

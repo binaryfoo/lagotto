@@ -1,8 +1,13 @@
 package io.github.binaryfoo.lagotto
 
+import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import org.joda.time.Period
 
 object FieldExpr {
+
+  // Not sure how to avoid this global state. Implicit parameter?
+  var dictionary: Option[DataDictionary] = None
+
   val SubtractOp = """calc\((.+)-(.+)\)""".r
   val DivideOp = """calc\((.+)/(.+)\)""".r
   val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
@@ -14,6 +19,7 @@ object FieldExpr {
       case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
       case "delay" => DelayExpr
       case AggregateOp(op) => AggregateExpr(expr, op)
+      case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
       case s => PrimitiveExpr(s)
     })
   }
@@ -49,6 +55,24 @@ case class PrimitiveExpr(field: String) extends DirectExpr {
 }
 
 /**
+ * Try to access the field but if it doesn't exist check if field is actually a name in the dictionary and try again.
+ *
+ * The name lookup is deferred and performed for each individual log entry since a given name can be bound to different
+ * paths based on some combination of realm, mti, nmic, etc. Eg Some message format might have privateThing as 48.1
+ * some messages and 48.48 in others.
+ */
+case class PrimitiveWithDictionaryFallbackExpr(field: String, dictionary: DataDictionary) extends DirectExpr {
+  def apply(e: LogLike): String = {
+    val v = e(field)
+    if (v == null) {
+      dictionary.fieldForShortName(field, e).map(e(_)).orNull
+    } else {
+      v
+    }
+  }
+}
+
+/**
  * The delay between a message and the one preceding it (according to the prevailing sort order).
  * Requires a call to io.github.binaryfoo.lagotto.DelayTimer#calculateDelays(scala.collection.immutable.Stream).
  */
@@ -74,7 +98,10 @@ object DelayExpr extends DirectExpr {
 
 /**
  * A marker to indicate an expression does not require the calculation of any aggregate expression.
- * The value can be obtained without running aggregation.
+ *
+ * The value can be obtained without running aggregation but unlike a PrimitiveExpr a DirectExpr may require a
+ * calculation combining one or more fields from a single log entry. Eg subtraction or division.
+ *
  * A thing defined by being the opposite of an aggregate expression.
  */
 trait DirectExpr extends FieldExpr

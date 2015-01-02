@@ -2,6 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.FieldExpr.expressionFor
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
+import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.{DateTime, LocalTime}
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -161,5 +162,12 @@ class FieldExprTest extends FlatSpec with Matchers {
     an [IAmSorryDave] should be thrownBy  {
       FieldExpr.unapply("calc(time/sum(lifespan))")
     }
+  }
+
+  "Primitive field access" should "fall back to dictionary lookup" in {
+    FieldExpr.dictionary = Some(RootDataDictionary())
+    val expr = expressionFor("stan")
+    expr(LogEntry("11" -> "123456")) shouldBe "123456"
+    FieldExpr.dictionary = None
   }
 }

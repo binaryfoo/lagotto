@@ -1,15 +1,13 @@
 package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.dictionary.{RootDataDictionary, ConfigDataDictionary}
-import io.github.binaryfoo.lagotto.shell.output.{DigestedFormat, IncrementalAsciiTableFormat, AsciiTableFormat, JSONOutput}
+import io.github.binaryfoo.lagotto.dictionary.DataDictionary
+import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
 import scopt.Read
 
 object Options {
 
-  lazy val dictionary = RootDataDictionary()
-
-  def parse(args: Array[String]): Option[Config] = {
+  def parse(args: Array[String], dictionary: DataDictionary): Option[Config] = {
 
     val parser = new scopt.OptionParser[Config]("plog") {
       head(s"lagotto", "0.0.1")

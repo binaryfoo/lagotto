@@ -2,12 +2,16 @@ package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 
 import scala.util.Try
 
 object Main extends App {
 
-  Options.parse(args).map { config =>
+  val dictionary = RootDataDictionary()
+  FieldExpr.dictionary = Some(dictionary)
+
+  Options.parse(args, dictionary).map { config =>
     val sink = sinkFor(config)
     val pipeline = new Pipeline(config)
 

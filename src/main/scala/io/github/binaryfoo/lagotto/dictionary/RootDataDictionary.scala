@@ -52,6 +52,12 @@ case class RootDataDictionary(customDirectory: File = new File(System.getPropert
       .orElse(default.translateValue(field, context, value))
   }
 
+  override def fieldForShortName(name: String, context: LogLike): Option[String] = {
+    customFor(context)
+      .flatMap(_.fieldForShortName(name, context))
+      .orElse(default.fieldForShortName(name, context))
+  }
+
   def customFor(context: LogLike): Option[DataDictionary] = custom.collectFirst {
     case (filter, dictionary) if filter(context) => dictionary
   }

@@ -274,6 +274,16 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                          |""".stripMargin
   }
 
+  it should "allow a data dictionary name as the sort field" in {
+    val output = run("--sort", "stan", "--csv", "11,48.1", testFile("a-bunch.xml"))
+    output shouldEqual """11,48.1
+                         |1,a-bunch.xml #1
+                         |1,a-bunch.xml #4
+                         |2,a-bunch.xml #2
+                         |2,a-bunch.xml #3
+                         |""".stripMargin
+  }
+
   "--sort-desc" should "reverse sort order" in {
     val output = run("--sort-desc", "11", "--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,rtt
@@ -290,7 +300,7 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                          |""".stripMargin
   }
 
-  it should "filter using greater than operator with -f rtt>1000 option" in {
+  "-f" should "filter using greater than operator with -f rtt>1000 option" in {
     val output = run("--pair", "-f", "rtt>1000", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,rtt
                          |00:00:03.292,0200,1,1700
@@ -319,7 +329,32 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                          |""".stripMargin
   }
 
-  it should "match anywhere in the message with -grep option" in {
+  it should "filter using a field name from the data dictionary" in {
+    val output = run("-f", "stan=1", "--csv", "48.1", testFile("a-bunch.xml"))
+    output shouldBe """48.1
+                      |a-bunch.xml #1
+                      |a-bunch.xml #4
+                      |""".stripMargin
+  }
+
+  it should "allow names from the data dictionary in --csv field list" in {
+    val output = run("--csv", "stan,48.1", testFile("a-bunch.xml"))
+    output shouldBe """stan,48.1
+                      |1,a-bunch.xml #1
+                      |2,a-bunch.xml #2
+                      |2,a-bunch.xml #3
+                      |1,a-bunch.xml #4
+                      |""".stripMargin
+  }
+
+  it should "include records matching all -f filters" in {
+    val output = run("-f", "48.1~bunch", "-f", "at~.892", "--csv", "48.1", "--no-header", testFile("a-bunch.xml"))
+    output shouldEqual
+      """a-bunch.xml #3
+        |""".stripMargin
+  }
+
+  "--grep" should "match anywhere in the message" in {
     val output = run("--grep", "threshold", testFile("a-pair.xml"))
     output shouldEqual """<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
                          |   maxSize (50000000) threshold reached
@@ -357,7 +392,7 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                          |""".stripMargin
   }
 
-  it should "print full text by default" in {
+  "Main" should "print full text by default" in {
     val output = run(testFile("a-pair.xml"))
     output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
                          |  <send>
@@ -422,13 +457,6 @@ class MainTest extends FlatSpec with Matchers with TestInput {
         |a-bunch.xml #2
         |a-bunch.xml #3
         |a-bunch.xml #4
-        |""".stripMargin
-  }
-
-  it should "include records matching all -f filters" in {
-    val output = run("-f", "48.1~bunch", "-f", "at~.892", "--csv", "48.1", "--no-header", testFile("a-bunch.xml"))
-    output shouldEqual
-      """a-bunch.xml #3
         |""".stripMargin
   }
 

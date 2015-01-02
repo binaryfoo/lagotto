@@ -61,6 +61,14 @@ class DataDictionaryTest extends LagoTest {
     translateValue("70", LogEntry("0" -> "0800"), "666") shouldBe None
   }
 
+  "Field for short name" should "use shortNames from .conf" in {
+    fieldForShortName("stan", logEntry) shouldBe Some("11")
+  }
+
+  it should "return None if no name applies" in {
+    fieldForShortName("rubbish", logEntry) shouldBe None
+  }
+
   val acmeLog = LogEntry("realm" -> "acme-terminal/127.0.0.1:4321")
 
   "Log entry with realm matching custom dictionary" should "pick up custom fields" in {
@@ -71,6 +79,7 @@ class DataDictionaryTest extends LagoTest {
     exportNameOf("48.2", acmeLog) shouldBe "two"
     typeOf("258", acmeLog) shouldBe FieldType.Integer
     translateValue("48.3", LogEntry("realm" -> "acme-terminal/127.0.0.1:4321", "0" -> "4321"), "one") shouldBe Some("Beep Beep")
+    fieldForShortName("two", acmeLog) shouldBe Some("48.2")
   }
 
   it should "fall back to default for all lookups" in {
@@ -80,6 +89,7 @@ class DataDictionaryTest extends LagoTest {
     typeOf("11", acmeLog) shouldBe FieldType.Integer
     translateValue("48.3", LogEntry("realm" -> "acme-terminal/127.0.0.1:4321", "0" -> "4322"), "one") shouldBe None
     translateValue("48.3", acmeLog, "two") shouldBe None
+    fieldForShortName("stan", acmeLog) shouldBe Some("11")
   }
 
 }
