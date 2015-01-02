@@ -1,10 +1,13 @@
 package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.dictionary.{RootDataDictionary, ConfigDataDictionary}
 import io.github.binaryfoo.lagotto.shell.output.{DigestedFormat, IncrementalAsciiTableFormat, AsciiTableFormat, JSONOutput}
 import scopt.Read
 
 object Options {
+
+  lazy val dictionary = RootDataDictionary()
 
   def parse(args: Array[String]): Option[Config] = {
 
@@ -54,11 +57,11 @@ object Options {
       } text "Output an ASCII table incrementally. Can be messy."
 
       opt[Unit]("json") action { (_, c) =>
-        c.copy(format = JSONOutput)
+        c.copy(format = JSONOutput(dictionary))
       } text "Output a line of JSON per log entry."
 
       opt[Unit]("digest") action { (_, c) =>
-        c.copy(format = DigestedFormat)
+        c.copy(format = DigestedFormat(dictionary))
       } text "Output full message in a compact format."
 
       opt[String]("histogram") action { (fields, c) =>

@@ -1,11 +1,15 @@
 package io.github.binaryfoo.lagotto.dictionary
 
-import io.github.binaryfoo.lagotto.dictionary.DataDictionary.{englishNameOf, exportNameOf, shortNameOf, typeOf}
+import java.io.File
+
 import io.github.binaryfoo.lagotto.{LagoTest, LogEntry}
 
 class DataDictionaryTest extends LagoTest {
 
   val logEntry = LogEntry()
+  val dictionary = RootDataDictionary(new File("src/test/resources/"))
+
+  import dictionary._
 
   "English name" should "use global field from .conf" in {
     englishNameOf("2", logEntry) shouldBe Some("Primary account number")
@@ -47,6 +51,24 @@ class DataDictionaryTest extends LagoTest {
 
   it should "default to string" in {
     typeOf("2", logEntry) shouldBe FieldType.String
+  }
+
+  val acmeLog = LogEntry("realm" -> "acme-terminal/127.0.0.1:4321")
+
+  "Log entry with realm matching custom dictionary" should "pick up custom fields" in {
+    englishNameOf("48.1", acmeLog) shouldBe Some("Important 48.1")
+    englishNameOf("129", acmeLog) shouldBe Some("Magic 129")
+    shortNameOf("48.2", acmeLog) shouldBe Some("two")
+    exportNameOf("48.1", acmeLog) shouldBe "important481"
+    exportNameOf("48.2", acmeLog) shouldBe "two"
+    typeOf("258", acmeLog) shouldBe FieldType.Integer
+  }
+
+  it should "fall back to default for all lookups" in {
+    englishNameOf("2", acmeLog) shouldBe Some("Primary account number")
+    shortNameOf("2", acmeLog) shouldBe Some("pan")
+    exportNameOf("2", acmeLog) shouldBe "pan"
+    typeOf("11", acmeLog) shouldBe FieldType.Integer
   }
 
 }
