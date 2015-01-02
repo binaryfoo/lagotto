@@ -53,6 +53,14 @@ class DataDictionaryTest extends LagoTest {
     typeOf("2", logEntry) shouldBe FieldType.String
   }
 
+  "Translate value" should "use translations from .conf" in {
+    translateValue("70", LogEntry("0" -> "0800"), "301") shouldBe Some("Echo")
+  }
+
+  it should "default to None" in {
+    translateValue("70", LogEntry("0" -> "0800"), "666") shouldBe None
+  }
+
   val acmeLog = LogEntry("realm" -> "acme-terminal/127.0.0.1:4321")
 
   "Log entry with realm matching custom dictionary" should "pick up custom fields" in {
@@ -62,6 +70,7 @@ class DataDictionaryTest extends LagoTest {
     exportNameOf("48.1", acmeLog) shouldBe "important481"
     exportNameOf("48.2", acmeLog) shouldBe "two"
     typeOf("258", acmeLog) shouldBe FieldType.Integer
+    translateValue("48.3", LogEntry("realm" -> "acme-terminal/127.0.0.1:4321", "0" -> "4321"), "one") shouldBe Some("Beep Beep")
   }
 
   it should "fall back to default for all lookups" in {
@@ -69,6 +78,8 @@ class DataDictionaryTest extends LagoTest {
     shortNameOf("2", acmeLog) shouldBe Some("pan")
     exportNameOf("2", acmeLog) shouldBe "pan"
     typeOf("11", acmeLog) shouldBe FieldType.Integer
+    translateValue("48.3", LogEntry("realm" -> "acme-terminal/127.0.0.1:4321", "0" -> "4322"), "one") shouldBe None
+    translateValue("48.3", acmeLog, "two") shouldBe None
   }
 
 }

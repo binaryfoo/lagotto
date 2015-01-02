@@ -1,11 +1,16 @@
 package io.github.binaryfoo.lagotto.dictionary
 
+import java.util
 import java.util.Map.Entry
 
-import com.typesafe.config.{Config, ConfigValue}
-import io.github.binaryfoo.lagotto.LogLike
+import com.typesafe.config.{ConfigObject, Config, ConfigValue}
+import io.github.binaryfoo.lagotto.{AllFilter, AndFilter, LogFilter, LogLike}
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.{toPath,RichConfig}
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.mutable
 
 /**
  * Field number to human name translation.
@@ -19,6 +24,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   lazy val exportNames = englishNames.mapValues(CamelCase.toCamelCase)
   val shortNames = loadShortNames(config)
   val types = loadTypes(config)
+  val translations = loadTranslations(config)
 
   /*
   Needs:
@@ -46,6 +52,13 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     types.get(field)
   }
 
+  override def translateValue(field: String, context: LogLike, value: String): Option[String] = {
+    val table = translations.collectFirst {
+      case Translations(f, filter, t) if f == field && filter(context) => t
+    }
+    table.flatMap(_.get(value))
+  }
+
   private def loadEnglishNames(config: Config): Map[String, String] = {
     val fields = config.entries("fields")
     val subfields = config.entries("subfields")
@@ -63,6 +76,20 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     }.toMap
   }
 
+  private def loadTranslations(config: Config): Seq[Translations] = {
+    if (config.hasPath("translations")) {
+      val all: mutable.Buffer[_ <: ConfigObject] = config.getObjectList("translations")
+      all.map { c =>
+        val field = c.get("field").unwrapped().asInstanceOf[String]
+        val filter = Option(c.get("filter")).flatMap(v => AndFilter.unapply(v.unwrapped().asInstanceOf[String])).getOrElse(AllFilter)
+        val table: mutable.Map[String, String] = c.get("values").unwrapped().asInstanceOf[util.Map[String, String]]
+        Translations(field, filter, table.toMap)
+      }
+    } else {
+      Seq()
+    }
+  }
+
   def toPair(e: Entry[String, ConfigValue]): (String, String) = {
     val key = toPath(e.getKey)
     val value = e.getValue.unwrapped().toString
@@ -70,3 +97,5 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   }
 
 }
+
+case class Translations(field: String, filter: LogFilter, table: Map[String, String])

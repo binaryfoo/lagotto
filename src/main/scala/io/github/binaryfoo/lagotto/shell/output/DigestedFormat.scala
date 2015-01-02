@@ -19,7 +19,8 @@ case class DigestedFormat(dictionary: DataDictionary) extends OutputFormat {
 
   def format(e: LogEntry): String = {
     e.exportAsSeq.collect { case (k, v) if !headerAttributes.contains(k) =>
-      dictionary.englishNameOf(k, e).map(name => s"  $k ($name): $v").getOrElse(s"  $k: $v")
+      val translatedValue = dictionary.translateValue(k, e, v).map(t => s"$v ($t)").getOrElse(v)
+      dictionary.englishNameOf(k, e).map(name => s"  $k ($name): $translatedValue").getOrElse(s"  $k: $translatedValue")
     }.mkString(entryHeading(e), "\n", "")
   }
 

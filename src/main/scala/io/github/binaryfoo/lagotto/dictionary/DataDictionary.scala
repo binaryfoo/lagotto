@@ -26,6 +26,8 @@ trait DataDictionary {
   def optionalExportNameOf(field: String, context: LogLike): Option[String]
 
   def optionalTypeOf(field: String, context: LogLike): Option[FieldType]
+
+  def translateValue(field: String, context: LogLike, value: String): Option[String]
 }
 
 object FieldType extends Enumeration {

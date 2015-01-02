@@ -37,6 +37,11 @@ case class AndFilter(filters: Seq[LogFilter]) extends LogFilter {
   override def toString(): String = filters.mkString(",")
 }
 
+object AllFilter extends LogFilter {
+  override def apply(entry: LogLike): Boolean = true
+  override def toString(): String = "all"
+}
+
 case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
     val value = expr(entry)
