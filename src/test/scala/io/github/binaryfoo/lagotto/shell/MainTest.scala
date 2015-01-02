@@ -133,13 +133,13 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                           |,
                           |""".stripMargin
   }
-// TODO: requires support for aggregate of an expression
-//  it should "group rows when max(calc(time-lifespan)) field included in --csv option" in {
-//    val output = run("--csv", "min(calc(time-lifespan))", testFile("a-pair.xml"))
-//    output shouldEqual """min(calc(time-lifespan))
-//                          |23:59:53.287
-//                          |""".stripMargin
-//  }
+
+  it should "group rows when min(calc(timestamp-lifespan)) field included in --csv option" in {
+    val output = run("--csv", "min(calc(timestamp-lifespan))", testFile("a-pair.xml"))
+    output shouldEqual """min(calc(timestamp-lifespan))
+                          |2014-11-23 23:59:53.287
+                          |""".stripMargin
+  }
 
   it should "group rows when max(lifespan) field included in --jira-table option" in {
     val output = run("--jira-table", "ipAddress,max(lifespan)", testFile("a-pair.xml"))
