@@ -3,8 +3,11 @@ package io.github.binaryfoo.lagotto.dictionary
 import java.io.{File, FilenameFilter}
 
 import com.typesafe.config.ConfigFactory
+import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
-import io.github.binaryfoo.lagotto.{IAmSorryDave, AndFilter, LogFilter, LogLike}
+import io.github.binaryfoo.lagotto.{AndFilter, IAmSorryDave, LogFilter, LogLike}
+
+import scala.collection.JavaConversions.asScalaSet
 
 /**
  * Field number to human name translation.
@@ -14,7 +17,7 @@ import io.github.binaryfoo.lagotto.{IAmSorryDave, AndFilter, LogFilter, LogLike}
  */
 case class RootDataDictionary(customDirectory: File = new File(System.getProperty("user.home", ""), ".lago/")) extends DataDictionary {
 
-  val default: DataDictionary = ConfigDataDictionary(ConfigFactory.load().getConfig("dictionary.global"))
+  val default: DataDictionary = ConfigDataDictionary(ConfigFactory.load().getConfig("dictionaries.global"))
   val custom: Map[LogFilter, DataDictionary] = loadCustomDictionaries(customDirectory)
 
   // falls back to short name
@@ -48,11 +51,15 @@ case class RootDataDictionary(customDirectory: File = new File(System.getPropert
   }
 
   def loadCustomDictionaries(directory: File): Map[LogFilter, DataDictionary] = {
-    customDictionaryFiles(directory).map { f =>
+    customDictionaryFiles(directory).flatMap { f =>
       val custom = ConfigFactory.parseFile(f)
-      val filterText = custom.getString("filter")
-      val filter = AndFilter.unapply(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from ${f.getName}"))
-      filter -> ConfigDataDictionary(custom, f.getName)
+      custom.getObjectOrDie("dictionaries").entrySet().map { e =>
+        val name = e.getKey
+        val dictionary = custom.getConfig(s"dictionaries.$name")
+        val filterText = dictionary.getString("filter")
+        val filter = AndFilter.unapply(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from ${f.getName}"))
+        filter -> ConfigDataDictionary(dictionary, name + "@" + f.getName)
+      }
     }.toMap
   }
 

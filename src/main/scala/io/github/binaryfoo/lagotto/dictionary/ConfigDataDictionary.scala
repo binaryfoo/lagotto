@@ -4,7 +4,7 @@ import java.util.Map.Entry
 
 import com.typesafe.config.{Config, ConfigValue}
 import io.github.binaryfoo.lagotto.LogLike
-import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.{entries, toPath}
+import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.{toPath,RichConfig}
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 
 /**
@@ -47,17 +47,17 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   }
 
   private def loadEnglishNames(config: Config): Map[String, String] = {
-    val fields = entries(config, "fields")
-    val subfields = entries(config, "subfields")
+    val fields = config.entries("fields")
+    val subfields = config.entries("subfields")
     (fields ++ subfields).map(toPair).toMap
   }
 
   private def loadShortNames(config: Config): Map[String, String] = {
-    entries(config, "shortNames").map(toPair).toMap
+    config.entries("shortNames").map(toPair).toMap
   }
 
   private def loadTypes(config: Config): Map[String, FieldType] = {
-    entries(config, "types").map { e =>
+    config.entries("types").map { e =>
       val (k, v) = toPair(e)
       k -> FieldType.withName(v)
     }.toMap
