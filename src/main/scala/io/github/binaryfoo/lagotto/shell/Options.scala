@@ -1,7 +1,8 @@
 package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.dictionary.DataDictionary
+import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
+import io.github.binaryfoo.lagotto.dictionary.{NameType, DataDictionary}
 import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
 import scopt.Read
 
@@ -59,8 +60,12 @@ object Options {
       } text "Output a line of JSON per log entry."
 
       opt[Unit]("digest") action { (_, c) =>
-        c.copy(format = DigestedFormat(dictionary))
+        c.copy(format = DigestedFormat(dictionary, NameType.English))
       } text "Output full message in a compact format."
+
+      opt[NameType]("digest-as") action { (nameType, c) =>
+        c.copy(format = DigestedFormat(dictionary, nameType))
+      } text "Output full message in a compact format with name type: English, Short or Export."
 
       opt[String]("histogram") action { (fields, c) =>
         c.copy(histogramFields = fields.split(","))
@@ -121,6 +126,19 @@ object Options {
         case LogFilter(f) => f
         case _ =>
           throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
+      }
+    }
+  }
+
+  implicit def nameTypeRead: Read[NameType] = new Read[NameType] {
+
+    val arity = 1
+    val reads = { (s: String) =>
+      try {
+        NameType.withName(s)
+      }
+      catch {
+        case e: NoSuchElementException => throw new IllegalArgumentException(s"Unknown name type '$s'. Known types are ${NameType.values}")
       }
     }
   }

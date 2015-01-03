@@ -5,6 +5,7 @@ import java.io.{File, FilenameFilter}
 import com.typesafe.config.ConfigFactory
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
+import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.{AndFilter, IAmSorryDave, LogFilter, LogLike}
 
 import scala.collection.JavaConversions.asScalaSet
@@ -19,16 +20,8 @@ case class RootDataDictionary(customDirectory: File = new File(System.getPropert
 
   val chain: DataDictionary = buildChain() 
 
-  override def englishNameOf(field: String, context: LogLike): Option[String] = {
-    chain.englishNameOf(field, context)
-  }
-
-  override def shortNameOf(field: String, context: LogLike): Option[String] = {
-    chain.shortNameOf(field, context)
-  }
-
-  override def optionalExportNameOf(field: String, context: LogLike): Option[String] = {
-    chain.optionalExportNameOf(field, context)
+  override def nameOf(nameType: NameType, field: String, context: LogLike): Option[String] = {
+    chain.nameOf(nameType, field, context)
   }
 
   override def optionalTypeOf(field: String, context: LogLike): Option[FieldType] = {

@@ -541,6 +541,24 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                       |""".stripMargin
   }
 
+  "With --digest-as" should "show full log with even fewer characters" in {
+    val output = run("--digest-as", "Export", testFile("a-pair.xml"))
+    output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="send" lifespan="10005">
+                      |  0 (mti): 0800 (Network Management Request)
+                      |  7 (transmissionDateAndTime): 1124000003
+                      |  11 (stan): 28928
+                      |  24 (functionCode): 831
+                      |<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:04.100" type="receive" lifespan="1000">
+                      |  0 (mti): 0810 (Network Management Response)
+                      |  7 (transmissionDateAndTime): 1124000003
+                      |  11 (stan): 28928
+                      |  24 (functionCode): 831
+                      |  48.1: subfield 48.1
+                      |<log realm="rotate-log-listener" at="2014-11-24 13:10:55.000">
+                      |
+                      |""".stripMargin
+  }
+
   "With --json" should "dump each record as a line of JSON" in {
     val output = run("--json", testFile("a-pair.xml"))
     output shouldBe """{"at":"2014-11-24T00:00:03.292+1100","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831"}

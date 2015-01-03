@@ -1,20 +1,35 @@
 package io.github.binaryfoo.lagotto.dictionary
 import io.github.binaryfoo.lagotto.LogLike
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
+import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 
 trait DataDictionary {
 
-  // falls back to short name
-  def englishNameOf(field: String, context: LogLike): Option[String]
-
-  def shortNameOf(field: String, context: LogLike): Option[String]
+  /**
+   * Intent: Full wordy english to help somebody understand on first encounter.
+   */
+  final def englishNameOf(field: String, context: LogLike): Option[String] = {
+    nameOf(NameType.English, field, context)
+  }
 
   /**
-   * Always fall back to field.
+   * Intent: you know the meaning of the term you just can't remember the name for the number.
+   *
+   * Couple of letters for filters, field lists and export.
+   */
+  def shortNameOf(field: String, context: LogLike): Option[String] = {
+    nameOf(NameType.Short, field, context)
+  }
+
+  /**
+   * Intent: short name, then camel cased english name, finally just fall back to field.
    */
   final def exportNameOf(field: String, context: LogLike): String = {
-    optionalExportNameOf(field, context).getOrElse(field)
+    nameOf(NameType.Export, field, context)
+      .getOrElse(field)
   }
+
+  def nameOf(nameType: NameType, field: String, context: LogLike): Option[String]
 
   /**
    * Always default to String.
@@ -22,8 +37,6 @@ trait DataDictionary {
   final def typeOf(field: String, context: LogLike): FieldType = {
     optionalTypeOf(field, context).getOrElse(FieldType.String)
   }
-
-  def optionalExportNameOf(field: String, context: LogLike): Option[String]
 
   def optionalTypeOf(field: String, context: LogLike): Option[FieldType]
 
@@ -34,6 +47,11 @@ trait DataDictionary {
    * Eg Given name = stan find 11 as the field.
    */
   def fieldForShortName(name: String, context: LogLike): Option[String]
+}
+
+object NameType extends Enumeration {
+  type NameType = Value
+  val English, Short, Export = Value
 }
 
 object FieldType extends Enumeration {

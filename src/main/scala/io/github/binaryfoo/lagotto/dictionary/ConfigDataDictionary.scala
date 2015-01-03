@@ -4,6 +4,7 @@ import java.util
 import java.util.Map.Entry
 
 import com.typesafe.config.{ConfigObject, Config, ConfigValue}
+import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.{AllFilter, AndFilter, LogFilter, LogLike}
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.{toPath,RichConfig}
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
@@ -34,19 +35,12 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     3. override defaults based on realm, mti, nmic
    */
 
-  // falls back to short name
-  override def englishNameOf(field: String, context: LogLike): Option[String] = {
-    englishNames.get(field).orElse(shortNameOf(field, context))
-  }
-
-  override def shortNameOf(field: String, context: LogLike): Option[String] = {
-    shortNames.get(field)
-  }
-
-  // short name, field name camel cased, or just field
-  override def optionalExportNameOf(field: String, context: LogLike): Option[String] = {
-    shortNames.get(field)
-      .orElse(exportNames.get(field))
+  override def nameOf(nameType: NameType, field: String, context: LogLike): Option[String] = {
+    nameType match {
+      case NameType.English => englishNames.get(field).orElse(nameOf(NameType.Short, field, context))
+      case NameType.Short => shortNames.get(field)
+      case NameType.Export => shortNames.get(field).orElse(exportNames.get(field))
+    }
   }
 
   override def optionalTypeOf(field: String, context: LogLike): Option[FieldType] = {

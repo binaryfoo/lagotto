@@ -1,10 +1,11 @@
 package io.github.binaryfoo.lagotto.shell.output
 
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
+import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.shell.OutputFormat
 import io.github.binaryfoo.lagotto.{DefaultDateTimeFormat, LogEntry, LogLike}
 
-case class DigestedFormat(dictionary: DataDictionary) extends OutputFormat {
+case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extends OutputFormat {
 
   override def header(): Option[String] = None
 
@@ -20,7 +21,7 @@ case class DigestedFormat(dictionary: DataDictionary) extends OutputFormat {
   def format(e: LogEntry): String = {
     e.exportAsSeq.collect { case (k, v) if !headerAttributes.contains(k) =>
       val translatedValue = dictionary.translateValue(k, e, v).map(t => s"$v ($t)").getOrElse(v)
-      dictionary.englishNameOf(k, e).map(name => s"  $k ($name): $translatedValue").getOrElse(s"  $k: $translatedValue")
+      dictionary.nameOf(nameType, k, e).map(name => s"  $k ($name): $translatedValue").getOrElse(s"  $k: $translatedValue")
     }.mkString(entryHeading(e), "\n", "")
   }
 
