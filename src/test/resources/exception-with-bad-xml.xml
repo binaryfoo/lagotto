@@ -1,0 +1,15 @@
+<log realm="client-simulator" at="Thu Dec 18 15:12:40 UYST 2014.935">
+    <error>
+        <exception name="Sourced file: inline evaluation of: ``DATE=new Date();      MTI="2420"; PCODE="000000"; CURRENCY="858"; AMOUNT="4000"; . . . '' : Void assignment.">
+        Sourced file: inline evaluation of: ``DATE=new Date();      MTI="2420"; PCODE="000000"; CURRENCY="858"; AMOUNT="4000"; . . . '' : Void assignment. : at Line: 3 : in file: inline evaluation of: ``DATE=new Date();      MTI="2420"; PCODE="000000"; CURRENCY="858"; AMOUNT="4000"; . . . '' : ORIGINAL_STAN = AUTH_STAN
+
+        at bsh.BSHAssignment.eval(BSHAssignment.java:80)
+        at bsh.Interpreter.eval(Interpreter.java:645)
+        at bsh.Interpreter.eval(Interpreter.java:739)
+        at bsh.Interpreter.eval(Interpreter.java:728)
+        at org.jpos.simulator.TestRunner.runSuite(TestRunner.java:106)
+        at org.jpos.simulator.TestRunner.run(TestRunner.java:73)
+        at java.lang.Thread.run(Thread.java:744)
+        </exception>
+    </error>
+</log>

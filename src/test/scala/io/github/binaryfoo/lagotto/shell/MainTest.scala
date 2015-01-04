@@ -583,6 +583,11 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                       |""".stripMargin
   }
 
+  "exception with bad XML" should "not stop the show" in {
+    val output = run(testFile("exception-with-bad-xml.xml"))
+    output.trim shouldBe contentsOf("exception-with-bad-xml.xml")
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {

@@ -106,12 +106,12 @@ class LogEntryTest extends LagoTest {
   }
 
   it should "expose log contents via xpath" in {
-    val entry = LogEntry.fromLines(sourceFrom("pool-exhaustion.xml").getLines().toSeq)
+    val entry = LogEntry.fromLines(linesFrom("pool-exhaustion.xml"))
     entry("xpath(//jobs[text()])") shouldEqual "12413"
   }
 
   it should "report a <warn> in msgType" in {
-    val entry = LogEntry.fromLines(sourceFrom("pool-exhaustion.xml").getLines().toSeq)
+    val entry = LogEntry.fromLines(linesFrom("pool-exhaustion.xml"))
     entry("msgType") shouldEqual "warn"
   }
 
@@ -160,8 +160,13 @@ class LogEntryTest extends LagoTest {
   }
 
   "An <exception> element" should "be extracted" in {
-    val entry = LogEntry.fromLines(sourceFrom("exception.xml").getLines().toSeq)
+    val entry = LogEntry.fromLines(linesFrom("exception.xml"))
     entry("exception") shouldEqual "Remote host closed connection during handshake"
+  }
+
+  "Bad XML" should "be extracted" in {
+    val entry = LogEntry.fromLines(linesFrom("exception-with-bad-xml.xml"))
+    entry("exception") shouldBe "Sourced file: inline evaluation of: ``DATE=new Date();      MTI="
   }
 
   def oneEntry(realm: String = realm, timestamp: String = timestamp, lifespan: String = lifespan, msgType: String = "receive") = {

@@ -131,8 +131,9 @@ object LogEntry {
             case a => a
           }
         case ("exception", Start) =>
-          val ("name", value) :: _ = extractAttributes(line)
-          fields += (("exception", value))
+          extractAttributes(line)
+            .collectFirst { case ("name", value) => value }
+            .foreach(v => fields += (("exception", v)))
         case (name, Start) if !msgTypeBlackList.contains(name) && msgType == null =>
           fields += (("msgType", name))
           msgType = name
