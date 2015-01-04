@@ -21,4 +21,10 @@ class JposTimestampTest extends FlatSpec with Matchers {
   "DateTime implicit" should "format like 'at' attribute" in {
     new DateTime(2014, 11, 25, 23, 0, 0, 2).asJposAt shouldEqual "Tue Nov 25 23:00:00 EST 2014.2"
   }
+
+  "Parse" should "make a token effort with timezones" in {
+    // By token I mean assume the log has the same zone as the machine digesting it.
+    // Not good but since EST != AEST (australian EST) not sure what to do - Locale?
+    JposTimestamp.parse("Thu Dec 18 15:12:40 UYST 2014") shouldEqual new DateTime(2014, 12, 18, 15, 12, 40, 0)
+  }
 }
