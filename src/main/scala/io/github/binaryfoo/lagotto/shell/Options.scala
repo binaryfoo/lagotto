@@ -138,7 +138,7 @@ object Options {
         NameType.withName(s)
       }
       catch {
-        case e: NoSuchElementException => throw new IllegalArgumentException(s"Unknown name type '$s'. Known types are ${NameType.values}")
+        case e: NoSuchElementException => throw new IllegalArgumentException(s"Unknown name type '$s'. Known types are ${NameType.values.mkString(", ")}")
       }
     }
   }
