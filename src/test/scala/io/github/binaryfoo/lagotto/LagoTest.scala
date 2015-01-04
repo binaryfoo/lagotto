@@ -1,10 +1,7 @@
 package io.github.binaryfoo.lagotto
 
-import org.scalatest.{BeforeAndAfter, Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
-class LagoTest extends FlatSpec with Matchers with TestInput with BeforeAndAfter {
+class LagoTest extends FlatSpec with Matchers with TestInput {
 
-  after {
-    FieldExpr.dictionary = None
-  }
 }
