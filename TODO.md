@@ -2,6 +2,8 @@
 * Translate field numbers into names on output
  - needs a data dictionary. perhaps use ISO 8583 defaults (public spec?)
 * Dictionary could be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
+* Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
+* Wildcard field names in --csv and friends. Eg 43.* or 48.* ?
 * Type dictionary/schema?
  - mti, timestamp (with format), number
  - 11,lifespan,rtt,delay = number, timestamp,7 = datetime

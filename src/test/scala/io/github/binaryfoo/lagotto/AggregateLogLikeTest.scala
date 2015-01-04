@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto
 
+import io.github.binaryfoo.lagotto.FieldExpr._
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.DateTime
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
@@ -45,6 +46,11 @@ class AggregateLogLikeTest extends LagoTest {
   it should "support group_concat(field)" in {
     aggregate("group_concat(lifespan)") shouldBe List("100,200")
     aggregateToCsv(threeStans, "mti", "group_concat(11)") shouldBe List("0200,1,2", "0210,3")
+  }
+
+  it should "support group_sample(field N)" in {
+    aggregate("group_sample(lifespan 1)") should (contain("100") or contain("200"))
+    aggregateToCsv(threeStans, "mti", "group_sample(11 1)") should (contain("0210,3") and (contain("0200,1") or contain("0200,2")))
   }
 
   val now = new DateTime()
@@ -96,6 +102,20 @@ class AggregateLogLikeTest extends LagoTest {
 
   "max(field)" should "support string comparison" in {
     aggregateToCsv(twoStrings, "max(48)") shouldBe List("b")
+  }
+
+  "group_sample" should "parse" in {
+    val expr = expressionFor("group_sample(line 3)")
+    expr.toString() shouldBe "group_sample(line 3)"
+    val op = expr.asInstanceOf[AggregateExpr].op.asInstanceOf[GroupSampleBuilder]
+    op.size shouldEqual 3
+    op.field shouldEqual "line"
+  }
+
+  it should "handle having fewer values than the sample size" in {
+    val b = GroupSampleBuilder(PrimitiveExpr("mti"), 2)
+    b.+=(LogEntry("0" -> "0200"))
+    b.result() shouldBe "0200"
   }
 
   private def aggregate(field: String): List[String] = {

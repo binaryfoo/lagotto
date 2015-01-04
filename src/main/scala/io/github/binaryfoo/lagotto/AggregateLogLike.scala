@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto
 
+import java.util
+
 import org.joda.time.DateTime
 
 import scala.collection.mutable
@@ -43,6 +45,7 @@ object AggregateOp {
   val CountDistinct = """count\(distinct\((.*)\)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
+  val GroupSample = """group_sample\((.*) (\d+)\)""".r
 
   /**
    * Unapply or die.
@@ -59,6 +62,7 @@ object AggregateOp {
       case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
       case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
       case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
+      case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)
       case _ => null
     }
     Option(op)
@@ -146,6 +150,22 @@ case class GroupConcatBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   override def toString: String = s"group_concat($field){values=$values}"
 
   override def copy() = new GroupConcatBuilder(expr)
+}
+
+case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAggregateOp {
+
+  private val values = mutable.ListBuffer[String]()
+
+  override def add(v: String) = values += v
+
+  override def result(): String = {
+    val target = Math.min(size, values.size)
+    RandomSampler.pickNFromM(target, values.size).map(values(_)).mkString(",")
+  }
+
+  override def toString: String = s"group_sample($field,$size){values=$values}"
+
+  override def copy() = new GroupSampleBuilder(expr, size)
 }
 
 case class LongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
@@ -243,3 +263,17 @@ class AggregateLogLikeBuilder(key: Map[String, String], values: Seq[(String, Agg
 }
 
 class AbstractionFail extends Exception("Not needed to date. Found a need?")
+
+object RandomSampler {
+
+  def pickNFromM(n: Int, m: Int): Iterable[Int] = {
+    assert(n <= m, s"Can't pick $n integers from the range [0-$m)")
+    val random = new util.Random()
+    val indices = new mutable.HashSet[Int]()
+
+    while (indices.size < n)
+      indices.add(random.nextInt(m))
+
+    indices.toIterable
+  }
+}
