@@ -567,6 +567,22 @@ class MainTest extends FlatSpec with Matchers with TestInput {
                       |""".stripMargin
   }
 
+  "translate()" should "lookup value in the data dictionary" in {
+    val output = run("--csv", "time,translate(0)", testFile("a-pair.xml"))
+    output shouldBe """time,translate(0)
+                      |00:00:03.292,Network Management Request
+                      |00:00:04.100,Network Management Response
+                      |13:10:55.000,
+                      |""".stripMargin
+  }
+
+  "group_concat(translate(0))" should "be aggregate the translations" in {
+    val output = run("--csv", "group_concat(translate(0))", testFile("a-pair.xml"))
+    output shouldBe """group_concat(translate(0))
+                      |Network Management Request,Network Management Response
+                      |""".stripMargin
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {

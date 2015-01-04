@@ -1,10 +1,11 @@
 package io.github.binaryfoo.lagotto
 
+import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.DateTime
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import org.scalatest.{Matchers, FlatSpec}
 
-class AggregateLogLikeTest extends FlatSpec with Matchers {
+class AggregateLogLikeTest extends LagoTest {
 
   private val threeStans = Stream(
     LogEntry("0" -> "0200", "11" -> "1"),
@@ -76,6 +77,12 @@ class AggregateLogLikeTest extends FlatSpec with Matchers {
 
   it should "support count(distinct)" in {
     aggregateToCsv(threeLifespans, "count(distinct(calc(time(HH:mm:ss)-lifespan)))") shouldBe Seq("3")
+  }
+
+  it should "support group_concat(translate(70))" in {
+    FieldExpr.dictionary = Some(RootDataDictionary())
+    val twoMtis = Stream(LogEntry("0" -> "0800"), LogEntry("0" -> "0810"))
+    aggregateToCsv(twoMtis, "group_concat(translate(0))") shouldBe Seq("Network Management Request,Network Management Response")
   }
 
   private val twoStrings = Stream(

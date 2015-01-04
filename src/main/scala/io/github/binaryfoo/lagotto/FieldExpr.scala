@@ -11,6 +11,7 @@ object FieldExpr {
   val SubtractOp = """calc\((.+)-(.+)\)""".r
   val DivideOp = """calc\((.+)/(.+)\)""".r
   val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
+  val TranslateOp = """translate\((.+)\)""".r
 
   def unapply(expr: String): Option[FieldExpr] = {
     Some(expr match {
@@ -19,6 +20,7 @@ object FieldExpr {
       case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
       case "delay" => DelayExpr
       case AggregateOp(op) => AggregateExpr(expr, op)
+      case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
       case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
       case s => PrimitiveExpr(s)
     })
@@ -99,6 +101,10 @@ object DelayExpr extends DirectExpr {
 /**
  * A marker to indicate an expression does not require the calculation of any aggregate expression.
  *
+ * However the result of a DirectExpr can in turn be aggregated. For example in max(calc(timestamp-lifespan))
+ * calc(timestamp-lifespan) becomes a DirectExpr (SubtractDirectMillisFromTimeExpr) which is wrapped by an
+ * AggregateExpr to find the max() of this calculation.
+ *
  * The value can be obtained without running aggregation but unlike a PrimitiveExpr a DirectExpr may require a
  * calculation combining one or more fields from a single log entry. Eg subtraction or division.
  *
@@ -167,6 +173,8 @@ object HasAggregateExpressions {
 }
 
 /**
+ * Handle a function of one or more fields (calculation) where the fields are aggregates (a function of one or more rows).
+ *
  * Marks an expression as dependencies on the output of aggregation. Such as expression can't be evaluated without
  * first calculating the dependencies.
  *
@@ -189,7 +197,11 @@ trait CalculationOverAggregates extends FieldExpr {
 }
 
 /**
- * Handles the fact that the aggregation process does the calculation.
+ * Handles two cases:
+ *   1. A function of one or more fields (calculation).
+ *   2. An aggregate of a calculation.
+ *
+ * In the latter the aggregation process does the calculation.
  * Trying to perform the calculation on the output of aggregation would fail because the underlying fields are gone.
  * Unless the calculation is happening over aggregated fields.
  */
@@ -374,4 +386,17 @@ case class ConvertAggregateExpr(field: String, expr: AggregateExpr, op: ConvertE
 
 case class ConvertDirectExpr(field: String, expr: DirectExpr, op: ConvertExpr.TimeConversionOp, input: TimeFormatter, output: TimeFormatter)
   extends ConvertExpr with DirectCalculationExpr {
+}
+
+/**
+ * Perform a dictionary lookup to convert a value into English (or something else).
+ * Currently only works on direct not on an aggregation result.
+ */
+case class TranslateExpr(field: String, raw: String, dictionary: DataDictionary) extends DirectExpr {
+
+  def apply(e: LogLike): String = {
+    val value = e(raw)
+    dictionary.translateValue(raw, e, value).getOrElse(value)
+  }
+
 }

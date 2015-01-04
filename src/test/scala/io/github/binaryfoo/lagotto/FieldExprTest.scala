@@ -4,9 +4,9 @@ import io.github.binaryfoo.lagotto.FieldExpr.expressionFor
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.{DateTime, LocalTime}
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{BeforeAndAfter, Matchers, FlatSpec}
 
-class FieldExprTest extends FlatSpec with Matchers {
+class FieldExprTest extends LagoTest {
 
   "calc(max(a)-min(a))" should "diff two times" in {
     val expr = expressionFor("calc(max(time)-min(time))")
@@ -168,6 +168,11 @@ class FieldExprTest extends FlatSpec with Matchers {
     FieldExpr.dictionary = Some(RootDataDictionary())
     val expr = expressionFor("stan")
     expr(LogEntry("11" -> "123456")) shouldBe "123456"
-    FieldExpr.dictionary = None
+  }
+
+  "translate(70)" should "show translated value" in {
+    FieldExpr.dictionary = Some(RootDataDictionary())
+    val expr = expressionFor("translate(70)")
+    expr(LogEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
   }
 }
