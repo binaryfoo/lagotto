@@ -88,7 +88,7 @@ object DelayExpr extends DirectExpr {
     e(field)
   }
 
-  def calculateDelays(s: Stream[LogLike]): Stream[DelayTimer] = {
+  def calculateDelays(s: Iterator[LogLike]): Iterator[DelayTimer] = {
     var previous: Option[LogLike] = None
     s.map { e =>
       val next = DelayTimer(e, previous)
@@ -141,13 +141,13 @@ object AggregateExpr {
   }
 
   /**
-   * Apply aggregation 'decorator' if something in outputFields requires it.
+   * Calculate a set of aggregate values for each set of rows identified the keyFields.
    * @param s The stream of log entries that will be output.
    * @param keyFields The set of fields identifying each group.
    * @param aggregateFields The set of aggregates to calculate for each group.
-   * @return The original stream s or a Stream[AggregateLogLike].
+   * @return An Iterator[AggregateLogLike].
    */
-  def aggregate(s: Iterator[LogLike], keyFields: Seq[FieldExpr], aggregateFields: Seq[AggregateExpr]): Stream[LogLike] = {
+  def aggregate(s: Iterator[LogLike], keyFields: Seq[FieldExpr], aggregateFields: Seq[AggregateExpr]): Iterator[AggregateLogLike] = {
     def keyFor(e: LogLike): Seq[(String, String)] = {
       for {
         k <- keyFields
@@ -158,7 +158,7 @@ object AggregateExpr {
       val aggregates = aggregateFields.map(e => (e.field, e.op.copy()))
       new AggregateLogLikeBuilder(k.toMap, aggregates)
     }
-    OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.toStream
+    OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.iterator
   }
 }
 

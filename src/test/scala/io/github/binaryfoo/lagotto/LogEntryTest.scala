@@ -135,10 +135,10 @@ class LogEntryTest extends LagoTest {
   "A trio of entries" should "be coalescable" in {
     val one = LogEntry("11" -> "1", "53" -> "2")
     val four = LogEntry("11" -> "4", "53" -> "1")
-    val entries = Stream(one, LogEntry("11" -> "2", "53" -> "2"), LogEntry("11" -> "3", "53" -> "2"), four)
-    val coalesced = LogEntry.coalesce(entries, _("53"))
+    val entries = Seq(one, LogEntry("11" -> "2", "53" -> "2"), LogEntry("11" -> "3", "53" -> "2"), four)
+    val coalesced = LogEntry.coalesce(entries.iterator, _("53"))
 
-    coalesced shouldEqual List(one, Group(2, "2"), four)
+    coalesced.toList shouldEqual List(one, Group(2, "2"), four)
   }
 
   "Attributes" should "be extracted" in {

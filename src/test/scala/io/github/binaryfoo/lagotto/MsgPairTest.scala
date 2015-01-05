@@ -11,7 +11,7 @@ class MsgPairTest extends LagoTest {
     val request = LogEntry("0" -> "0800", "11" -> "1")
     val response = LogEntry("0" -> "0810", "11" -> "000001")
 
-    val pairs = MsgPair.pair(Stream(request, response))
+    val pairs = MsgPair.pair(iteratorOver(request, response)).toStream
 
     pairs should have size 1
     assert(pairs.head.request === request)
@@ -22,7 +22,7 @@ class MsgPairTest extends LagoTest {
     val request = LogEntry("0" -> "0800", "11" -> "abc")
     val response = LogEntry("0" -> "0810", "11" -> "abc")
 
-    val pairs = MsgPair.pair(Stream(request, response))
+    val pairs = MsgPair.pair(iteratorOver(request, response)).toStream
 
     pairs shouldEqual List(MsgPair(request, response))
   }
@@ -32,7 +32,7 @@ class MsgPairTest extends LagoTest {
     val dupeRequest = LogEntry("0" -> "0800", "11" -> "1", "id" -> "2")
     val response = LogEntry("0" -> "0810", "11" -> "1", "id" -> "3")
 
-    val pairs = MsgPair.pair(Stream(request, dupeRequest, response))
+    val pairs = MsgPair.pair(iteratorOver(request, dupeRequest, response)).toStream
 
     pairs shouldEqual List(MsgPair(dupeRequest, response))
   }
@@ -42,7 +42,7 @@ class MsgPairTest extends LagoTest {
     val wrongResponse = LogEntry("0" -> "0810", "11" -> "1", "realm" -> "b")
     val response = LogEntry("0" -> "0810", "11" -> "1", "realm" -> "a")
 
-    val pairs = MsgPair.pair(Stream(request, wrongResponse, response))
+    val pairs = MsgPair.pair(iteratorOver(request, wrongResponse, response)).toStream
 
     pairs shouldEqual List(MsgPair(request, response))
   }
@@ -54,13 +54,13 @@ class MsgPairTest extends LagoTest {
   }
 
   "A pair read from a file" should "have a round trip time" in {
-    val pairs = MsgPair.pair(LogReader().read(new File(testFile("a-pair.xml"))))
+    val pairs = MsgPair.pair(LogReader().read(new File(testFile("a-pair.xml")))).toStream
 
     pairs.head.rtt shouldEqual 808
   }
 
   it should "provide access to fields and attributes" in {
-    val pair = MsgPair.pair(LogReader().read(new File(testFile("a-pair.xml")))).head
+    val pair = MsgPair.pair(LogReader().read(new File(testFile("a-pair.xml")))).next()
 
     pair("0") shouldEqual "0800"
     pair("48.1") shouldEqual "subfield 48.1"
@@ -83,8 +83,8 @@ class MsgPairTest extends LagoTest {
     val key1 = pair("at" -> now.plusMillis(300).asJposAt, "0" -> "0820")
     val auth4 = pair("at" -> now.plusMillis(400).asJposAt, "0" -> "0200")
 
-    val seq = Stream(auth1, auth2, auth3, key1, auth4)
-    val coalesced = MsgPair.coalesce(seq, _.mti)
+    val seq = iteratorOver(auth1, auth2, auth3, key1, auth4)
+    val coalesced = MsgPair.coalesce(seq, _.mti).toStream
 
     coalesced shouldEqual List(auth1, Group(2, "0200"), key1, auth4)
   }
@@ -93,14 +93,14 @@ class MsgPairTest extends LagoTest {
     val one = pair("53" -> "1")
     val two = pair("53" -> "2")
 
-    MsgPair.coalesce(Stream(one, two), _("53")) shouldEqual List(one, two)
+    MsgPair.coalesce(iteratorOver(one, two), _("53")).toStream shouldEqual List(one, two)
   }
 
   it should "coalesce two messages with same value in 53" in {
     val one = pair("53" -> "1")
     val two = pair("53" -> "1")
 
-    MsgPair.coalesce(Stream(one, two), _("53")) shouldEqual List(one, Group(1, "1"))
+    MsgPair.coalesce(iteratorOver(one, two), _("53")).toStream shouldEqual List(one, Group(1, "1"))
   }
 
   "A single pair" should "be reduceable to a map" in {

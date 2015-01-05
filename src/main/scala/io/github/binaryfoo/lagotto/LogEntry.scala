@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto
 import org.joda.time.DateTime
 
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A single &lt;log&gt; entry from a jPOS log.
@@ -249,7 +249,7 @@ object LogEntry {
     LogEntry(mutable.LinkedHashMap(fields :_*))
   }
 
-  def coalesce(seq: Stream[LogEntry], selector: LogEntry => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
+  def coalesce(seq: Iterator[LogEntry], selector: LogEntry => String): Iterator[Coalesced] = Collapser.coalesce(seq, selector)
 
   val XPathAccess = """xpath\((.+)\)""".r
   val RegexReplacement = """([^(]+)\(/(.+)/(.*)/\)""".r

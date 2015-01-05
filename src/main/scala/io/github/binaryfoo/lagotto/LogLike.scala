@@ -57,7 +57,7 @@ trait LogLike {
 
 object LogLike {
 
-  implicit class IterableOfLogLike(val v: Iterable[LogLike]) extends AnyVal {
+  implicit class IterableOfLogLike(val v: Iterator[LogLike]) extends AnyVal {
 
     def toCsv(ids: String*): String = toCsv(ids.toIterable)
 

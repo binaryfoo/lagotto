@@ -7,8 +7,8 @@ package object lagotto {
    */
   type FieldAccessor[T <: LogLike] = T => String
 
-  implicit class TappableStream[A](val s: Stream[A]) extends AnyVal {
-    def tap(f: A => Unit): Stream[A] = {
+  implicit class TappableIterator[A](val s: Iterator[A]) extends AnyVal {
+    def tap(f: A => Unit): Iterator[A] = {
       s.map { e =>
         f(e)
         e

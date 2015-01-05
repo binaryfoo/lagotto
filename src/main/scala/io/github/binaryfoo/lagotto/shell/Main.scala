@@ -49,27 +49,19 @@ case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Se
 
 class Pipeline(val config: Config) {
 
-  def apply(): Stream[LogLike] = {
+  def apply(): Iterator[LogLike] = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
-    // Need to understand if this insane nesting can be removed without introducing a memory leak.
-    // ie pinning the whole Stream in memory.
-    // I suspect not. Maybe Stream ain't a good idea.
-    sort(
-      filter(
-        applyAggregation(
-          filter(
-            addDelays(
-              sort(
-                filter(
-                  pair(read()).toIterator,
-                  filters.paired),
-                preAggregationSortKey, config.sortDescending)
-            ).toIterator,
-            filters.delay).toIterator).toIterator,
-        filters.aggregate
-      ),
-      postAggregationSortKey, config.sortDescending)
+
+    val raw = read()
+    val paired = if (config.pair) raw.pair() else raw
+    val firstFilter = filter(paired, filters.paired)
+    val sorted = sort(firstFilter, preAggregationSortKey, config.sortDescending)
+    val withDelays = addDelays(sorted)
+    val secondFilter = filter(withDelays, filters.delay)
+    val aggregated = applyAggregation(secondFilter)
+    val thirdFilter = filter(aggregated, filters.aggregate)
+    sort(thirdFilter, postAggregationSortKey, config.sortDescending)
   }
 
   def partitionSortKey(): SortOrder = {
@@ -96,18 +88,14 @@ class Pipeline(val config: Config) {
     reader.readFilesOrStdIn(config.input.sortBy(LogFiles.sequenceNumber))
   }
 
-  private def pair(v: Stream[LogEntry]): Stream[LogLike] = if (config.pair) v.pair() else v
-
-  // need an Iterator instead of Stream to prevent a call to filter() or flatMap() pinning the whole stream
-  // in memory until the first match (if any)
-  private def filter(v: Iterator[LogLike], filters: Seq[LogFilter]): Stream[LogLike] = {
+  private def filter(v: Iterator[LogLike], filters: Seq[LogFilter]): Iterator[LogLike] = {
     val shouldInclude = AndFilter(filters)
 
     if (filters.isEmpty) {
-      v.toStream
+      v
     } else if (config.beforeContext == 0 && config.afterContext == 0) {
       // premature optimization for this case?
-      v.filter(shouldInclude).toStream
+      v.filter(shouldInclude)
     } else {
       val preceding = new BoundedQueue[LogLike](config.beforeContext)
       var aftersNeeded = 0
@@ -122,38 +110,36 @@ class Pipeline(val config: Config) {
           preceding.add(item)
           List.empty
         }
-      }.toStream
+      }
     }
   }
 
-  // not always going to work in a bounded amount of memory
-  private def sort(v: Stream[LogLike], sortBy: Option[FieldExpr], descending: Boolean): Stream[LogLike] = {
+  private def sort(v: Iterator[LogLike], sortBy: Option[FieldExpr], descending: Boolean): Iterator[LogLike] = {
     if (sortBy.isEmpty) {
       v
     } else {
       val key = sortBy.get
       // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
       // Options: could try to guess from they name of the key or write an Ordering[Any]?
-      val sorted = Try(v.sortBy(key(_).toInt)).getOrElse(v.sortBy(key(_)))
-      if (descending) sorted.reverse
-      else sorted
+      val memoryHog = v.toSeq
+      val sorted = Try(memoryHog.sortBy(key(_).toInt)).getOrElse(memoryHog.sortBy(key(_)))
+      (if (descending) sorted.reverse else sorted).toIterator
     }
   }
 
-  private def addDelays(v: Stream[LogLike]): Stream[LogLike] = {
+  private def addDelays(v: Iterator[LogLike]): Iterator[LogLike] = {
     if (config.requiresDelayCalculation())
       DelayExpr.calculateDelays(v)
     else
       v
   }
 
-  // Iterator instead of Stream to the same reason as filter()
-  private def applyAggregation(v: Iterator[LogLike]): Stream[LogLike] = {
+  private def applyAggregation(v: Iterator[LogLike]): Iterator[LogLike] = {
     val aggregationConfig = config.aggregationConfig()
     if (aggregationConfig.aggregates.isEmpty) {
-      v.toStream
+      v
     } else {
-      AggregateExpr.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
+      AggregateExpr.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq).toIterator
     }
   }
 }

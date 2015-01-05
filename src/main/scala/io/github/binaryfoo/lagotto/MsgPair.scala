@@ -4,7 +4,6 @@ import io.github.binaryfoo.lagotto.Iso8583._
 import org.joda.time.DateTime
 
 import scala.collection.mutable
-import scala.util.matching.Regex
 
 /**
  * A single request paired with its response. Eg an auth (0200) and reply (0210).
@@ -37,46 +36,42 @@ case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with
 
 object MsgPair {
 
-  def coalesce(seq: Stream[MsgPair], selector: MsgPair => String): Iterable[Coalesced] = Collapser.coalesce(seq, selector)
+  def coalesce(seq: Iterator[MsgPair], selector: MsgPair => String): Iterator[Coalesced] = Collapser.coalesce(seq, selector)
 
   /**
    * Match requests with responses based on MTI, STAN (field 11) and realm.
    */
-  def pair(list: Stream[LogEntry]): Stream[MsgPair] = {
+  def pair(list: Iterator[LogEntry]): Iterator[MsgPair] = {
     val pending = new mutable.LinkedHashMap[String, LogEntry]
 
-    def pairNext(s: Stream[LogEntry]): Stream[MsgPair] = {
-      s match {
-        case e #:: tail =>
-          val mti = e.mti
-          if (mti != null) {
-            val partnersKey = key(invertMTI(mti), e)
-            pending.get(partnersKey) match {
-              case Some(other) =>
-                val m = if (isResponseMTI(mti)) MsgPair(other, e) else MsgPair(e, other)
-                pending.remove(partnersKey)
-                return m #:: pairNext(tail)
-              case None =>
-                val thisKey = key(mti, e)
-                pending.put(thisKey, e)
-            }
-          }
-          pairNext(tail)
-        case _ => Stream.empty
+    list.flatMap { e =>
+      val mti = e.mti
+      if (mti != null) {
+        val partnersKey = key(invertMTI(mti), e)
+        pending.get(partnersKey) match {
+          case Some(other) =>
+            val m = if (isResponseMTI(mti)) MsgPair(other, e) else MsgPair(e, other)
+            pending.remove(partnersKey)
+            Some(m)
+          case None =>
+            val thisKey = key(mti, e)
+            pending.put(thisKey, e)
+            None
+        }
+      } else {
+        None
       }
     }
-
-    pairNext(list)
   }
 
   private def key(mti: String, e: LogEntry): String = mti + "-" + toIntIfPossible(e("11"))   + "-" + e.realm.raw
 
-  implicit class RichEntryIterable(val v: Stream[LogEntry]) extends AnyVal {
-    def pair(): Stream[MsgPair] = MsgPair.pair(v)
+  implicit class RichEntryIterable(val v: Iterator[LogEntry]) extends AnyVal {
+    def pair(): Iterator[MsgPair] = MsgPair.pair(v)
   }
 
-  implicit class RichMsgPairIterable(val v: Stream[MsgPair]) extends AnyVal {
-    def coalesce(selector: MsgPair => String): Stream[Coalesced] = Collapser.coalesce(v, selector)
+  implicit class RichMsgPairIterable(val v: Iterator[MsgPair]) extends AnyVal {
+    def coalesce(selector: MsgPair => String): Iterator[Coalesced] = Collapser.coalesce(v, selector)
   }
 
   def toIntIfPossible(s: String): Any = {
