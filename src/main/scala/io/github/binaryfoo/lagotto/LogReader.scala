@@ -30,6 +30,8 @@ case class LogReader(strict: Boolean = false, keepFullText: Boolean = true, prog
       Source.fromFile(f)
   }
 
+  def read(source: Source, sourceName: String = ""): Iterator[LogEntry] = new LogEntryIterator(source, sourceName)
+
   class LogEntryIterator(source: Source, sourceName: String = "") extends AbstractIterator[LogEntry] {
 
     private val lines = source.getLines()
@@ -97,7 +99,5 @@ case class LogReader(strict: Boolean = false, keepFullText: Boolean = true, prog
     }
 
   }
-
-  def read(source: Source, sourceName: String = ""): Iterator[LogEntry] = new LogEntryIterator(source, sourceName)
 
 }
