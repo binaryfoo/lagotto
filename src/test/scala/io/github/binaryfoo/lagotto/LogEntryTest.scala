@@ -27,7 +27,7 @@ class LogEntryTest extends LagoTest {
 
   it should "parse the 'at' attribute as a timestamp" in {
     val entry = LogEntry.fromLines(lines)
-    entry.timestamp shouldEqual new DateTime(2014, 11, 24, 16, 59, 3, 292)
+    entry.timestamp shouldEqual new DateTime(2014, 11, 24, 16, 59, 3, 292, EST_TZ)
   }
 
   it should "parse the 'lifespan' attribute as a number" in {

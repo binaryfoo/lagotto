@@ -2,10 +2,10 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.ByteArrayOutputStream
 
-import io.github.binaryfoo.lagotto.TestInput
+import io.github.binaryfoo.lagotto.{LagoTest, TestInput}
 import org.scalatest.{FlatSpec, Matchers}
 
-class MainTest extends FlatSpec with Matchers with TestInput {
+class MainTest extends LagoTest {
 
   "Main" should "produce tab separated output with --tsv option" in {
     val output = run("--tsv", "time,mti,11", testFile("a-bunch.xml"))
@@ -560,10 +560,10 @@ class MainTest extends FlatSpec with Matchers with TestInput {
   }
 
   "With --json" should "dump each record as a line of JSON" in {
-    val output = run("--json", testFile("a-pair.xml"))
-    output shouldBe """{"at":"2014-11-24T00:00:03.292+1100","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831"}
-                      |{"at":"2014-11-24T00:00:04.100+1100","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831","48.1":"subfield 48.1"}
-                      |{"at":"2014-11-24T13:10:55.000+1100","realm":"rotate-log-listener"}
+    val output = run("--json", testFile("a-pair-uyst.xml"))
+    output shouldBe """{"at":"2014-11-24T00:00:03.292-0200","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831"}
+                      |{"at":"2014-11-24T00:00:04.100-0200","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831","48.1":"subfield 48.1"}
+                      |{"at":"2014-11-24T13:10:55.000-0200","realm":"rotate-log-listener"}
                       |""".stripMargin
   }
 

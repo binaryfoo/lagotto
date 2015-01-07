@@ -1,22 +1,33 @@
 package io.github.binaryfoo.lagotto
 
-import org.joda.time.DateTime
+import java.text.SimpleDateFormat
+
+import org.joda.time.{DateTimeZone, DateTime}
 import org.joda.time.format.DateTimeFormat
 
 object JposTimestamp {
 
   private val FORMAT = DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss zzz yyyy")
-  private val READ_WORKAROUND_FORMAT = DateTimeFormat.forPattern("MMM dd HH:mm:ss yyyy")
-  private val TimeZoneRemover = "[A-Z]{3,4} ".r
+  private val READ_FORMAT = "MMM dd HH:mm:ss zzz yyyy"
 
   def parse(s: String): DateTime = {
     try {
+      // Nuanced:
+      // 1. Day names don't seem to parse so well
+      // 2. Optional milliseconds are also troublesome
+      // 3. The timezone id (zzz) needs to be read the java.util way
+      // 4. Joda's new DateTime(java.util.Date) leaves us with an instance that has GJChronology instead of
+      //    an ISOChronology which breaks equals()
+
       val dot = s.lastIndexOf('.')
       val millis = if (dot == -1) 0 else s.substring(dot + 1).toInt
       val end = if (dot == -1) s.length else dot
       val withoutDayNameAndMillis = s.substring(4, end)
-      val sansTimeZone = TimeZoneRemover.replaceFirstIn(withoutDayNameAndMillis, "")
-      READ_WORKAROUND_FORMAT.parseDateTime(sansTimeZone).withMillisOfSecond(millis)
+
+      val juFormat = new SimpleDateFormat(READ_FORMAT)
+      val date = juFormat.parse(withoutDayNameAndMillis)
+      val timeZone = DateTimeZone.forTimeZone(juFormat.getCalendar.getTimeZone)
+      new DateTime(date.getTime, timeZone).withMillisOfSecond(millis)
     }
     catch {
       case e: Throwable => throw new IllegalArgumentException(s"Failed to parse time: $s", e)
