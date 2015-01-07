@@ -20,6 +20,21 @@ libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 
 mainClass in assembly := Some("io.github.binaryfoo.lagotto.shell.Main")
 
+artifact in (Compile, assembly) := {
+  val art = (artifact in (Compile, assembly)).value
+  art.copy(`classifier` = Some("assembly"))
+}
+
+addArtifact(artifact in (Compile, assembly), assembly)
+
+licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
+
+seq(bintraySettings:_*)
+
+seq(bintrayPublishSettings:_*)
+
+bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("jpos", "log", "grep")
+
 initialCommands in console :=
   """
     |import io.github.binaryfoo.lagotto._
