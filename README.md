@@ -1,3 +1,5 @@
+[ ![Codeship Status for binaryfoo/lagotto](https://codeship.com/projects/90b68e60-780c-0132-6736-4ab0787fdfaa/status?branch=master)](https://codeship.com/projects/55597)
+
 A library to parse, filter and output XML logs written by [jPOS](http://jpos.org).
 
 Can be used:
