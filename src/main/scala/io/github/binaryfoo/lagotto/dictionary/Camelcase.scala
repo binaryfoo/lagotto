@@ -17,10 +17,10 @@ object CamelCase {
     "9" -> "nine"
   )
 
-  val LeadingUpperCaseLetter = Rule("^([A-Z])", {m => Some(m.group(1).toLowerCase) })
-  val DropIllegals = Rule("[^a-zA-Z0-9_ ]", {m => Some("") })
-  val SpaceThenLetter = Rule(" +(\\w)", {m => Some(m.group(1).toUpperCase) })
-  val LeadingDigit = Rule("^([0-9])", {m => Some(digits(m.group(1))) })
+  val LeadingUpperCaseLetter = WordRule("^([A-Z])", {m => Some(m.group(1).toLowerCase) })
+  val DropIllegals = WordRule("[^a-zA-Z0-9_ ]", {m => Some("") })
+  val SpaceThenLetter = WordRule(" +(\\w)", {m => Some(m.group(1).toUpperCase) })
+  val LeadingDigit = WordRule("^([0-9])", {m => Some(digits(m.group(1))) })
 
   val rules = Seq(LeadingUpperCaseLetter, DropIllegals, SpaceThenLetter, LeadingDigit)
 
@@ -31,10 +31,22 @@ object CamelCase {
     humped
   }
 
-  case class Rule(regex: String, replacer: Regex.Match => Option[String]) {
-    val r = regex.r.unanchored
-    def apply(s: String): String = {
-      r.replaceSomeIn(s, replacer)
-    }
+}
+
+object SentenceCase {
+
+  val HeadCap = new WordRule("(?<=^.)(\\w+)", {m => Some(m.group(1).toLowerCase)})
+
+  def toSentence(s: String): String = {
+    s.split('_').map(HeadCap.apply).mkString(" ")
+  }
+
+}
+
+case class WordRule(regex: String, replacer: Regex.Match => Option[String]) {
+  val r = regex.r.unanchored
+  def apply(s: String): String = {
+    r.replaceSomeIn(s, replacer)
   }
 }
+

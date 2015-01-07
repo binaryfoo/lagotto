@@ -25,4 +25,12 @@ class CamelCaseTest extends LagoTest {
     CamelCase.toCamelCase("Digit #0") shouldBe "digit0"
     CamelCase.toCamelCase("Digit #0 end") shouldBe "digit0End"
   }
+
+  "upperUnderscoredToSentence" should "decapitalise all but the first letter" in {
+    SentenceCase.toSentence("ONE") shouldBe "One"
+  }
+
+  it should "replace '_' with ' '" in {
+    SentenceCase.toSentence("ONE_TWO") shouldBe "One Two"
+  }
 }
