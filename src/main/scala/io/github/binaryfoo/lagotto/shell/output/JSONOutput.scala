@@ -1,7 +1,7 @@
 package io.github.binaryfoo.lagotto.shell.output
 
 import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, FieldType}
-import io.github.binaryfoo.lagotto.output.DeadSimpleJsonWriter
+import io.github.binaryfoo.lagotto.output.{GZip, DeadSimpleJsonWriter}
 import io.github.binaryfoo.lagotto.shell.OutputFormat
 import io.github.binaryfoo.lagotto.{ISO8601TimeFormat, LogLike}
 
@@ -23,6 +23,7 @@ case class JSONOutput(dictionary: DataDictionary) extends OutputFormat {
         case ("at", _) => // ignore
         case (name, FieldType.Integer) => writer.addAsInt(name, v)
         case (name, FieldType.String) => writer.add(name, v)
+        case (name, FieldType.GZippedString) => writer.add(name, GZip.unzip(v).replace("\n", "\\n"))
       }
     }
 

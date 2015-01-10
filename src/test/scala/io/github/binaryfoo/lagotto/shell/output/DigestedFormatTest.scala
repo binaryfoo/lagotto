@@ -24,4 +24,9 @@ class DigestedFormatTest extends LagoTest {
                       |  11 (stan): 28928
                       |  24 (functionCode): 831""".stripMargin
   }
+
+  it should "unzip gzipped fields" in {
+    val output = DigestedFormat(RootDataDictionary(configWithTestDictionary), NameType.English).format(LogEntry.fromString(contentsOf("gzip.xml")))
+    output should include("hello digest")
+  }
 }

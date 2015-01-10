@@ -5,7 +5,7 @@ import java.util.Map.Entry
 
 import com.typesafe.config.{ConfigObject, Config, ConfigValue}
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
-import io.github.binaryfoo.lagotto.{AllFilter, AndFilter, LogFilter, LogLike}
+import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.{toPath,RichConfig}
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 
@@ -71,7 +71,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   private def loadTypes(config: Config): Map[String, FieldType] = {
     config.entries("types").map { e =>
       val (k, v) = toPair(e)
-      k -> FieldType.withName(v)
+      k -> FieldType.forName(v).getOrElse(throw new IAmSorryDave(s"Unknown Field Type '$v' for value $k"))
     }.toMap
   }
 

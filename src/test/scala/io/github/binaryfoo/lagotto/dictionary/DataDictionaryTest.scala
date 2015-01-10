@@ -1,13 +1,12 @@
 package io.github.binaryfoo.lagotto.dictionary
 
-import java.io.File
-
+import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.{LagoTest, LogEntry}
 
 class DataDictionaryTest extends LagoTest {
 
   val logEntry = LogEntry()
-  val dictionary = RootDataDictionary(new File("src/test/resources/"))
+  val dictionary = RootDataDictionary(configWithTestDictionary)
 
   import dictionary._
 

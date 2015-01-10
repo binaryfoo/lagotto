@@ -56,5 +56,7 @@ object NameType extends Enumeration {
 
 object FieldType extends Enumeration {
   type FieldType = Value
-  val String, Integer = Value
+  val String, Integer, GZippedString = Value
+
+  def forName(s: String): Option[Value] = values.find(_.toString == s)
 }

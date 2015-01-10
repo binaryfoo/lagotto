@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto
 import java.text.SimpleDateFormat
 import java.util.{GregorianCalendar, TimeZone}
 
+import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
 import org.joda.time.DateTimeZone
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -26,4 +27,6 @@ class LagoTest extends FlatSpec with Matchers with TestInput {
   }
 
   def iteratorOver[T](e: T*): Iterator[T] = List(e :_*).iterator
+
+  def configWithTestDictionary = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources/"))
 }

@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.dictionary
 
 import java.io.{File, FilenameFilter}
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
@@ -16,7 +16,7 @@ import scala.collection.JavaConversions.asScalaSet
  * Debug using:
  *   -Dconfig.trace=loads
  */
-case class RootDataDictionary(customDirectory: File = new File(System.getProperty("user.home", ""), ".lago/")) extends DataDictionary {
+case class RootDataDictionary(config: Config = ConfigFactory.load()) extends DataDictionary {
 
   val chain: DataDictionary = buildChain() 
 
@@ -42,9 +42,10 @@ case class RootDataDictionary(customDirectory: File = new File(System.getPropert
     }
   }
 
-  private def defaultDictionary = ChainedDictionary(ConfigDataDictionary(ConfigFactory.load().getConfig("dictionaries.global")))
+  private def defaultDictionary = ChainedDictionary(ConfigDataDictionary(config.getConfig("dictionaries.global")))
 
   private def customDictionaries: Array[(LogFilter, DataDictionary)] = {
+    val customDirectory = new File(config.getString("custom.dictionaries.dir"))
     customDictionaryFiles(customDirectory).flatMap { f =>
       val custom = ConfigFactory.parseFile(f)
       custom.getObjectOrDie("dictionaries").entrySet().map { e =>

@@ -1,0 +1,8 @@
+<log realm="acme-terminal/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
+  <receive>
+    <isomsg direction="incoming">
+      <!-- org.jpos.iso.packager.XMLPackager -->
+      <field id="259" value="1F8B0800000000000000CB48CDC9C95748C94C4F2D2E010037FA227F0C000000"/>
+    </isomsg>
+  </receive>
+</log>

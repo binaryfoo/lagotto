@@ -541,6 +541,14 @@ class MainTest extends LagoTest {
                       |""".stripMargin
   }
 
+// TODO deal with global state vs concurrent tests ...
+//  it should "unzip gzipped strings" in {
+//    System.setProperty("custom.dictionaries.dir", "src/test/resources")
+//    val output = run("--digest", testFile("gzip.xml"))
+//    output should include("259 (A zipped message): hello digest")
+//    System.clearProperty("custom.dictionaries.dir")
+//  }
+
   "With --digest-as" should "show full log with even fewer characters" in {
     val output = run("--digest-as", "Export", testFile("a-pair.xml"))
     output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="send" lifespan="10005">
