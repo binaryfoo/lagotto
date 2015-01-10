@@ -66,7 +66,7 @@ case class PrimitiveExpr(field: String) extends DirectExpr {
 case class PrimitiveWithDictionaryFallbackExpr(field: String, dictionary: DataDictionary) extends DirectExpr {
   def apply(e: LogLike): String = {
     val v = e(field)
-    if (v == null) {
+    if (v == null && field != "mti") {
       dictionary.fieldForShortName(field, e).map(e(_)).orNull
     } else {
       v
@@ -392,9 +392,9 @@ case class ConvertDirectExpr(field: String, expr: DirectExpr, op: ConvertExpr.Ti
  * Perform a dictionary lookup to convert a value into English (or something else).
  * Currently only works on direct not on an aggregation result.
  */
-case class TranslateExpr(field: String, raw: String, dictionary: DataDictionary) extends DirectExpr {
+case class TranslateExpr(field: String, raw: String, dictionary: DataDictionary) extends DirectCalculationExpr {
 
-  def apply(e: LogLike): String = {
+  override def calculate(e: LogLike): String = {
     val value = e(raw)
     dictionary.translateValue(raw, e, value).getOrElse(value)
   }
