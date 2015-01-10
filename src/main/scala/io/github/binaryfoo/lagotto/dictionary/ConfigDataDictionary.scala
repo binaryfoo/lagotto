@@ -24,7 +24,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   val englishNames = loadEnglishNames(config)
   lazy val exportNames = englishNames.mapValues(CamelCase.toCamelCase)
   val shortNames = loadShortNames(config)
-  lazy val reverseShortNames = shortNames.map { case (k, v) => v -> k }
+  lazy val reverseShortNames = inverse(exportNames) ++ inverse(shortNames)
   val types = loadTypes(config)
   val translations = loadTranslations(config)
 
@@ -95,6 +95,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     key -> value
   }
 
+  private def inverse(m: Map[String, String]) = m.map { case (k, v) => v -> k }
 }
 
 case class Translations(field: String, filter: LogFilter, table: Map[String, String])

@@ -64,6 +64,10 @@ class DataDictionaryTest extends LagoTest {
     fieldForShortName("stan", logEntry) shouldBe Some("11")
   }
 
+  it should "match on export name too" in {
+    fieldForShortName("settlementAmount", logEntry) shouldBe Some("5")
+  }
+
   it should "return None if no name applies" in {
     fieldForShortName("rubbish", logEntry) shouldBe None
   }
