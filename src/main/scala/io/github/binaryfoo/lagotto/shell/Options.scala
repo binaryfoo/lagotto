@@ -27,6 +27,14 @@ object Options {
         c.copy(filters = c.filters :+ NegativeGrepFilter(expr))
       } text "Exclude messages containing text"
 
+      opt[String]("igrep") unbounded() action { (expr, c) =>
+        c.copy(filters = c.filters :+ InsensitiveGrepFilter(expr))
+      } text "Case insensitive grep. Slower."
+
+      opt[String]("igrep!") unbounded() action { (expr, c) =>
+        c.copy(filters = c.filters :+ NegativeInsensitiveGrepFilter(expr))
+      } text "Case insensitive grep!. Slower."
+
       opt[FieldFilter]('f', "field") unbounded() action { case (filter, c) =>
           c.copy(filters = c.filters :+ filter)
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"

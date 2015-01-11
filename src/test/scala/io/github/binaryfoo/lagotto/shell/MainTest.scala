@@ -392,6 +392,22 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
+  "--igrep" should "match anywhere in the message ignoring case" in {
+    val output = run("--igrep", "THRESH", testFile("a-pair.xml"))
+    output shouldEqual """<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
+                         |   maxSize (50000000) threshold reached
+                         |</log>
+                         |""".stripMargin
+  }
+
+  it should "negate with --igrep!" in {
+    val output = run("--igrep!", "THRESH", "--csv", "msgType", "--no-header", testFile("a-pair.xml"))
+    output shouldEqual """send
+                         |receive
+                         |""".stripMargin
+  }
+
+
   "Main" should "print full text by default" in {
     val output = run(testFile("a-pair.xml"))
     output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">

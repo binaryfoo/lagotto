@@ -25,6 +25,18 @@ case class NegativeGrepFilter(pattern: String) extends LogFilter {
   override def toString(): String = s"grep!($pattern)"
 }
 
+case class InsensitiveGrepFilter(pattern: String) extends LogFilter {
+  val lowerPattern = pattern.toLowerCase
+  override def apply(entry: LogLike): Boolean = entry.lines.toLowerCase.contains(lowerPattern)
+  override def toString(): String = s"igrep($pattern)"
+}
+
+case class NegativeInsensitiveGrepFilter(pattern: String) extends LogFilter {
+  val lowerPattern = pattern.toLowerCase
+  override def apply(entry: LogLike): Boolean = !entry.lines.toLowerCase.contains(lowerPattern)
+  override def toString(): String = s"igrep!($pattern)"
+}
+
 case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
   override def apply(entry: LogLike): Boolean = {
     op(expr(entry), desired)
