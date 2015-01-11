@@ -1,14 +1,74 @@
-Show a table of message type and count
+== Filtering
+
+Only output entries with an MTI (field 0) of 2100 using --field.
+
+    LAGO: log_samples/q2.log --field mti=2100 -n 1
+
+The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.
+
+To make the remaining example output shorter let's introduce the idea tabular output (--csv, --tsv, --ascii, --jira and --html). List out just the fields you're interested in.
+
+    LAGO: log_samples/q2.log --tsv time,2,11 -f mti=2100 -n 1
+
+Whilst comma and tab separated data might be good for import into Excel/Google Docs/Libre Office/MySQL an ASCII table like mysql's command line client is a bit easier for humans to parse on the command line.
+
+    LAGO: log_samples/q2.log --ascii time,2,11 -f mti=2100 -n 1
+
+Back to filtering, you can filter using somewhat familiar operators: <, >, !=, ~, and ~/regex/. The last two are contains and http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regex].
+
+To show log events that took more than 300ms to receive or send use >. The following two receives aren't really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.
+
+    LAGO: log_samples/q2.log --ascii time,msgType,lifespan,file -f 'lifespan>300'
+
+You can also use --grep to just search the log entries as text.
+
+    LAGO log_samples/q2.log --grep suspicious --ascii time,63,file
+
+== Aggregation
+
+Some rather basic SQL like group by and aggregation operators are supported.
+
+Show a table of message type and count.
 
     LAGO: log_samples/q2.log --ascii mti,count
+
+Count rows matching a condition (like approved).
+
+    LAGO: log_samples/q2.log --ascii 'mti,count,count(39=0000)'
+
+Combine with filtering to get the spread of response codes for auths.
+
+    LAGO: log_samples/q2.log --ascii '39,count' --field '39!=0000' --field mti=2110
+
+Bucketing results by time. You can use a joda time http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[format] or a few extras to aggregate by 10 minute (HH:m0) or 10 second (HH:mm:s0) buckets.
+
+    LAGO: log_samples/q2.log --ascii 'time(HH:mm:s0),count'
+
+The results aren't that interesting with such a small data set.
+
+== Pairing Requests & Responses
 
 Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time
 
     LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair
 
-Sort up or down --sort rtt or --sort-desc rtt
+== Cleaning Data
 
-    LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair --sort-desc rtt
+Tidy up a field a little using a regex replacement. This feature is probably somewhat gratuitous.
+
+    LAGO: log_samples/q2.log --ascii 'time(HH:mm),mti,11(/^0+//),rtt' --pair
+
+== Sorting
+
+Sort using a field with --sort rtt
+
+    LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort rtt
+
+Or sort descending using --sort rtt
+
+    LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort-desc rtt
+
+== More Filtering
 
 Show only pairs where the response took more than 100ms using --field
 
@@ -35,3 +95,38 @@ Show a table of exceptions. Not very interesting with only one exception but use
 Show a breakdown of message types
 
     LAGO: log_samples/q2.log --ascii msgType,count
+
+== Dictionaries
+
+TODO Convert a https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml[snippet] of jPOS' CMF into a dictionary to show how translation works
+
+    LAGO: log_samples/q2.log --ascii 'translate(39),count' --field mti=2110
+
+== Histograms
+
+You can output an http://hdrhistogram.org/[HDR Histogram] using --histogram. Has some use for http://hdrhistogram.github.io/HdrHistogram/plotFiles.html[plotting] response times (rtt).
+
+    LAGO: log_samples/q2.log --pair --histogram rtt
+
+== JSON export
+
+Export each log entry as a single line of JSON. The driver idea here was to allow import into Apache Spark for query using https://spark.apache.org/sql/[Spark SQL].
+
+    LAGO: log_samples/q2.log --field mti=2100 -n 1 --json
+
+== Digest format
+
+Output a slightly less wordy output. Supports translation of field paths to names using a dictionary (TODO explain...).
+
+    LAGO: log_samples/q2.log --field mti=2100 -n 1 --digest
+
+== Gnuplot script generation
+
+    LAGO: log_samples/q2.log --pair --tsv time,rtt --gnuplot rtts
+
+----
+include::rtts.csv[]
+----
+----
+include::rtts.gp[]
+----

@@ -20,6 +20,8 @@ libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 
 libraryDependencies += "org.asciidoctor" % "asciidoctorj" % "1.5.2" % "test"
 
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.9" % "test"
+
 mainClass in assembly := Some("io.github.binaryfoo.lagotto.shell.Main")
 
 artifact in (Compile, assembly) := {

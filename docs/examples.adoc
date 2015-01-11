@@ -1,4 +1,84 @@
-Show a table of message type and count
+== Filtering
+
+Only output entries with an MTI (field 0) of 2100 using --field.
+
+    lago log_samples/q2.log --field mti=2100 -n 1
+
+    <log realm="channel/127.0.0.1:9001" at="Thu Dec 18 15:12:40 UYST 2014.330" lifespan="1ms">
+      <send>
+        <isomsg direction="outgoing">
+          <!-- org.jpos.iso.packager.GenericPackager[cfg/jcard.xml] -->
+          <field id="0" value="2100"/>
+          <field id="2" value="6009330000000021"/>
+          <field id="3" value="300000"/>
+          <field id="4" value="8582000000000000"/>
+          <field id="7" value="1218151240"/>
+          <field id="11" value="000000000002"/>
+          <field id="12" value="20141218151240"/>
+          <field id="14" value="1001"/>
+          <field id="15" value="20141218"/>
+          <field id="17" value="1218"/>
+          <field id="22" value="10000000080000000004000001000000" type="binary"/>
+          <field id="32" value="000001"/>
+          <field id="37" value="180312760317"/>
+          <field id="41" value="29110001"/>
+          <field id="42" value="001001"/>
+          <isomsg id="43">
+            <field id="2" value="jCard Selftest system"/>
+            <field id="4" value="Montevideo"/>
+            <field id="5" value="MV"/>
+            <field id="7" value="UY"/>
+          </isomsg>
+          <isomsg id="113">
+            <field id="2" value="106"/>
+          </isomsg>
+        </isomsg>
+      </send>
+    </log>
+
+The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.
+
+To make the remaining example output shorter let's introduce the idea tabular output (--csv, --tsv, --ascii, --jira and --html). List out just the fields you're interested in.
+
+    lago log_samples/q2.log --tsv time,2,11 -f mti=2100 -n 1
+
+    time	2	11
+    15:12:40.330	6009330000000021	000000000002
+
+Whilst comma and tab separated data might be good for import into Excel/Google Docs/Libre Office/MySQL an ASCII table like mysql's command line client is a bit easier for humans to parse on the command line.
+
+    lago log_samples/q2.log --ascii time,2,11 -f mti=2100 -n 1
+
+    ==================================================
+    | time         | 2                | 11           |
+    ==================================================
+    | 15:12:40.330 | 6009330000000021 | 000000000002 |
+    ==================================================
+    
+
+Back to filtering, you can filter using somewhat familiar operators: <, >, !=, ~, and ~/regex/. The last two are contains and http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regex].
+
+To show log events that took more than 300ms to receive or send use >. The following two receives aren't really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.
+
+    lago log_samples/q2.log --ascii time,msgType,lifespan,file -f 'lifespan>300'
+
+    ===================================================
+    | time         | msgType | lifespan | file        |
+    ===================================================
+    | 15:12:41.281 | receive | 362      | q2.log:5544 |
+    | 15:12:41.281 | receive | 356      | q2.log:5549 |
+    ===================================================
+    
+
+You can also use --grep to just search the log entries as text.
+
+    LAGO log_samples/q2.log --grep suspicious --ascii time,63,file
+
+== Aggregation
+
+Some rather basic SQL like group by and aggregation operators are supported.
+
+Show a table of message type and count.
 
     lago log_samples/q2.log --ascii mti,count
 
@@ -14,6 +94,54 @@ Show a table of message type and count
     | 2430 | 3     |
     ================
     
+
+Count rows matching a condition (like approved).
+
+    lago log_samples/q2.log --ascii 'mti,count,count(39=0000)'
+
+    =================================
+    | mti  | count | count(39=0000) |
+    =================================
+    |      | 92    | 0              |
+    | 2800 | 2     | 0              |
+    | 2810 | 2     | 2              |
+    | 2100 | 35    | 0              |
+    | 2110 | 33    | 0              |
+    | 2420 | 3     | 0              |
+    | 2430 | 3     | 0              |
+    =================================
+    
+
+Combine with filtering to get the spread of response codes for auths.
+
+    lago log_samples/q2.log --ascii '39,count' --field '39!=0000' --field mti=2110
+
+    ================
+    | 39   | count |
+    ================
+    | 1011 | 2     |
+    | 1015 | 3     |
+    | 1002 | 5     |
+    | 1014 | 2     |
+    | 1803 | 21    |
+    ================
+    
+
+Bucketing results by time. You can use a joda time http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[format] or a few extras to aggregate by 10 minute (HH:m0) or 10 second (HH:mm:s0) buckets.
+
+    lago log_samples/q2.log --ascii 'time(HH:mm:s0),count'
+
+    ==========================
+    | time(HH:mm:s0) | count |
+    ==========================
+    | 15:12:30       | 18    |
+    | 15:12:40       | 152   |
+    ==========================
+    
+
+The results aren't that interesting with such a small data set.
+
+== Pairing Requests & Responses
 
 Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time
 
@@ -53,43 +181,125 @@ Match responses to requests using --pair. Show one line per pair including the r
     ============================================
     
 
-Sort up or down --sort rtt or --sort-desc rtt
+== Cleaning Data
 
-    lago log_samples/q2.log --ascii time,mti,11,rtt --pair --sort-desc rtt
+Tidy up a field a little using a regex replacement. This feature is probably somewhat gratuitous.
 
-    ============================================
-    | time         | mti  | 11           | rtt |
-    ============================================
-    | 15:12:40.547 | 2100 | 000000000005 | 150 |
-    | 15:12:40.548 | 2100 | 000000000005 | 149 |
-    | 15:12:40.330 | 2100 | 000000000002 | 143 |
-    | 15:12:40.331 | 2100 | 000000000002 | 141 |
-    | 15:12:40.710 | 2100 | 000000000006 | 51  |
-    | 15:12:40.711 | 2100 | 000000000006 | 49  |
-    | 15:12:40.515 | 2100 | 000000000004 | 23  |
-    | 15:12:40.515 | 2100 | 000000000004 | 22  |
-    | 15:12:40.793 | 2100 | 000000000008 | 12  |
-    | 15:12:40.836 | 2100 | 000000000010 | 11  |
-    | 15:12:40.794 | 2100 | 000000000008 | 10  |
-    | 15:12:40.837 | 2100 | 000000000010 | 9   |
-    | 15:12:40.917 | 2420 | 000000000014 | 8   |
-    | 15:12:40.877 | 2100 | 000000000012 | 8   |
-    | 15:12:40.817 | 2100 | 000000000009 | 8   |
-    | 15:12:40.817 | 2100 | 000000000009 | 8   |
-    | 15:12:40.774 | 2100 | 000000000007 | 8   |
-    | 15:12:40.896 | 2100 | 000000000013 | 7   |
-    | 15:12:40.861 | 2100 | 000000000011 | 7   |
-    | 15:12:40.496 | 2100 | 000000000003 | 7   |
-    | 15:12:40.918 | 2420 | 000000000014 | 6   |
-    | 15:12:40.896 | 2100 | 000000000013 | 6   |
-    | 15:12:40.878 | 2100 | 000000000012 | 6   |
-    | 15:12:40.775 | 2100 | 000000000007 | 6   |
-    | 15:12:40.496 | 2100 | 000000000003 | 6   |
-    | 15:12:40.287 | 2800 | 000000000001 | 6   |
-    | 15:12:40.862 | 2100 | 000000000011 | 5   |
-    | 15:12:40.288 | 2800 | 000000000001 | 4   |
-    ============================================
+    lago log_samples/q2.log --ascii 'time(HH:mm),mti,11(/^0+//),rtt' --pair
+
+    =========================================
+    | time(HH:mm) | mti  | 11(/^0+//) | rtt |
+    =========================================
+    | 15:12       | 2800 | 1          | 4   |
+    | 15:12       | 2800 | 1          | 6   |
+    | 15:12       | 2100 | 2          | 141 |
+    | 15:12       | 2100 | 2          | 143 |
+    | 15:12       | 2100 | 3          | 6   |
+    | 15:12       | 2100 | 3          | 7   |
+    | 15:12       | 2100 | 4          | 22  |
+    | 15:12       | 2100 | 4          | 23  |
+    | 15:12       | 2100 | 5          | 149 |
+    | 15:12       | 2100 | 5          | 150 |
+    | 15:12       | 2100 | 6          | 49  |
+    | 15:12       | 2100 | 6          | 51  |
+    | 15:12       | 2100 | 7          | 6   |
+    | 15:12       | 2100 | 7          | 8   |
+    | 15:12       | 2100 | 8          | 10  |
+    | 15:12       | 2100 | 8          | 12  |
+    | 15:12       | 2100 | 9          | 8   |
+    | 15:12       | 2100 | 9          | 8   |
+    | 15:12       | 2100 | 10         | 9   |
+    | 15:12       | 2100 | 10         | 11  |
+    | 15:12       | 2100 | 11         | 5   |
+    | 15:12       | 2100 | 11         | 7   |
+    | 15:12       | 2100 | 12         | 6   |
+    | 15:12       | 2100 | 12         | 8   |
+    | 15:12       | 2100 | 13         | 6   |
+    | 15:12       | 2100 | 13         | 7   |
+    | 15:12       | 2420 | 14         | 6   |
+    | 15:12       | 2420 | 14         | 8   |
+    =========================================
     
+
+== Sorting
+
+Sort using a field with --sort rtt
+
+    lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort rtt
+
+    ==========================================
+    | time         | mti  | 11(/^0+//) | rtt |
+    ==========================================
+    | 15:12:40.288 | 2800 | 1          | 4   |
+    | 15:12:40.862 | 2100 | 11         | 5   |
+    | 15:12:40.287 | 2800 | 1          | 6   |
+    | 15:12:40.496 | 2100 | 3          | 6   |
+    | 15:12:40.775 | 2100 | 7          | 6   |
+    | 15:12:40.878 | 2100 | 12         | 6   |
+    | 15:12:40.896 | 2100 | 13         | 6   |
+    | 15:12:40.918 | 2420 | 14         | 6   |
+    | 15:12:40.496 | 2100 | 3          | 7   |
+    | 15:12:40.861 | 2100 | 11         | 7   |
+    | 15:12:40.896 | 2100 | 13         | 7   |
+    | 15:12:40.774 | 2100 | 7          | 8   |
+    | 15:12:40.817 | 2100 | 9          | 8   |
+    | 15:12:40.817 | 2100 | 9          | 8   |
+    | 15:12:40.877 | 2100 | 12         | 8   |
+    | 15:12:40.917 | 2420 | 14         | 8   |
+    | 15:12:40.837 | 2100 | 10         | 9   |
+    | 15:12:40.794 | 2100 | 8          | 10  |
+    | 15:12:40.836 | 2100 | 10         | 11  |
+    | 15:12:40.793 | 2100 | 8          | 12  |
+    | 15:12:40.515 | 2100 | 4          | 22  |
+    | 15:12:40.515 | 2100 | 4          | 23  |
+    | 15:12:40.711 | 2100 | 6          | 49  |
+    | 15:12:40.710 | 2100 | 6          | 51  |
+    | 15:12:40.331 | 2100 | 2          | 141 |
+    | 15:12:40.330 | 2100 | 2          | 143 |
+    | 15:12:40.548 | 2100 | 5          | 149 |
+    | 15:12:40.547 | 2100 | 5          | 150 |
+    ==========================================
+    
+
+Or sort descending using --sort rtt
+
+    lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort-desc rtt
+
+    ==========================================
+    | time         | mti  | 11(/^0+//) | rtt |
+    ==========================================
+    | 15:12:40.547 | 2100 | 5          | 150 |
+    | 15:12:40.548 | 2100 | 5          | 149 |
+    | 15:12:40.330 | 2100 | 2          | 143 |
+    | 15:12:40.331 | 2100 | 2          | 141 |
+    | 15:12:40.710 | 2100 | 6          | 51  |
+    | 15:12:40.711 | 2100 | 6          | 49  |
+    | 15:12:40.515 | 2100 | 4          | 23  |
+    | 15:12:40.515 | 2100 | 4          | 22  |
+    | 15:12:40.793 | 2100 | 8          | 12  |
+    | 15:12:40.836 | 2100 | 10         | 11  |
+    | 15:12:40.794 | 2100 | 8          | 10  |
+    | 15:12:40.837 | 2100 | 10         | 9   |
+    | 15:12:40.917 | 2420 | 14         | 8   |
+    | 15:12:40.877 | 2100 | 12         | 8   |
+    | 15:12:40.817 | 2100 | 9          | 8   |
+    | 15:12:40.817 | 2100 | 9          | 8   |
+    | 15:12:40.774 | 2100 | 7          | 8   |
+    | 15:12:40.896 | 2100 | 13         | 7   |
+    | 15:12:40.861 | 2100 | 11         | 7   |
+    | 15:12:40.496 | 2100 | 3          | 7   |
+    | 15:12:40.918 | 2420 | 14         | 6   |
+    | 15:12:40.896 | 2100 | 13         | 6   |
+    | 15:12:40.878 | 2100 | 12         | 6   |
+    | 15:12:40.775 | 2100 | 7          | 6   |
+    | 15:12:40.496 | 2100 | 3          | 6   |
+    | 15:12:40.287 | 2800 | 1          | 6   |
+    | 15:12:40.862 | 2100 | 11         | 5   |
+    | 15:12:40.288 | 2800 | 1          | 4   |
+    ==========================================
+    
+
+== More Filtering
 
 Show only pairs where the response took more than 100ms using --field
 
@@ -185,3 +395,109 @@ Show a breakdown of message types
     | session-end       | 1     |
     =============================
     
+
+== Dictionaries
+
+TODO Convert a https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml[snippet] of jPOS' CMF into a dictionary to show how translation works
+
+    lago log_samples/q2.log --ascii 'translate(39),count' --field mti=2110
+
+    =========================
+    | translate(39) | count |
+    =========================
+    | 1011          | 2     |
+    | 1015          | 3     |
+    | 1002          | 5     |
+    | 1014          | 2     |
+    | 1803          | 21    |
+    =========================
+    
+
+== Histograms
+
+You can output an http://hdrhistogram.org/[HDR Histogram] using --histogram. Has some use for http://hdrhistogram.github.io/HdrHistogram/plotFiles.html[plotting] response times (rtt).
+
+    lago log_samples/q2.log --pair --histogram rtt
+
+           Value     Percentile TotalCount 1/(1-Percentile)
+    
+           4.000 0.000000000000          1           1.00
+           6.000 0.100000000000          8           1.11
+           6.000 0.200000000000          8           1.25
+           7.000 0.300000000000         11           1.43
+           8.000 0.400000000000         16           1.67
+           8.000 0.500000000000         16           2.00
+           8.000 0.550000000000         16           2.22
+           9.000 0.600000000000         17           2.50
+          11.000 0.650000000000         19           2.86
+          12.000 0.700000000000         20           3.33
+          22.000 0.750000000000         21           4.00
+          23.000 0.775000000000         22           4.44
+          49.000 0.800000000000         23           5.00
+          51.000 0.825000000000         24           5.71
+          51.000 0.850000000000         24           6.67
+         141.000 0.875000000000         25           8.00
+         141.000 0.887500000000         25           8.89
+         143.000 0.900000000000         26          10.00
+         143.000 0.912500000000         26          11.43
+         143.000 0.925000000000         26          13.33
+         149.000 0.937500000000         27          16.00
+         149.000 0.943750000000         27          17.78
+         149.000 0.950000000000         27          20.00
+         149.000 0.956250000000         27          22.86
+         149.000 0.962500000000         27          26.67
+         150.000 0.968750000000         28          32.00
+         150.000 1.000000000000         28
+    #[Mean    =       31.286, StdDeviation   =       48.111]
+    #[Max     =      150.000, Total count    =           28]
+    #[Buckets =           32, SubBuckets     =         2048]
+
+== JSON export
+
+Export each log entry as a single line of JSON. The driver idea here was to allow import into Apache Spark for query using https://spark.apache.org/sql/[Spark SQL].
+
+    lago log_samples/q2.log --field mti=2100 -n 1 --json
+
+    {"at":"2014-12-18T15:12:40.330-0200","lifespan":1,"realm":"channel/127.0.0.1:9001","msgType":"send","mti":"2100","pan":"6009330000000021","processingCode":"300000","transactionAmount":8582000000000000,"transmissionDateAndTime":"1218151240","stan":2,"localTransactionTime":"20141218151240","expirationDate":"1001","settlementDate":"20141218","captureDate":"1218","pointOfServiceEntryMode":"10000000080000000004000001000000","acquiringInstitutionIdentificationCode":"000001","rrn":"180312760317","cardAcceptorTerminalIdentification":"29110001","cardAcceptorIdentificationCode":"001001","city":"jCard Selftest system","country":"Montevideo","43.5":"MV","43.7":"UY","113.2":"106"}
+
+== Digest format
+
+Output a slightly less wordy output. Supports translation of field paths to names using a dictionary (TODO explain...).
+
+    lago log_samples/q2.log --field mti=2100 -n 1 --digest
+
+    <log realm="channel/127.0.0.1:9001" at="2014-12-18 15:12:40.330" type="send" lifespan="1">
+      0 (mti): 2100
+      2 (Primary account number): 6009330000000021
+      3 (Processing code): 300000
+      4 (Transaction amount): 8582000000000000
+      7 (Transmission date and time): 1218151240
+      11 (System trace audit number): 000000000002
+      12 (Local transaction time): 20141218151240
+      14 (Expiration date): 1001
+      15 (Settlement date): 20141218
+      17 (Capture date): 1218
+      22 (Point of service entry mode): 10000000080000000004000001000000
+      32 (Acquiring institution identification code): 000001
+      37 (Retrieval reference number): 180312760317
+      41 (Card acceptor terminal identification): 29110001
+      42 (Card acceptor identification code): 001001
+      43.2 (City): jCard Selftest system
+      43.4 (Country): Montevideo
+      43.5: MV
+      43.7: UY
+      113.2: 106
+
+== Gnuplot script generation
+
+    lago log_samples/q2.log --pair --tsv time,rtt --gnuplot rtts
+
+    Wrote rtts.csv
+    Wrote rtts.gp
+
+----
+include::rtts.csv[]
+----
+----
+include::rtts.gp[]
+----
