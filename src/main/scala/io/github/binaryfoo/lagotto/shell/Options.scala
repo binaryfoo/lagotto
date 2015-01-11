@@ -110,6 +110,10 @@ object Options {
       opt[Unit]("progress") action {(_,c) =>
         c.copy(progressMeter = new ConsoleProgressMeter())
       } text "Print progress to standard error. Only really sane if standard out is redirected."
+
+      opt[Int]('n', "limit") action {(limit,c) =>
+        c.copy(limit = Some(limit))
+      } text "Only output n entries"
     }
 
     parser.parse(args, Config())

@@ -61,7 +61,9 @@ class Pipeline(val config: Config) {
     val secondFilter = filter(withDelays, filters.delay)
     val aggregated = applyAggregation(secondFilter)
     val thirdFilter = filter(aggregated, filters.aggregate)
-    sort(thirdFilter, postAggregationSortKey, config.sortDescending)
+    val secondSort = sort(thirdFilter, postAggregationSortKey, config.sortDescending)
+    if (config.limit.isDefined) secondSort.take(config.limit.get)
+    else secondSort
   }
 
   def partitionSortKey(): SortOrder = {

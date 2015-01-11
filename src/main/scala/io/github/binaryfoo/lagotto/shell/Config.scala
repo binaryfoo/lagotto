@@ -17,7 +17,8 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    strict: Boolean = false,
                    progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[String] = Seq(),
-                   gnuplotFileName: Option[String] = None) {
+                   gnuplotFileName: Option[String] = None,
+                   limit: Option[Int] = None) {
   
   def requiresDelayCalculation(): Boolean = includesDelayInFieldList() || includesDelayInFilters()
   

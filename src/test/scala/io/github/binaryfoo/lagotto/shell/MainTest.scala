@@ -596,6 +596,36 @@ class MainTest extends LagoTest {
     output.trim shouldBe contentsOf("exception-with-bad-xml.xml")
   }
 
+  "Option -n 1" should "limit output to only one entry" in {
+    val output = run("-n", "1", testFile("a-bunch.xml"))
+    output shouldBe """    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292">
+                      |        <send>
+                      |            <isomsg direction="outgoing">
+                      |                <field id="0" value="0200"/>
+                      |                <field id="4" value="10001"/>
+                      |                <field id="11" value="1"/>
+                      |                <isomsg id="48">
+                      |                    <field id="1" value="a-bunch.xml #1"/>
+                      |                </isomsg>
+                      |            </isomsg>
+                      |        </send>
+                      |    </log>
+                      |""".stripMargin
+  }
+
+  it should "apply limit for table formats too" in {
+    val output = run("-n", "1", "--csv", "48.1", "--no-header", testFile("a-bunch.xml"))
+    output shouldBe "a-bunch.xml #1\n"
+  }
+
+  it should "have long form --limit" in {
+    val output = run("--limit", "2", "--csv", "48.1", "--no-header", testFile("a-bunch.xml"))
+    output shouldBe
+      """a-bunch.xml #1
+        |a-bunch.xml #2
+        |""".stripMargin
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {
