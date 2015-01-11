@@ -1,0 +1,37 @@
+Show a table of message type and count
+
+    LAGO: log_samples/q2.log --ascii mti,count
+
+Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time
+
+    LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair
+
+Sort up or down --sort rtt or --sort-desc rtt
+
+    LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair --sort-desc rtt
+
+Show only pairs where the response took more than 100ms using --field
+
+    LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair --field rtt>100
+
+Remember you'll need to use quotes 'rtt>100' or a slash rtt\>100 to escape the '>' when using bash.
+
+Add the file name and line number to get more detail (or check lago is not lying)
+
+    LAGO: log_samples/q2.log --ascii time,mti,11,rtt,file --pair --field rtt>100
+
+Use some aggregate operators min(), max() and avg() to get basic stats about the round trip times
+
+    LAGO: log_samples/q2.log --ascii mti,min(rtt),max(rtt),avg(rtt),count --pair
+
+Find delays of more than 100ms in a message sequence
+
+    LAGO: log_samples/q2.log --ascii time,delay,file --field delay>100
+
+Show a table of exceptions. Not very interesting with only one exception but useful when there are many
+
+    LAGO: log_samples/q2.log --ascii exception,file --field exception!=
+
+Show a breakdown of message types
+
+    LAGO: log_samples/q2.log --ascii msgType,count

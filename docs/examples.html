@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.2">
+<title>Untitled</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
+<link rel="stylesheet" href="./asciidoctor.css">
+</head>
+<body class="article">
+<div id="header">
+</div>
+<div id="content">
+<div class="paragraph">
+<p>Show a table of message type and count</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii mti,count</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>================
+| mti  | count |
+================
+|      | 92    |
+| 2800 | 2     |
+| 2810 | 2     |
+| 2100 | 35    |
+| 2110 | 33    |
+| 2420 | 3     |
+| 2430 | 3     |
+================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii time,mti,11,rtt --pair</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>============================================
+| time         | mti  | 11           | rtt |
+============================================
+| 15:12:40.288 | 2800 | 000000000001 | 4   |
+| 15:12:40.287 | 2800 | 000000000001 | 6   |
+| 15:12:40.331 | 2100 | 000000000002 | 141 |
+| 15:12:40.330 | 2100 | 000000000002 | 143 |
+| 15:12:40.496 | 2100 | 000000000003 | 6   |
+| 15:12:40.496 | 2100 | 000000000003 | 7   |
+| 15:12:40.515 | 2100 | 000000000004 | 22  |
+| 15:12:40.515 | 2100 | 000000000004 | 23  |
+| 15:12:40.548 | 2100 | 000000000005 | 149 |
+| 15:12:40.547 | 2100 | 000000000005 | 150 |
+| 15:12:40.711 | 2100 | 000000000006 | 49  |
+| 15:12:40.710 | 2100 | 000000000006 | 51  |
+| 15:12:40.775 | 2100 | 000000000007 | 6   |
+| 15:12:40.774 | 2100 | 000000000007 | 8   |
+| 15:12:40.794 | 2100 | 000000000008 | 10  |
+| 15:12:40.793 | 2100 | 000000000008 | 12  |
+| 15:12:40.817 | 2100 | 000000000009 | 8   |
+| 15:12:40.817 | 2100 | 000000000009 | 8   |
+| 15:12:40.837 | 2100 | 000000000010 | 9   |
+| 15:12:40.836 | 2100 | 000000000010 | 11  |
+| 15:12:40.862 | 2100 | 000000000011 | 5   |
+| 15:12:40.861 | 2100 | 000000000011 | 7   |
+| 15:12:40.878 | 2100 | 000000000012 | 6   |
+| 15:12:40.877 | 2100 | 000000000012 | 8   |
+| 15:12:40.896 | 2100 | 000000000013 | 6   |
+| 15:12:40.896 | 2100 | 000000000013 | 7   |
+| 15:12:40.918 | 2420 | 000000000014 | 6   |
+| 15:12:40.917 | 2420 | 000000000014 | 8   |
+============================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Sort up or down --sort rtt or --sort-desc rtt</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii time,mti,11,rtt --pair --sort-desc rtt</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>============================================
+| time         | mti  | 11           | rtt |
+============================================
+| 15:12:40.547 | 2100 | 000000000005 | 150 |
+| 15:12:40.548 | 2100 | 000000000005 | 149 |
+| 15:12:40.330 | 2100 | 000000000002 | 143 |
+| 15:12:40.331 | 2100 | 000000000002 | 141 |
+| 15:12:40.710 | 2100 | 000000000006 | 51  |
+| 15:12:40.711 | 2100 | 000000000006 | 49  |
+| 15:12:40.515 | 2100 | 000000000004 | 23  |
+| 15:12:40.515 | 2100 | 000000000004 | 22  |
+| 15:12:40.793 | 2100 | 000000000008 | 12  |
+| 15:12:40.836 | 2100 | 000000000010 | 11  |
+| 15:12:40.794 | 2100 | 000000000008 | 10  |
+| 15:12:40.837 | 2100 | 000000000010 | 9   |
+| 15:12:40.917 | 2420 | 000000000014 | 8   |
+| 15:12:40.877 | 2100 | 000000000012 | 8   |
+| 15:12:40.817 | 2100 | 000000000009 | 8   |
+| 15:12:40.817 | 2100 | 000000000009 | 8   |
+| 15:12:40.774 | 2100 | 000000000007 | 8   |
+| 15:12:40.896 | 2100 | 000000000013 | 7   |
+| 15:12:40.861 | 2100 | 000000000011 | 7   |
+| 15:12:40.496 | 2100 | 000000000003 | 7   |
+| 15:12:40.918 | 2420 | 000000000014 | 6   |
+| 15:12:40.896 | 2100 | 000000000013 | 6   |
+| 15:12:40.878 | 2100 | 000000000012 | 6   |
+| 15:12:40.775 | 2100 | 000000000007 | 6   |
+| 15:12:40.496 | 2100 | 000000000003 | 6   |
+| 15:12:40.287 | 2800 | 000000000001 | 6   |
+| 15:12:40.862 | 2100 | 000000000011 | 5   |
+| 15:12:40.288 | 2800 | 000000000001 | 4   |
+============================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Show only pairs where the response took more than 100ms using --field</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii time,mti,11,rtt --pair --field rtt&gt;100</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>============================================
+| time         | mti  | 11           | rtt |
+============================================
+| 15:12:40.331 | 2100 | 000000000002 | 141 |
+| 15:12:40.330 | 2100 | 000000000002 | 143 |
+| 15:12:40.548 | 2100 | 000000000005 | 149 |
+| 15:12:40.547 | 2100 | 000000000005 | 150 |
+============================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Remember you&#8217;ll need to use quotes 'rtt&gt;100' or a slash rtt\&gt;100 to escape the '&gt;' when using bash.</p>
+</div>
+<div class="paragraph">
+<p>Add the file name and line number to get more detail (or check lago is not lying)</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii time,mti,11,rtt,file --pair --field rtt&gt;100</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==========================================================
+| time         | mti  | 11           | rtt | file        |
+==========================================================
+| 15:12:40.331 | 2100 | 000000000002 | 141 | q2.log:378  |
+| 15:12:40.330 | 2100 | 000000000002 | 143 | q2.log:347  |
+| 15:12:40.548 | 2100 | 000000000005 | 149 | q2.log:1285 |
+| 15:12:40.547 | 2100 | 000000000005 | 150 | q2.log:1254 |
+==========================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use some aggregate operators min(), max() and avg() to get basic stats about the round trip times</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii mti,min(rtt),max(rtt),avg(rtt),count --pair</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>=================================================
+| mti  | min(rtt) | max(rtt) | avg(rtt) | count |
+=================================================
+| 2800 | 4        | 6        | 5        | 2     |
+| 2100 | 5        | 150      | 35       | 24    |
+| 2420 | 6        | 8        | 7        | 2     |
+=================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Find delays of more than 100ms in a message sequence</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii time,delay,file --field delay&gt;100</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>======================================
+| time         | delay | file        |
+======================================
+| 15:12:37.626 | 113   | q2.log:55   |
+| 15:12:37.792 | 126   | q2.log:105  |
+| 15:12:40.014 | 2218  | q2.log:120  |
+| 15:12:40.272 | 227   | q2.log:268  |
+| 15:12:40.472 | 141   | q2.log:411  |
+| 15:12:40.697 | 149   | q2.log:1318 |
+| 15:12:41.279 | 342   | q2.log:5519 |
+======================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Show a table of exceptions. Not very interesting with only one exception but useful when there are many</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii exception,file --field exception!=</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==================================================================================
+| exception                                                        | file        |
+==================================================================================
+| Sourced file: inline evaluation of: ``DATE=new Date();      MTI= | q2.log:5479 |
+==================================================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Show a breakdown of message types</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --ascii msgType,count</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>=============================
+| msgType           | count |
+=============================
+| info              | 39    |
+| jce-provider      | 1     |
+| local-master-keys | 1     |
+| iso-server        | 2     |
+| connect           | 1     |
+| session-start     | 1     |
+| trace             | 30    |
+| send              | 28    |
+| receive           | 30    |
+| abort             | 12    |
+| debug             | 13    |
+| commit            | 1     |
+| error             | 10    |
+| session-end       | 1     |
+=============================</pre>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2015-01-11 12:57:02 EST
+</div>
+</div>
+</body>
+</html>
