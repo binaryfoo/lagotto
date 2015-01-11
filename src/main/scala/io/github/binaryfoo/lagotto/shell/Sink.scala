@@ -110,7 +110,7 @@ class SingleHistogramSink(val field: String) extends Sink {
     }
   }
   override def finish() = {
-    histogram.outputPercentileDistribution(System.out, 1.0)
+    histogram.outputPercentileDistribution(Console.out, 1.0)
   }
 
 }
