@@ -16,7 +16,7 @@ case class Config (filters: Seq[LogFilter] = Seq(),
                    sortDescending: Boolean = false,
                    strict: Boolean = false,
                    progressMeter: ProgressMeter = NullProgressMeter,
-                   histogramFields: Seq[String] = Seq(),
+                   histogramFields: Seq[FieldExpr] = Seq(),
                    gnuplotFileName: Option[String] = None,
                    limit: Option[Int] = None) {
   

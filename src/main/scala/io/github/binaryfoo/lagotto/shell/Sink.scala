@@ -97,14 +97,14 @@ class CompositeSink(val sinks: Seq[Sink]) extends Sink {
  * Write to the console an HDR histogram for the range of
  * values produced by ''field''.
  */
-class SingleHistogramSink(val field: String) extends Sink {
+class SingleHistogramSink(val field: FieldExpr) extends Sink {
 
   private val histogram = new Histogram(3600000000000L, 3)
 
   override def start() = {}
 
   override def entry(e: LogLike) = {
-    val v = e(field)
+    val v = field(e)
     if (v != null) {
       histogram.recordValue(v.toLong)
     }
@@ -119,16 +119,16 @@ class SingleHistogramSink(val field: String) extends Sink {
  * Output an HDR histogram for each group. The group is identified by ''keyFields''. The histogram is for the range of
  * values produced by ''field''. Each histogram is written to a file name ''prefix''.hgrm where prefix is the group identifier.
  */
-class MultipleHistogramSink(val keyFields: Seq[String], val field: String) extends Sink {
+class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr) extends Sink {
 
   private val histograms = mutable.Map[String, Histogram]()
 
   override def start() = {}
 
   override def entry(e: LogLike) = {
-    val v = e(field)
+    val v = field(e)
     if (v != null) {
-      val key = e.toXsv("-", keyFields)
+      val key = e.exprToSeq(keyFields).mkString("-").replace(' ', '-')
       val histogram = histograms.getOrElseUpdate(key, new Histogram(3600000000000L, 3))
       histogram.recordValue(v.toLong)
     }

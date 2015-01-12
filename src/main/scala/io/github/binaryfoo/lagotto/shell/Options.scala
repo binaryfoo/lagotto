@@ -76,7 +76,7 @@ object Options {
       } text "Output full message in a compact format with name type: English, Short or Export."
 
       opt[String]("histogram") action { (fields, c) =>
-        c.copy(histogramFields = fields.split(","))
+        c.copy(histogramFields = FieldExpr.expressionsFor(fields))
       } text "Output a histogram"
 
       opt[Unit]("pair") action {(_, c) =>
