@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto.shell
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
+import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, AutoDetectLog, LogReader}
 
 import scala.util.Try
 
@@ -53,8 +54,7 @@ class Pipeline(val config: Config) {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
 
-    val raw = read()
-    val paired = if (config.pair) raw.pair() else raw
+    val paired = if (config.pair) read(JposLog).pair() else read(AutoDetectLog)
     val firstFilter = filter(paired, filters.paired)
     val sorted = sort(firstFilter, preAggregationSortKey, config.sortDescending)
     val withDelays = addDelays(sorted)
@@ -85,8 +85,8 @@ class Pipeline(val config: Config) {
     Filters(aggregate, delay, paired)
   }
 
-  private def read() = {
-    val reader = LogReader(strict = config.strict, progressMeter = config.progressMeter)
+  private def read[T <: LogLike](logType: LogType[T]): Iterator[T] = {
+    val reader = LogReader(strict = config.strict, progressMeter = config.progressMeter, logType = logType)
     reader.readFilesOrStdIn(config.input.sortBy(LogFiles.sequenceNumber))
   }
 

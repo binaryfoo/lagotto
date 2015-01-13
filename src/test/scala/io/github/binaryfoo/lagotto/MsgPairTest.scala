@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto
 import java.io.File
 
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
+import io.github.binaryfoo.lagotto.reader.LogReader
 import org.joda.time.DateTime
 
 class MsgPairTest extends LagoTest {

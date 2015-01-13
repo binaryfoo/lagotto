@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.examples
 
-import io.github.binaryfoo.lagotto.{Group, MsgPair, LogReader}
+import io.github.binaryfoo.lagotto.reader.LogReader
+import io.github.binaryfoo.lagotto.{Group, MsgPair}
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto.MsgPair.RichMsgPairIterable
 

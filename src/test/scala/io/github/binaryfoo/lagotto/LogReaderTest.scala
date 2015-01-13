@@ -4,6 +4,7 @@ import java.io.File
 
 import io.github.binaryfoo.lagotto.LogLike.IterableOfLogLike
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
+import io.github.binaryfoo.lagotto.reader.LogReader
 
 class LogReaderTest extends LagoTest {
 
@@ -55,6 +56,15 @@ class LogReaderTest extends LagoTest {
     csv shouldEqual
       """00:00:04.292,0200,2,5000,01,600
         |00:00:03.292,0200,1,10001,00,1700""".stripMargin
+  }
+
+  it should "tag each record with a line starting line number" in {
+    val entries = readEntries("a-bunch.xml")
+    val csv = entries.toCsv("48.1", "file")
+    csv shouldEqual """a-bunch.xml #1,:3
+                      |a-bunch.xml #2,:15
+                      |a-bunch.xml #3,:27
+                      |a-bunch.xml #4,:39""".stripMargin
   }
 
   "Reading 2 files" should "read records in order" in {

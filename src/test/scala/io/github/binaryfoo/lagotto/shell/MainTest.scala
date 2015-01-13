@@ -642,6 +642,17 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "log4j log" should "be readable" in {
+    val output = run("--csv", "timestamp,message", testFile("log4j.txt"))
+    output shouldBe """timestamp,message
+                      |08 Nov 2014 00:00:00,001,Did something useful
+                      |08 Nov 2014 00:00:00,002,And again
+                      |This time over two lines
+                      |
+                      |08 Nov 2014 00:00:00,003,One more for good measure
+                      |""".stripMargin
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {

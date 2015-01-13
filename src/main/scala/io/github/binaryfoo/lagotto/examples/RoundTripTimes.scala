@@ -1,7 +1,7 @@
 package io.github.binaryfoo.lagotto.examples
 
-import io.github.binaryfoo.lagotto.LogReader
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
+import io.github.binaryfoo.lagotto.reader.LogReader
 
 object RoundTripTimes extends App {
 
