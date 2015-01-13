@@ -33,6 +33,8 @@ trait LogLike {
     }.toSeq
   }
 
+  def exprToSeq(ids: FieldAccessor[this.type]*): Seq[String] = exprToSeq(ids.toIterable)
+
   def exprToSeq(ids: Iterable[FieldAccessor[this.type]]): Seq[String] = {
     ids.map { id =>
       val value = id(this)
@@ -69,5 +71,5 @@ object LogLike {
 
   }
 
-  implicit def stringAsFieldAccessor[T <: LogLike](s: String): FieldAccessor[T] = { e: T => e(s) }
+  implicit def stringAsFieldAccessor[T <: LogLike](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
 }

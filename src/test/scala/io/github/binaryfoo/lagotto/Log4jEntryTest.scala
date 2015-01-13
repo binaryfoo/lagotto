@@ -5,6 +5,7 @@ import org.joda.time.DateTime
 class Log4jEntryTest extends LagoTest {
 
   private val oneLine = "[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful"
+  private val twoLines = "[11 Jan 2014 03:02:01,999] ERROR [a.ClassName]: Did something not so useful\nWith some details..."
 
   "fromString()" should "read a single line record" in {
     val entry = Log4jEntry.fromString(oneLine)
@@ -40,10 +41,15 @@ class Log4jEntryTest extends LagoTest {
   }
 
   it should "read a two line record" in {
-    val entry = Log4jEntry.fromString("[11 Jan 2014 03:02:01,999] ERROR [a.ClassName]: Did something not so useful\nWith some details...")
+    val entry = Log4jEntry.fromString(twoLines)
 
     entry.timestamp shouldBe new DateTime(2014, 1, 11, 3, 2, 1, 999)
     entry.message shouldBe "Did something not so useful\nWith some details..."
     entry.lines shouldBe "[11 Jan 2014 03:02:01,999] ERROR [a.ClassName]: Did something not so useful\nWith some details..."
+  }
+
+  "message(/regex/replacement/)" should "apply regex to message" in {
+    val entry = Log4jEntry.fromString(twoLines)
+    entry.exprToSeq("message(/(^.*detail.*$)/$1/)") shouldBe Seq("With some details...")
   }
 }

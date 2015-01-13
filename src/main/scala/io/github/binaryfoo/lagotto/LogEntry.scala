@@ -25,9 +25,6 @@ case class LogEntry(private val _fields: mutable.LinkedHashMap[String, String], 
     case "line" if source != null => source.line.toString
     case TimeFormatter(format) => format.print(timestamp)
     case LogEntry.XPathAccess(path) => xpath(path)
-    case LogEntry.RegexReplacement(field, regex, replacement) =>
-      val raw = this(field)
-      if (raw != null) raw.replaceAll(regex, replacement) else null
     case _ => null
   }
 
@@ -252,7 +249,6 @@ object LogEntry {
   def coalesce(seq: Iterator[LogEntry], selector: LogEntry => String): Iterator[Coalesced] = Collapser.coalesce(seq, selector)
 
   val XPathAccess = """xpath\((.+)\)""".r
-  val RegexReplacement = """([^(]+)\(/(.+)/(.*)/\)""".r
 }
 
 case class SourceRef(file: String, line: Int) {

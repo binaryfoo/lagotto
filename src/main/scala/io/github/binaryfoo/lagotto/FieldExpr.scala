@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto
 
+import java.util.regex.Pattern
+
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import org.joda.time.Period
 
@@ -12,6 +14,7 @@ object FieldExpr {
   val DivideOp = """calc\((.+)/(.+)\)""".r
   val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
   val TranslateOp = """translate\((.+)\)""".r
+  val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
 
   def unapply(expr: String): Option[FieldExpr] = {
     Some(expr match {
@@ -21,6 +24,7 @@ object FieldExpr {
       case "delay" => DelayExpr
       case AggregateOp(op) => AggregateExpr(expr, op)
       case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
+      case RegexReplacementOp(path, regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
       case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
       case s => PrimitiveExpr(s)
     })
@@ -43,7 +47,7 @@ object FieldExpr {
  */
 trait FieldExpr extends FieldAccessor[LogLike] {
   /**
-   * The source text of this expression.
+   * The source text of this expression. This name is confusing. Maybe expr or sourceText would be better.
    */
   def field: String
   override def toString(): String = field
@@ -392,11 +396,36 @@ case class ConvertDirectExpr(field: String, expr: DirectExpr, op: ConvertExpr.Ti
  * Perform a dictionary lookup to convert a value into English (or something else).
  * Currently only works on direct not on an aggregation result.
  */
-case class TranslateExpr(field: String, raw: String, dictionary: DataDictionary) extends DirectCalculationExpr {
+case class TranslateExpr(field: String, path: String, dictionary: DataDictionary) extends DirectCalculationExpr {
 
   override def calculate(e: LogLike): String = {
-    val value = e(raw)
-    dictionary.translateValue(raw, e, value).getOrElse(value)
+    val value = e(path)
+    dictionary.translateValue(path, e, value).getOrElse(value)
+  }
+
+}
+
+/**
+ * Find lines in a field of a log entry that match a pattern. Replace the match with replacement.
+ */
+case class RegexReplaceExpr(field: String, path: String, pattern: String, replacement: String) extends DirectCalculationExpr {
+
+  val regex = Pattern.compile(pattern)
+
+  override def calculate(e: LogLike): String = {
+    val raw = e(path)
+    if (raw != null) {
+      raw.split('\n').flatMap { line =>
+        val m = regex.matcher(line)
+        if (m.find()) {
+          Some(m.replaceAll(replacement))
+        } else {
+          None
+        }
+      }.mkString("\n")
+    } else {
+      null
+    }
   }
 
 }
