@@ -1,10 +1,10 @@
 package io.github.binaryfoo.lagotto.reader
 
-import io.github.binaryfoo.lagotto.LogLike
+import io.github.binaryfoo.lagotto.LogEntry
 
-object AutoDetectLog extends LogType[LogLike] {
+object AutoDetectLog extends LogType[LogEntry] {
 
-  override def apply(lines: SourceLineIterator): LogLike = {
+  override def apply(lines: SourceLineIterator): LogEntry = {
     if (lines.hasNext) {
       val first = lines.peek()
       if (first.charAt(0) == '[')

@@ -10,83 +10,83 @@ class FieldExprTest extends LagoTest {
 
   "calc(max(a)-min(a))" should "diff two times" in {
     val expr = expressionFor("calc(max(time)-min(time))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(time)" -> "03:03:03.333", "min(time)" -> "02:02:02.222")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(time)" -> "03:03:03.333", "min(time)" -> "02:02:02.222")))
     diff shouldBe "01:01:01.111"
     expr.toString() shouldBe "calc(max(time)-min(time))"
   }
 
   it should "always show zero for times" in {
     val expr = expressionFor("calc(max(time)-min(time))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(time)" -> "02:02:02.222", "min(time)" -> "02:02:02.222")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(time)" -> "02:02:02.222", "min(time)" -> "02:02:02.222")))
     diff shouldBe "00:00:00.000"
   }
 
   it should "handle custom time format HH:m0" in {
     val expr = expressionFor("calc(max(time(HH:m0))-min(time(HH:m0)))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(time(HH:m0))" -> "03:30", "min(time(HH:m0))" -> "02:20")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(time(HH:m0))" -> "03:30", "min(time(HH:m0))" -> "02:20")))
     diff shouldBe "01:10"
   }
 
   it should "handle full date with difference of days" in {
     val expr = expressionFor("calc(max(date)-min(date))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(date)" -> "2015-01-01", "min(date)" -> "2014-12-31")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(date)" -> "2015-01-01", "min(date)" -> "2014-12-31")))
     diff shouldBe "1 day"
   }
 
   it should "handle full date with difference of months" in {
     val expr = expressionFor("calc(max(date)-min(date))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(date)" -> "2015-01-01", "min(date)" -> "2014-11-30")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(date)" -> "2015-01-01", "min(date)" -> "2014-11-30")))
     diff shouldBe "1 month 2 days"
   }
 
   it should "handle full date with difference of years" in {
     val expr = expressionFor("calc(max(date)-min(date))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(date)" -> "2017-01-01", "min(date)" -> "2014-10-30")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(date)" -> "2017-01-01", "min(date)" -> "2014-10-30")))
     diff shouldBe "2 years 2 months 2 days"
   }
 
   it should "handle full timestamp with difference of days" in {
     val expr = expressionFor("calc(max(timestamp)-min(timestamp))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(timestamp)" -> "2015-01-01 17:03:33.333", "min(timestamp)" -> "2014-12-31 16:02:22.222")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(timestamp)" -> "2015-01-01 17:03:33.333", "min(timestamp)" -> "2014-12-31 16:02:22.222")))
     diff shouldBe "1 day 01:01:11.111"
   }
 
   it should "handle full timestamp with difference of months" in {
     val expr = expressionFor("calc(max(timestamp)-min(timestamp))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(timestamp)" -> "2015-01-01 17:03:33.333", "min(timestamp)" -> "2014-11-30 16:02:22.222")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(timestamp)" -> "2015-01-01 17:03:33.333", "min(timestamp)" -> "2014-11-30 16:02:22.222")))
     diff shouldBe "1 month 2 days 01:01:11.111"
   }
 
   it should "handle full timestamp with difference of years" in {
     val expr = expressionFor("calc(max(timestamp)-min(timestamp))")
-    val diff = expr(AggregateLogLike(Map(), Seq("max(timestamp)" -> "2015-01-01 17:03:33.333", "min(timestamp)" -> "2013-10-30 16:02:22.222")))
+    val diff = expr(AggregateLogEntry(Map(), Seq("max(timestamp)" -> "2015-01-01 17:03:33.333", "min(timestamp)" -> "2013-10-30 16:02:22.222")))
     diff shouldBe "1 year 2 months 2 days 01:01:11.111"
   }
 
   "calc(timestamp-lifespan)" should "show when log event was created" in {
     val loggedAt = new DateTime()
     val expr = expressionFor("calc(timestamp-lifespan)")
-    expr(LogEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe DefaultDateTimeFormat.print(loggedAt.minusMillis(1000))
+    expr(JposEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe DefaultDateTimeFormat.print(loggedAt.minusMillis(1000))
   }
 
   it should "work for aggregation output (different because the individual fields aren't available)" in {
     val expr = expressionFor("calc(timestamp-lifespan)")
-    expr(AggregateLogLike(Map("calc(timestamp-lifespan)" -> "already computed"), Seq())) shouldBe "already computed"
+    expr(AggregateLogEntry(Map("calc(timestamp-lifespan)" -> "already computed"), Seq())) shouldBe "already computed"
   }
 
   "Format expression (lifespan millis as period)" should "convert millis to a time period" in {
     val expr = expressionFor("(lifespan millis as period)")
-    expr(LogEntry("lifespan" -> "3600000")) shouldBe "01:00:00.000"
+    expr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00:00.000"
   }
 
   it should "handle missing value" in {
     val expr = expressionFor("(lifespan millis as period)")
-    expr(LogEntry()) shouldBe null
+    expr(JposEntry()) shouldBe null
   }
 
   "(lifespan millis as time(HH:mm))" should "convert millis to a time period with only hour and minute fields" in {
     val expr = expressionFor("(lifespan millis as time(HH:mm))")
-    expr(LogEntry("lifespan" -> "3600000")) shouldBe "01:00"
+    expr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00"
   }
 
   "(max(lifespan) millis as time(HH:mm))" should "confess to containing an aggregate expression" in {
@@ -97,12 +97,12 @@ class FieldExprTest extends LagoTest {
 
   "(time(HH:mm) as millis)" should "convert time to millis period" in {
     val expr = expressionFor("(time(HH:mm) as millis)")
-    expr(LogEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
+    expr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
   }
 
   "(calc(timestamp-lifespan) as millis)" should "convert the calc output to millis period" in {
     val expr = expressionFor("(calc(timestamp-lifespan) time as millis)")
-    expr(LogEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt, "lifespan" -> "60000")) shouldBe "3540000"
+    expr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt, "lifespan" -> "60000")) shouldBe "3540000"
   }
 
   "(time(HH:mm) as peanuts)" should "complain about unknown conversion" in {
@@ -114,23 +114,23 @@ class FieldExprTest extends LagoTest {
   "Format expression (calc(time-lifespan) time as time(HH:mm:ss))" should "drop millis from the modified timestamp" in {
     val loggedAt = new DateTime()
     val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")
-    expr(LogEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe loggedAt.minusMillis(1000).toString("HH:mm:ss")
+    expr(JposEntry("at" -> loggedAt.asJposAt, "lifespan" -> "1000")) shouldBe loggedAt.minusMillis(1000).toString("HH:mm:ss")
   }
 
   it should "work for aggregation output (different because the individual fields aren't available)" in {
     val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")
-    expr(AggregateLogLike(Map("(calc(time-lifespan) time as time(HH:mm:ss))" -> "already computed"), Seq())) shouldBe "already computed"
+    expr(AggregateLogEntry(Map("(calc(time-lifespan) time as time(HH:mm:ss))" -> "already computed"), Seq())) shouldBe "already computed"
   }
 
   "calc(count(mti=0200)/count)" should "calculate percentage of 0200's" in {
     val expr = expressionFor("calc(count(mti=0200)/count)")
-    val percent = expr(AggregateLogLike(Map(), Seq("count(mti=0200)" -> "50", "count" -> "100")))
+    val percent = expr(AggregateLogEntry(Map(), Seq("count(mti=0200)" -> "50", "count" -> "100")))
     percent shouldBe "0.5000"
   }
 
   "calc(4/lifespan)" should "perform a rather useless division" in {
     val expr = expressionFor("calc(4/lifespan)")
-    val percent = expr(LogEntry("4" -> "000000050", "lifespan" -> "200"))
+    val percent = expr(JposEntry("4" -> "000000050", "lifespan" -> "200"))
     percent shouldBe "0.2500"
   }
 
@@ -167,12 +167,12 @@ class FieldExprTest extends LagoTest {
   "Primitive field access" should "fall back to dictionary lookup" in {
     FieldExpr.dictionary = Some(RootDataDictionary())
     val expr = expressionFor("stan")
-    expr(LogEntry("11" -> "123456")) shouldBe "123456"
+    expr(JposEntry("11" -> "123456")) shouldBe "123456"
   }
 
   "translate(70)" should "show translated value" in {
     FieldExpr.dictionary = Some(RootDataDictionary())
     val expr = expressionFor("translate(70)")
-    expr(LogEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
+    expr(JposEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
   }
 }

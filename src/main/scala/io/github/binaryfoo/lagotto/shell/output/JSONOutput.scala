@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto.shell.output
 import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, FieldType}
 import io.github.binaryfoo.lagotto.output.{GZip, DeadSimpleJsonWriter}
 import io.github.binaryfoo.lagotto.shell.OutputFormat
-import io.github.binaryfoo.lagotto.{ISO8601TimeFormat, LogLike}
+import io.github.binaryfoo.lagotto.{ISO8601TimeFormat, LogEntry}
 
 case class JSONOutput(dictionary: DataDictionary) extends OutputFormat {
 
@@ -11,7 +11,7 @@ case class JSONOutput(dictionary: DataDictionary) extends OutputFormat {
 
   // TODO unpack realm fields?
 
-  override def apply(e: LogLike): Option[String] = {
+  override def apply(e: LogEntry): Option[String] = {
     val writer = new DeadSimpleJsonWriter()
 
     val timestamp = e.timestamp

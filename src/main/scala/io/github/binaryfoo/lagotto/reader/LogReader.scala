@@ -3,12 +3,12 @@ package io.github.binaryfoo.lagotto.reader
 import java.io.{BufferedInputStream, File, FileInputStream}
 import java.util.zip.GZIPInputStream
 
-import io.github.binaryfoo.lagotto.{LogLike, NullProgressMeter, ProgressMeter}
+import io.github.binaryfoo.lagotto.{LogEntry, NullProgressMeter, ProgressMeter}
 
 import scala.collection.AbstractIterator
 import scala.io.{BufferedSource, Source}
 
-case class LogReader[T <: LogLike](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) {
+case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) {
 
   def readFilesOrStdIn(args: Iterable[String]): Iterator[T] = {
     if (args.isEmpty)
@@ -103,4 +103,4 @@ class SourceLineIterator(val lines: Iterator[String], val sourceName: String, va
   }
 }
 
-trait LogType[T <: LogLike] extends (SourceLineIterator => T)
+trait LogType[T <: LogEntry] extends (SourceLineIterator => T)

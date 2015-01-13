@@ -1,5 +1,5 @@
 package io.github.binaryfoo.lagotto.dictionary
-import io.github.binaryfoo.lagotto.LogLike
+import io.github.binaryfoo.lagotto.LogEntry
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 
@@ -8,7 +8,7 @@ trait DataDictionary {
   /**
    * Intent: Full wordy english to help somebody understand on first encounter.
    */
-  final def englishNameOf(field: String, context: LogLike): Option[String] = {
+  final def englishNameOf(field: String, context: LogEntry): Option[String] = {
     nameOf(NameType.English, field, context)
   }
 
@@ -17,36 +17,36 @@ trait DataDictionary {
    *
    * Couple of letters for filters, field lists and export.
    */
-  def shortNameOf(field: String, context: LogLike): Option[String] = {
+  def shortNameOf(field: String, context: LogEntry): Option[String] = {
     nameOf(NameType.Short, field, context)
   }
 
   /**
    * Intent: short name, then camel cased english name, finally just fall back to field.
    */
-  final def exportNameOf(field: String, context: LogLike): String = {
+  final def exportNameOf(field: String, context: LogEntry): String = {
     nameOf(NameType.Export, field, context)
       .getOrElse(field)
   }
 
-  def nameOf(nameType: NameType, field: String, context: LogLike): Option[String]
+  def nameOf(nameType: NameType, field: String, context: LogEntry): Option[String]
 
   /**
    * Always default to String.
    */
-  final def typeOf(field: String, context: LogLike): FieldType = {
+  final def typeOf(field: String, context: LogEntry): FieldType = {
     optionalTypeOf(field, context).getOrElse(FieldType.String)
   }
 
-  def optionalTypeOf(field: String, context: LogLike): Option[FieldType]
+  def optionalTypeOf(field: String, context: LogEntry): Option[FieldType]
 
-  def translateValue(field: String, context: LogLike, value: String): Option[String]
+  def translateValue(field: String, context: LogEntry, value: String): Option[String]
 
   /**
    * Reverse lookup of the field path for the short name that applies based on the context.
    * Eg Given name = stan find 11 as the field.
    */
-  def fieldForShortName(name: String, context: LogLike): Option[String]
+  def fieldForShortName(name: String, context: LogEntry): Option[String]
 }
 
 object NameType extends Enumeration {

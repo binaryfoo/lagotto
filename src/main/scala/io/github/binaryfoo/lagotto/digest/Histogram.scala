@@ -1,12 +1,12 @@
 package io.github.binaryfoo.lagotto.digest
 
-import io.github.binaryfoo.lagotto.LogEntry
+import io.github.binaryfoo.lagotto.JposEntry
 
 import scala.collection.mutable
 
-case class HistogramSet(key: LogEntry => String, keyName: String, grams: Histogram*) {
+case class HistogramSet(key: JposEntry => String, keyName: String, grams: Histogram*) {
 
-  def add(e: LogEntry) = {
+  def add(e: JposEntry) = {
     grams.foreach(_.add(e, key))
   }
 
@@ -18,10 +18,10 @@ case class HistogramSet(key: LogEntry => String, keyName: String, grams: Histogr
   }
 }
 
-case class Histogram(name: String, filter: LogEntry => Boolean) {
+case class Histogram(name: String, filter: JposEntry => Boolean) {
   val counts: mutable.Map[String, Int] = mutable.Map()
 
-  def add(e: LogEntry, key: LogEntry => String): Unit = {
+  def add(e: JposEntry, key: JposEntry => String): Unit = {
     if (filter(e)) {
       val k = key(e)
       counts.update(k, counts.getOrElse(k, 0) + 1)

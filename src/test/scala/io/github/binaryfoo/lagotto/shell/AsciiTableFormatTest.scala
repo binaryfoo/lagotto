@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.{PrintStream, ByteArrayOutputStream}
 
-import io.github.binaryfoo.lagotto.LogEntry
+import io.github.binaryfoo.lagotto.JposEntry
 import io.github.binaryfoo.lagotto.shell.output.{IncrementalAsciiTableFormat, AsciiTableFormat}
 import org.scalatest.{Matchers, FlatSpec}
 

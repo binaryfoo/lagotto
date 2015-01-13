@@ -1,15 +1,15 @@
 package io.github.binaryfoo.lagotto.reader
 
-import io.github.binaryfoo.lagotto.{LogEntry, SourceRef}
+import io.github.binaryfoo.lagotto.{JposEntry, SourceRef}
 
 import scala.collection.mutable.ListBuffer
 
 /**
  * XML output by jPOS' XMLPackager and logging framework.
  */
-object JposLog extends LogType[LogEntry] {
+object JposLog extends LogType[JposEntry] {
 
-  override def apply(lines: SourceLineIterator): LogEntry = {
+  override def apply(lines: SourceLineIterator): JposEntry = {
     var record: ListBuffer[String] = null
     var startLineNumber = lines.lineNumber
     for (line <- lines) {
@@ -29,7 +29,7 @@ object JposLog extends LogType[LogEntry] {
         if (record != null) {
           try {
             val fullText = if (lines.keepFullText) record.mkString("\n") else ""
-            return LogEntry(LogEntry.extractFields(record), fullText, SourceRef(lines.sourceName, startLineNumber))
+            return JposEntry(JposEntry.extractFields(record), fullText, SourceRef(lines.sourceName, startLineNumber))
           }
           catch {
             case e: IllegalArgumentException =>

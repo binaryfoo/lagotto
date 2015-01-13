@@ -1,15 +1,16 @@
 package io.github.binaryfoo.lagotto.shell
 
 import java.io.{File, FileOutputStream, FileWriter, PrintStream}
+
 import io.github.binaryfoo.lagotto.output.GnuplotScriptWriter
-import io.github.binaryfoo.lagotto.{FieldExpr, LogLike}
+import io.github.binaryfoo.lagotto.{FieldExpr, LogEntry}
 import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
 
 trait Sink {
   def start()
-  def entry(e: LogLike)
+  def entry(e: LogEntry)
   def finish()
 }
 
@@ -24,7 +25,7 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) exte
     }
   }
 
-  override def entry(e: LogLike) = format(e).foreach(println)
+  override def entry(e: LogEntry) = format(e).foreach(println)
 
   override def finish() = format.footer().foreach(println)
 
@@ -43,7 +44,7 @@ class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileNam
     }
   }
 
-  override def entry(e: LogLike) = format(e).foreach(out.println)
+  override def entry(e: LogEntry) = format(e).foreach(out.println)
 
   override def finish() = {
     format.footer().foreach(out.println)
@@ -62,7 +63,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
   
   override def start() = {}
 
-  override def entry(e: LogLike) = {
+  override def entry(e: LogEntry) = {
     val time = fields.head(e)
     if (time != null) {
       xRange = xRange match {
@@ -87,7 +88,7 @@ class CompositeSink(val sinks: Seq[Sink]) extends Sink {
 
   override def start() = sinks.foreach(_.start())
 
-  override def entry(e: LogLike) = sinks.foreach(_.entry(e))
+  override def entry(e: LogEntry) = sinks.foreach(_.entry(e))
 
   override def finish() = sinks.foreach(_.finish())
 
@@ -103,7 +104,7 @@ class SingleHistogramSink(val field: FieldExpr) extends Sink {
 
   override def start() = {}
 
-  override def entry(e: LogLike) = {
+  override def entry(e: LogEntry) = {
     val v = field(e)
     if (v != null) {
       histogram.recordValue(v.toLong)
@@ -125,7 +126,7 @@ class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr)
 
   override def start() = {}
 
-  override def entry(e: LogLike) = {
+  override def entry(e: LogEntry) = {
     val v = field(e)
     if (v != null) {
       val key = e.exprToSeq(keyFields).mkString("-").replace(' ', '-')

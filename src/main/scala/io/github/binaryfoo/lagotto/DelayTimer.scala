@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
-case class DelayTimer(current: LogLike, previous: Option[LogLike]) extends LogLike {
+case class DelayTimer(current: LogEntry, previous: Option[LogEntry]) extends LogEntry {
 
   override def timestamp: DateTime = current.timestamp
 

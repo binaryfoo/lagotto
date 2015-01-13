@@ -13,7 +13,7 @@ import scala.collection.mutable
  * @param key The set of (key, value) pairs that uniquely identify the group.
  * @param aggregates The set of values computed over the group.
  */
-case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, String)]) extends LogLike {
+case class AggregateLogEntry(key: Map[String, String], aggregates: Seq[(String, String)]) extends LogEntry {
 
   override def timestamp: DateTime = null
 
@@ -26,7 +26,7 @@ case class AggregateLogLike(key: Map[String, String], aggregates: Seq[(String, S
   override def exportAsSeq: Seq[(String, String)] = key.toSeq ++ aggregates
 }
 
-trait AggregateOp extends mutable.Builder[LogLike, String] {
+trait AggregateOp extends mutable.Builder[LogEntry, String] {
   override def clear() = throw new AbstractionFail
 
   /**
@@ -82,7 +82,7 @@ trait FieldBasedAggregateOp extends AggregateOp {
   def field = expr.field
   def add(v: String)
 
-  final override def +=(elem: LogLike) = {
+  final override def +=(elem: LogEntry) = {
     val v = expr(elem)
     if (v != null) {
       add(v)
@@ -96,7 +96,7 @@ case class CountBuilder() extends AggregateOp {
   
   private var count = 0
 
-  override def +=(elem: LogLike) = {
+  override def +=(elem: LogEntry) = {
     count += 1
     this
   }
@@ -112,7 +112,7 @@ case class CountIfBuilder(condition: FieldFilter) extends AggregateOp {
   
   private var count = 0
   
-  override def +=(elem: LogLike) = {
+  override def +=(elem: LogEntry) = {
     if (condition(elem)) {
       count += 1
     }
@@ -250,14 +250,14 @@ case class AverageBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
 /**
  * Accumulate a set of aggregated values for the group uniquely identified by key.
  */
-class AggregateLogLikeBuilder(key: Map[String, String], values: Seq[(String, AggregateOp)]) extends mutable.Builder[LogLike, AggregateLogLike] {
+class AggregateLogEntryBuilder(key: Map[String, String], values: Seq[(String, AggregateOp)]) extends mutable.Builder[LogEntry, AggregateLogEntry] {
   
-  override def +=(elem: LogLike) = {
+  override def +=(elem: LogEntry) = {
     values.foreach { case (_, v) => v += elem }
     this
   }
 
-  override def result(): AggregateLogLike = AggregateLogLike(key, values.map { case (k, v) => (k, v.result()) })
+  override def result(): AggregateLogEntry = AggregateLogEntry(key, values.map { case (k, v) => (k, v.result()) })
 
   override def clear(): Unit = throw new AbstractionFail
 }

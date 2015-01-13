@@ -9,8 +9,8 @@ import org.joda.time.DateTime
 class MsgPairTest extends LagoTest {
 
   "A single request and response pair" should "be matched" in {
-    val request = LogEntry("0" -> "0800", "11" -> "1")
-    val response = LogEntry("0" -> "0810", "11" -> "000001")
+    val request = JposEntry("0" -> "0800", "11" -> "1")
+    val response = JposEntry("0" -> "0810", "11" -> "000001")
 
     val pairs = MsgPair.pair(iteratorOver(request, response)).toStream
 
@@ -20,8 +20,8 @@ class MsgPairTest extends LagoTest {
   }
 
   it should "pair when field 11 is not numeric" in {
-    val request = LogEntry("0" -> "0800", "11" -> "abc")
-    val response = LogEntry("0" -> "0810", "11" -> "abc")
+    val request = JposEntry("0" -> "0800", "11" -> "abc")
+    val response = JposEntry("0" -> "0810", "11" -> "abc")
 
     val pairs = MsgPair.pair(iteratorOver(request, response)).toStream
 
@@ -29,9 +29,9 @@ class MsgPairTest extends LagoTest {
   }
 
   it should "pair response with most recent request in face of duplicates" in {
-    val request = LogEntry("0" -> "0800", "11" -> "1", "id" -> "1")
-    val dupeRequest = LogEntry("0" -> "0800", "11" -> "1", "id" -> "2")
-    val response = LogEntry("0" -> "0810", "11" -> "1", "id" -> "3")
+    val request = JposEntry("0" -> "0800", "11" -> "1", "id" -> "1")
+    val dupeRequest = JposEntry("0" -> "0800", "11" -> "1", "id" -> "2")
+    val response = JposEntry("0" -> "0810", "11" -> "1", "id" -> "3")
 
     val pairs = MsgPair.pair(iteratorOver(request, dupeRequest, response)).toStream
 
@@ -39,9 +39,9 @@ class MsgPairTest extends LagoTest {
   }
 
   it should "pairing should use realm" in {
-    val request = LogEntry("0" -> "0800", "11" -> "1", "realm" -> "a")
-    val wrongResponse = LogEntry("0" -> "0810", "11" -> "1", "realm" -> "b")
-    val response = LogEntry("0" -> "0810", "11" -> "1", "realm" -> "a")
+    val request = JposEntry("0" -> "0800", "11" -> "1", "realm" -> "a")
+    val wrongResponse = JposEntry("0" -> "0810", "11" -> "1", "realm" -> "b")
+    val response = JposEntry("0" -> "0810", "11" -> "1", "realm" -> "a")
 
     val pairs = MsgPair.pair(iteratorOver(request, wrongResponse, response)).toStream
 
@@ -73,7 +73,7 @@ class MsgPairTest extends LagoTest {
     pair("timestamp") shouldEqual "2014-11-24 00:00:03.292"
   }
 
-  def pair(requestFields: (String, String)*): MsgPair = MsgPair(LogEntry(requestFields : _*), LogEntry())
+  def pair(requestFields: (String, String)*): MsgPair = MsgPair(JposEntry(requestFields : _*), JposEntry())
 
   "A sequence of msgs" should "be coalesceable by mti" in {
     val now = new DateTime()
@@ -105,7 +105,7 @@ class MsgPairTest extends LagoTest {
   }
 
   "A single pair" should "be reduceable to a map" in {
-    val p = MsgPair(LogEntry("11" -> "123456", "37" -> "ignored"), LogEntry("39" -> "00"))
+    val p = MsgPair(JposEntry("11" -> "123456", "37" -> "ignored"), JposEntry("39" -> "00"))
 
     p.toSeq("11", "39") shouldEqual Seq("123456", "00")
   }

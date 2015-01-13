@@ -50,7 +50,7 @@ case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Se
 
 class Pipeline(val config: Config) {
 
-  def apply(): Iterator[LogLike] = {
+  def apply(): Iterator[LogEntry] = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
 
@@ -85,12 +85,12 @@ class Pipeline(val config: Config) {
     Filters(aggregate, delay, paired)
   }
 
-  private def read[T <: LogLike](logType: LogType[T]): Iterator[T] = {
+  private def read[T <: LogEntry](logType: LogType[T]): Iterator[T] = {
     val reader = LogReader(strict = config.strict, progressMeter = config.progressMeter, logType = logType)
     reader.readFilesOrStdIn(config.input.sortBy(LogFiles.sequenceNumber))
   }
 
-  private def filter(v: Iterator[LogLike], filters: Seq[LogFilter]): Iterator[LogLike] = {
+  private def filter(v: Iterator[LogEntry], filters: Seq[LogFilter]): Iterator[LogEntry] = {
     val shouldInclude = AndFilter(filters)
 
     if (filters.isEmpty) {
@@ -99,7 +99,7 @@ class Pipeline(val config: Config) {
       // premature optimization for this case?
       v.filter(shouldInclude)
     } else {
-      val preceding = new BoundedQueue[LogLike](config.beforeContext)
+      val preceding = new BoundedQueue[LogEntry](config.beforeContext)
       var aftersNeeded = 0
       v.flatMap { item =>
         if (shouldInclude(item)) {
@@ -116,7 +116,7 @@ class Pipeline(val config: Config) {
     }
   }
 
-  private def sort(v: Iterator[LogLike], sortBy: Option[FieldExpr], descending: Boolean): Iterator[LogLike] = {
+  private def sort(v: Iterator[LogEntry], sortBy: Option[FieldExpr], descending: Boolean): Iterator[LogEntry] = {
     if (sortBy.isEmpty) {
       v
     } else {
@@ -129,14 +129,14 @@ class Pipeline(val config: Config) {
     }
   }
 
-  private def addDelays(v: Iterator[LogLike]): Iterator[LogLike] = {
+  private def addDelays(v: Iterator[LogEntry]): Iterator[LogEntry] = {
     if (config.requiresDelayCalculation())
       DelayExpr.calculateDelays(v)
     else
       v
   }
 
-  private def applyAggregation(v: Iterator[LogLike]): Iterator[LogLike] = {
+  private def applyAggregation(v: Iterator[LogEntry]): Iterator[LogEntry] = {
     val aggregationConfig = config.aggregationConfig()
     if (aggregationConfig.aggregates.isEmpty) {
       v

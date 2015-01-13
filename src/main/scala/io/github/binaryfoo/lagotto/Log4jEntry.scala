@@ -5,7 +5,7 @@ import org.joda.time.format.DateTimeFormat
 
 import scala.collection.mutable
 
-case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String], lines: String, source: SourceRef = null) extends LogLike {
+case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String], lines: String, source: SourceRef = null) extends LogEntry {
 
   val fields = _fields.withDefault {
     case TimeFormatter(format) => format.print(timestamp)

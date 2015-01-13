@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import java.io.File
 
-import io.github.binaryfoo.lagotto.LogLike.IterableOfLogLike
+import io.github.binaryfoo.lagotto.LogEntry.IterableOfLogEntry
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto.reader.LogReader
 
@@ -78,7 +78,7 @@ class LogReaderTest extends LagoTest {
                       |00:00:04.100,a-second-bunch.xml #2""".stripMargin
   }
 
-  def readEntries(s: String): Iterator[LogEntry] = {
+  def readEntries(s: String): Iterator[JposEntry] = {
     LogReader().read(sourceFrom(s))
   }
 

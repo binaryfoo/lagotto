@@ -35,7 +35,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     3. override defaults based on realm, mti, nmic
    */
 
-  override def nameOf(nameType: NameType, field: String, context: LogLike): Option[String] = {
+  override def nameOf(nameType: NameType, field: String, context: LogEntry): Option[String] = {
     nameType match {
       case NameType.English => englishNames.get(field).orElse(nameOf(NameType.Short, field, context))
       case NameType.Short => shortNames.get(field)
@@ -43,18 +43,18 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     }
   }
 
-  override def optionalTypeOf(field: String, context: LogLike): Option[FieldType] = {
+  override def optionalTypeOf(field: String, context: LogEntry): Option[FieldType] = {
     types.get(field)
   }
 
-  override def translateValue(field: String, context: LogLike, value: String): Option[String] = {
+  override def translateValue(field: String, context: LogEntry, value: String): Option[String] = {
     val table = translations.collectFirst {
       case Translations(f, filter, t) if f == field && filter(context) => t
     }
     table.flatMap(_.get(value))
   }
 
-  override def fieldForShortName(name: String, context: LogLike): Option[String] = {
+  override def fieldForShortName(name: String, context: LogEntry): Option[String] = {
     reverseShortNames.get(name)
   }
 

@@ -4,7 +4,7 @@ import scala.collection.mutable.ListBuffer
 
 object Collapser {
 
-  def coalesce[T <: Coalesced with LogLike](seq: Iterator[T], selector: T => String): Iterator[Coalesced] = {
+  def coalesce[T <: Coalesced with LogEntry](seq: Iterator[T], selector: T => String): Iterator[Coalesced] = {
 
     case class CurrentGroup(key: String, members: ListBuffer[T]) {
 

@@ -4,7 +4,7 @@ import io.github.binaryfoo.lagotto.dictionary.{FieldType, DataDictionary}
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.output.GZip
 import io.github.binaryfoo.lagotto.shell.OutputFormat
-import io.github.binaryfoo.lagotto.{DefaultDateTimeFormat, LogEntry, LogLike}
+import io.github.binaryfoo.lagotto.{DefaultDateTimeFormat, JposEntry, LogEntry}
 
 case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extends OutputFormat {
 
@@ -12,14 +12,14 @@ case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extend
 
   override def footer(): Option[String] = None
 
-  override def apply(e: LogLike): Option[String] = {
+  override def apply(e: LogEntry): Option[String] = {
     Some(e match {
-      case l: LogEntry => format(l)
+      case l: JposEntry => format(l)
       case _ => e.exportAsSeq.mkString("\n")
     })
   }
 
-  def format(e: LogEntry): String = {
+  def format(e: JposEntry): String = {
     e.exportAsSeq.collect { case (k, v) if !headerAttributes.contains(k) =>
       val translatedValue = dictionary.typeOf(k, e) match {
         case FieldType.GZippedString => GZip.unzip(v)
@@ -29,7 +29,7 @@ case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extend
     }.mkString(entryHeading(e), "\n", "")
   }
 
-  private def entryHeading(e: LogEntry) = {
+  private def entryHeading(e: JposEntry) = {
     val b = new StringBuilder("<log")
     addAttribute(b, "realm", e.realm.toString)
     addAttribute(b, "at", DefaultDateTimeFormat.print(e.timestamp))

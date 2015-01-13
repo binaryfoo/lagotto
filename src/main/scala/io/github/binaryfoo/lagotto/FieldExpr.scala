@@ -43,9 +43,9 @@ object FieldExpr {
 }
 
 /**
- * Exists separately from FieldAccessor to allow passing lambdas to LogLike.toXsv(). Maybe misguided.
+ * Exists separately from FieldAccessor to allow passing lambdas to LogEntry.toXsv(). Maybe misguided.
  */
-trait FieldExpr extends FieldAccessor[LogLike] {
+trait FieldExpr extends FieldAccessor[LogEntry] {
   /**
    * The source text of this expression. This name is confusing. Maybe expr or sourceText would be better.
    */
@@ -57,7 +57,7 @@ trait FieldExpr extends FieldAccessor[LogLike] {
  * Just access a field. The simplest case.
  */
 case class PrimitiveExpr(field: String) extends DirectExpr {
-  def apply(e: LogLike): String = e(field)
+  def apply(e: LogEntry): String = e(field)
 }
 
 /**
@@ -68,7 +68,7 @@ case class PrimitiveExpr(field: String) extends DirectExpr {
  * some messages and 48.48 in others.
  */
 case class PrimitiveWithDictionaryFallbackExpr(field: String, dictionary: DataDictionary) extends DirectExpr {
-  def apply(e: LogLike): String = {
+  def apply(e: LogEntry): String = {
     val v = e(field)
     if (v == null && field != "mti") {
       dictionary.fieldForShortName(field, e).map(e(_)).orNull
@@ -85,15 +85,15 @@ case class PrimitiveWithDictionaryFallbackExpr(field: String, dictionary: DataDi
 object DelayExpr extends DirectExpr {
   val field = "delay"
 
-  def apply(e: LogLike): String = {
+  def apply(e: LogEntry): String = {
     if (!e.isInstanceOf[DelayTimer]) {
       throw new IllegalStateException(s"We lost delay calculation. Can't retrieve delay from $e")
     }
     e(field)
   }
 
-  def calculateDelays(s: Iterator[LogLike]): Iterator[DelayTimer] = {
-    var previous: Option[LogLike] = None
+  def calculateDelays(s: Iterator[LogEntry]): Iterator[DelayTimer] = {
+    var previous: Option[LogEntry] = None
     s.map { e =>
       val next = DelayTimer(e, previous)
       previous = Some(e)
@@ -129,8 +129,8 @@ object DirectExpr {
  * @param op How to calculate the aggregate value.
  */
 case class AggregateExpr(field: String, op: AggregateOp) extends FieldExpr {
-  override def apply(e: LogLike): String = {
-    if (!e.isInstanceOf[AggregateLogLike]) {
+  override def apply(e: LogEntry): String = {
+    if (!e.isInstanceOf[AggregateLogEntry]) {
       throw new IllegalStateException(s"We lost aggregation. Can't retrieve $field from $e")
     }
     e(field)
@@ -149,10 +149,10 @@ object AggregateExpr {
    * @param s The stream of log entries that will be output.
    * @param keyFields The set of fields identifying each group.
    * @param aggregateFields The set of aggregates to calculate for each group.
-   * @return An Iterator[AggregateLogLike].
+   * @return An Iterator[AggregateLogEntry].
    */
-  def aggregate(s: Iterator[LogLike], keyFields: Seq[FieldExpr], aggregateFields: Seq[AggregateExpr]): Iterator[AggregateLogLike] = {
-    def keyFor(e: LogLike): Seq[(String, String)] = {
+  def aggregate(s: Iterator[LogEntry], keyFields: Seq[FieldExpr], aggregateFields: Seq[AggregateExpr]): Iterator[AggregateLogEntry] = {
+    def keyFor(e: LogEntry): Seq[(String, String)] = {
       for {
         k <- keyFields
       } yield (k.field, k(e))
@@ -160,7 +160,7 @@ object AggregateExpr {
     def newBuilder(k: Seq[(String, String)]) = {
       // Each aggregate holds state so needs to be cloned for each new group
       val aggregates = aggregateFields.map(e => (e.field, e.op.copy()))
-      new AggregateLogLikeBuilder(k.toMap, aggregates)
+      new AggregateLogEntryBuilder(k.toMap, aggregates)
     }
     OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.iterator
   }
@@ -186,13 +186,13 @@ object HasAggregateExpressions {
  */
 trait CalculationOverAggregates extends FieldExpr {
 
-  final def apply(e: LogLike): String = calculate(e)
+  final def apply(e: LogEntry): String = calculate(e)
 
   /**
    * Only exists to allow expression implementations to share code between the direct and aggregate versions.
    * Maybe there's a better way.
    */
-  def calculate(e: LogLike): String
+  def calculate(e: LogEntry): String
 
   /**
    * The aggregate expressions involved in this calculation.
@@ -210,13 +210,13 @@ trait CalculationOverAggregates extends FieldExpr {
  * Unless the calculation is happening over aggregated fields.
  */
 trait DirectCalculationExpr extends DirectExpr {
-  final def apply(e: LogLike): String = {
+  final def apply(e: LogEntry): String = {
     e match {
-      case aggregated: AggregateLogLike => e(field)
+      case aggregated: AggregateLogEntry => e(field)
       case _ => calculate(e)
     }
   }
-  def calculate(e: LogLike): String
+  def calculate(e: LogEntry): String
 }
 
 object SubtractExpr {
@@ -256,7 +256,7 @@ trait SubtractTimestampsExpr {
   def leftFormat: TimeFormatter
   def rightFormat: TimeFormatter
 
-  def calculate(e: LogLike): String = {
+  def calculate(e: LogEntry): String = {
     val leftTime = leftFormat.parseDateTime(left(e))
     val rightTime = rightFormat.parseDateTime(right(e))
     val period = new Period(rightTime, leftTime)
@@ -282,7 +282,7 @@ trait SubtractMillisFromTimeExpr {
   def right: FieldExpr
   def leftFormat: TimeFormatter
 
-  def calculate(e: LogLike): String = {
+  def calculate(e: LogEntry): String = {
     val leftValue = left(e)
     val rightValue = right(e)
     if (leftValue == null || rightValue == null) {
@@ -323,7 +323,7 @@ trait DivideExpr {
   def left: FieldExpr
   def right: FieldExpr
 
-  def calculate(e: LogLike): String = {
+  def calculate(e: LogEntry): String = {
     val leftNumber = left(e).toDouble
     val rightNumber = right(e).toDouble
     (leftNumber / rightNumber).formatted("%.4f")
@@ -349,7 +349,7 @@ trait ConvertExpr {
   def input: TimeFormatter
   def output: TimeFormatter
 
-  def calculate(e: LogLike): String = {
+  def calculate(e: LogEntry): String = {
     val value = expr(e)
     if (value == null || value == "") {
       null
@@ -398,7 +398,7 @@ case class ConvertDirectExpr(field: String, expr: DirectExpr, op: ConvertExpr.Ti
  */
 case class TranslateExpr(field: String, path: String, dictionary: DataDictionary) extends DirectCalculationExpr {
 
-  override def calculate(e: LogLike): String = {
+  override def calculate(e: LogEntry): String = {
     val value = e(path)
     dictionary.translateValue(path, e, value).getOrElse(value)
   }
@@ -412,7 +412,7 @@ case class RegexReplaceExpr(field: String, path: String, pattern: String, replac
 
   val regex = Pattern.compile(pattern)
 
-  override def calculate(e: LogLike): String = {
+  override def calculate(e: LogEntry): String = {
     val raw = e(path)
     if (raw != null) {
       raw.split('\n').flatMap { line =>

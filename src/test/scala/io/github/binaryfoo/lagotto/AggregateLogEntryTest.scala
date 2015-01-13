@@ -6,12 +6,12 @@ import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import io.github.binaryfoo.lagotto.output.Xsv.SeqToXsv
 import org.joda.time.DateTime
 
-class AggregateLogLikeTest extends LagoTest {
+class AggregateLogEntryTest extends LagoTest {
 
   private def threeStans = iteratorOver(
-    LogEntry("0" -> "0200", "11" -> "1"),
-    LogEntry("0" -> "0200", "11" -> "2"),
-    LogEntry("0" -> "0210", "11" -> "3"))
+    JposEntry("0" -> "0200", "11" -> "1"),
+    JposEntry("0" -> "0200", "11" -> "2"),
+    JposEntry("0" -> "0210", "11" -> "3"))
 
   "Aggregation" should "support count" in {
     aggregateToCsv(threeStans, "mti", "count") shouldBe List("0200,2", "0210,1")
@@ -21,7 +21,7 @@ class AggregateLogLikeTest extends LagoTest {
     aggregateToCsv(threeStans, "count(distinct(mti))") shouldBe List("2")
   }
 
-  private def twoLifespans = iteratorOver(LogEntry("lifespan" -> "100"), LogEntry("lifespan" -> "200"))
+  private def twoLifespans = iteratorOver(JposEntry("lifespan" -> "100"), JposEntry("lifespan" -> "200"))
 
   it should "support avg(field)" in {
     aggregate("avg(lifespan)") shouldBe List("150")
@@ -55,9 +55,9 @@ class AggregateLogLikeTest extends LagoTest {
 
   private val now = new DateTime()
   private def threeLifespans = iteratorOver(
-    LogEntry("at" -> now.asJposAt, "lifespan" -> "1000"),
-    LogEntry("at" -> now.asJposAt, "lifespan" -> "2000"),
-    LogEntry("at" -> now.asJposAt, "lifespan" -> "3000"))
+    JposEntry("at" -> now.asJposAt, "lifespan" -> "1000"),
+    JposEntry("at" -> now.asJposAt, "lifespan" -> "2000"),
+    JposEntry("at" -> now.asJposAt, "lifespan" -> "3000"))
 
   "Aggregation over a calculation" should "support max" in {
     aggregateToCsv(threeLifespans, "max(calc(timestamp-lifespan))") shouldBe Seq(DefaultDateTimeFormat.print(now.minusMillis(1000)))
@@ -87,19 +87,19 @@ class AggregateLogLikeTest extends LagoTest {
 
   it should "support group_concat(translate(70))" in {
     FieldExpr.dictionary = Some(RootDataDictionary())
-    val twoMtis = iteratorOver(LogEntry("0" -> "0800"), LogEntry("0" -> "0810"))
+    val twoMtis = iteratorOver(JposEntry("0" -> "0800"), JposEntry("0" -> "0810"))
     aggregateToCsv(twoMtis, "group_concat(translate(0))") shouldBe Seq("Network Management Request,Network Management Response")
   }
 
   it should "support translate() as an aggregation key" in {
     FieldExpr.dictionary = Some(RootDataDictionary())
-    val twoMtis = iteratorOver(LogEntry("0" -> "0800"), LogEntry("0" -> "0810"))
+    val twoMtis = iteratorOver(JposEntry("0" -> "0800"), JposEntry("0" -> "0810"))
     aggregateToCsv(twoMtis, "translate(0)", "count") shouldBe Seq("Network Management Request,1", "Network Management Response,1")
   }
 
   private def twoStrings = iteratorOver(
-    LogEntry("48" -> "a"),
-    LogEntry("48" -> "b"))
+    JposEntry("48" -> "a"),
+    JposEntry("48" -> "b"))
 
   "min(field)" should "support string comparison" in {
     aggregateToCsv(twoStrings, "min(48)") shouldBe List("a")
@@ -119,7 +119,7 @@ class AggregateLogLikeTest extends LagoTest {
 
   it should "handle having fewer values than the sample size" in {
     val b = GroupSampleBuilder(PrimitiveExpr("mti"), 2)
-    b.+=(LogEntry("0" -> "0200"))
+    b.+=(JposEntry("0" -> "0200"))
     b.result() shouldBe "0200"
   }
 
@@ -127,7 +127,7 @@ class AggregateLogLikeTest extends LagoTest {
     aggregateToCsv(twoLifespans, field)
   }
 
-  private def aggregateToCsv(raw: Iterator[LogLike], fields: String*): List[String] = {
+  private def aggregateToCsv(raw: Iterator[LogEntry], fields: String*): List[String] = {
     val fieldExprs = FieldExpr.expressionsFor(fields)
     val aggregationConfig = AggregationSpec.fromExpressions(fieldExprs)
     val aggregated = AggregateExpr.aggregate(raw.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)

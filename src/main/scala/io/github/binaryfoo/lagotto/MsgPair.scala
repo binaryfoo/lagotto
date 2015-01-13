@@ -8,7 +8,7 @@ import scala.collection.mutable
 /**
  * A single request paired with its response. Eg an auth (0200) and reply (0210).
  */
-case class MsgPair(request: LogEntry, response: LogEntry) extends Coalesced with LogLike {
+case class MsgPair(request: JposEntry, response: JposEntry) extends Coalesced with LogEntry {
 
   def apply(field: String): String = {
     field match {
@@ -41,8 +41,8 @@ object MsgPair {
   /**
    * Match requests with responses based on MTI, STAN (field 11) and realm.
    */
-  def pair(list: Iterator[LogEntry]): Iterator[MsgPair] = {
-    val pending = new mutable.LinkedHashMap[String, LogEntry]
+  def pair(list: Iterator[JposEntry]): Iterator[MsgPair] = {
+    val pending = new mutable.LinkedHashMap[String, JposEntry]
 
     list.flatMap { e =>
       val mti = e.mti
@@ -64,9 +64,9 @@ object MsgPair {
     }
   }
 
-  private def key(mti: String, e: LogEntry): String = mti + "-" + toIntIfPossible(e("11"))   + "-" + e.realm.raw
+  private def key(mti: String, e: JposEntry): String = mti + "-" + toIntIfPossible(e("11"))   + "-" + e.realm.raw
 
-  implicit class RichEntryIterable(val v: Iterator[LogEntry]) extends AnyVal {
+  implicit class RichEntryIterable(val v: Iterator[JposEntry]) extends AnyVal {
     def pair(): Iterator[MsgPair] = MsgPair.pair(v)
   }
 

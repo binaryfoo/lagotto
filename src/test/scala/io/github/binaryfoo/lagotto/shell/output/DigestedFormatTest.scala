@@ -1,11 +1,11 @@
 package io.github.binaryfoo.lagotto.shell.output
 
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
-import io.github.binaryfoo.lagotto.{LagoTest, LogEntry}
+import io.github.binaryfoo.lagotto.{LagoTest, JposEntry}
 
 class DigestedFormatTest extends LagoTest {
 
-  val entry = LogEntry.fromString(contentsOf("one-entry.xml"))
+  val entry = JposEntry.fromString(contentsOf("one-entry.xml"))
 
   "Format" should "do something with a LogEntry" in {
     val output = DigestedFormat(RootDataDictionary(), NameType.English).format(entry)
@@ -26,7 +26,7 @@ class DigestedFormatTest extends LagoTest {
   }
 
   it should "unzip gzipped fields" in {
-    val output = DigestedFormat(RootDataDictionary(configWithTestDictionary), NameType.English).format(LogEntry.fromString(contentsOf("gzip.xml")))
+    val output = DigestedFormat(RootDataDictionary(configWithTestDictionary), NameType.English).format(JposEntry.fromString(contentsOf("gzip.xml")))
     output should include("hello digest")
   }
 }

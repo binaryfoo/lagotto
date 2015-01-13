@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
-import io.github.binaryfoo.lagotto.{AndFilter, IAmSorryDave, LogFilter, LogLike}
+import io.github.binaryfoo.lagotto.{AndFilter, IAmSorryDave, LogFilter, LogEntry}
 
 import scala.collection.JavaConversions.asScalaSet
 
@@ -20,19 +20,19 @@ case class RootDataDictionary(config: Config = ConfigFactory.load()) extends Dat
 
   val chain: DataDictionary = buildChain() 
 
-  override def nameOf(nameType: NameType, field: String, context: LogLike): Option[String] = {
+  override def nameOf(nameType: NameType, field: String, context: LogEntry): Option[String] = {
     chain.nameOf(nameType, field, context)
   }
 
-  override def optionalTypeOf(field: String, context: LogLike): Option[FieldType] = {
+  override def optionalTypeOf(field: String, context: LogEntry): Option[FieldType] = {
     chain.optionalTypeOf(field, context)
   }
 
-  override def translateValue(field: String, context: LogLike, value: String): Option[String] = {
+  override def translateValue(field: String, context: LogEntry, value: String): Option[String] = {
     chain.translateValue(field, context, value)
   }
 
-  override def fieldForShortName(name: String, context: LogLike): Option[String] = {
+  override def fieldForShortName(name: String, context: LogEntry): Option[String] = {
     chain.fieldForShortName(name, context)
   }
 

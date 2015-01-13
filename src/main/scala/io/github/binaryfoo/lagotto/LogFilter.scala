@@ -2,8 +2,8 @@ package io.github.binaryfoo.lagotto
 
 import scala.util.matching.Regex
 
-trait LogFilter extends Function[LogLike, Boolean] {
-  def apply(entry: LogLike): Boolean
+trait LogFilter extends Function[LogEntry, Boolean] {
+  def apply(entry: LogEntry): Boolean
 }
 
 trait FieldFilter extends LogFilter {
@@ -16,46 +16,46 @@ object FieldFilterOn {
 }
 
 case class GrepFilter(pattern: String) extends LogFilter {
-  override def apply(entry: LogLike): Boolean = entry.lines.contains(pattern)
+  override def apply(entry: LogEntry): Boolean = entry.lines.contains(pattern)
   override def toString(): String = s"grep($pattern)"
 }
 
 case class NegativeGrepFilter(pattern: String) extends LogFilter {
-  override def apply(entry: LogLike): Boolean = !entry.lines.contains(pattern)
+  override def apply(entry: LogEntry): Boolean = !entry.lines.contains(pattern)
   override def toString(): String = s"grep!($pattern)"
 }
 
 case class InsensitiveGrepFilter(pattern: String) extends LogFilter {
   val lowerPattern = pattern.toLowerCase
-  override def apply(entry: LogLike): Boolean = entry.lines.toLowerCase.contains(lowerPattern)
+  override def apply(entry: LogEntry): Boolean = entry.lines.toLowerCase.contains(lowerPattern)
   override def toString(): String = s"igrep($pattern)"
 }
 
 case class NegativeInsensitiveGrepFilter(pattern: String) extends LogFilter {
   val lowerPattern = pattern.toLowerCase
-  override def apply(entry: LogLike): Boolean = !entry.lines.toLowerCase.contains(lowerPattern)
+  override def apply(entry: LogEntry): Boolean = !entry.lines.toLowerCase.contains(lowerPattern)
   override def toString(): String = s"igrep!($pattern)"
 }
 
 case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
-  override def apply(entry: LogLike): Boolean = {
+  override def apply(entry: LogEntry): Boolean = {
     op(expr(entry), desired)
   }
   override def toString(): String = s"$expr$operatorSymbol$desired"
 }
 
 case class AndFilter(filters: Seq[LogFilter]) extends LogFilter {
-  override def apply(entry: LogLike): Boolean = filters.forall(_.apply(entry))
+  override def apply(entry: LogEntry): Boolean = filters.forall(_.apply(entry))
   override def toString(): String = filters.mkString(",")
 }
 
 object AllFilter extends LogFilter {
-  override def apply(entry: LogLike): Boolean = true
+  override def apply(entry: LogEntry): Boolean = true
   override def toString(): String = "all"
 }
 
 case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true) extends FieldFilter {
-  override def apply(entry: LogLike): Boolean = {
+  override def apply(entry: LogEntry): Boolean = {
     val value = expr(entry)
     value != null && pattern.findFirstMatchIn(value).isDefined == positive
   }
