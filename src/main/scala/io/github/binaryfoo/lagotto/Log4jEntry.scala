@@ -46,7 +46,3 @@ object Log4jEntry {
   }
 
 }
-
-object Log4jReader {
-
-}
