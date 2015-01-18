@@ -32,9 +32,7 @@ object Main extends App {
       val baseName = config.gnuplotFileName.get
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
-      val fields = config.format match {
-        case Tabular(f, _) => f
-      }
+      val fields = config.outputFields()
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
       new CompositeSink(Seq(dataFile, gnuplotScript))

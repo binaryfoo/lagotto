@@ -22,12 +22,7 @@ case class Config (filters: Seq[LogFilter] = Seq(),
   
   def requiresDelayCalculation(): Boolean = includesDelayInFieldList() || includesDelayInFilters()
   
-  def includesDelayInFieldList() = {
-    format match {
-      case Tabular(fields, _) if fields.contains(DelayExpr) => true
-      case _ => false
-    }
-  }
+  def includesDelayInFieldList(): Boolean = outputFields().contains(DelayExpr)
   
   def includesDelayInFilters(): Boolean = {
     filters.collectFirst {
@@ -45,10 +40,13 @@ case class Config (filters: Seq[LogFilter] = Seq(),
       case FieldFilterOn(HasAggregateExpressions(exprs)) => exprs
       case _ => Seq()
     }
-    val outputFields = format match {
+    AggregationSpec.fromExpressions(outputFields ++ aggregatesUsedInFilters)
+  }
+
+  def outputFields(): Seq[FieldExpr] = {
+    format match {
       case Tabular(fields, _) => fields
       case _ => Seq()
     }
-    AggregationSpec.fromExpressions(outputFields ++ aggregatesUsedInFilters)
   }
 }
