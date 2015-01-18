@@ -100,6 +100,21 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
   }
 
+  "(max(responseTime) micro as seconds)" should "convert microseconds to seconds" in {
+    val expr = expressionFor("(max(responseTime) micro as seconds)")
+    expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20005046"))) shouldBe "20"
+  }
+
+  "(max(responseTime) micro as millis)" should "convert microseconds to seconds" in {
+    val expr = expressionFor("(max(responseTime) micro as millis)")
+    expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20005046"))) shouldBe "20005"
+  }
+
+  "(max(responseTime) millis as seconds)" should "convert microseconds to seconds" in {
+    val expr = expressionFor("(max(responseTime) millis as seconds)")
+    expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "21005"))) shouldBe "21"
+  }
+
   "(calc(timestamp-lifespan) as millis)" should "convert the calc output to millis period" in {
     val expr = expressionFor("(calc(timestamp-lifespan) time as millis)")
     expr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt, "lifespan" -> "60000")) shouldBe "3540000"
