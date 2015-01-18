@@ -36,6 +36,11 @@ object Main extends App {
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
       new CompositeSink(Seq(dataFile, gnuplotScript))
+    } else if (config.pivot().isDefined) {
+      val fields = config.outputFields()
+      val rotateOn = fields.collectFirst { case e: DirectExpr => e }
+      val aggregates = config.aggregationConfig().aggregates
+      new PivotTableSink(rotateOn.get, config.pivot().get, aggregates.toSeq, config.tableFormatter(), config.header)
     } else {
       new IncrementalSink(config.format, config.header)
     }

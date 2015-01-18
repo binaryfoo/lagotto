@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto.shell
 import java.io.{File, FileOutputStream, FileWriter, PrintStream}
 
 import io.github.binaryfoo.lagotto.output.GnuplotScriptWriter
-import io.github.binaryfoo.lagotto.{FieldExpr, LogEntry}
+import io.github.binaryfoo.lagotto._
 import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
@@ -28,6 +28,46 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) exte
   override def entry(e: LogEntry) = format(e).foreach(println)
 
   override def finish() = format.footer().foreach(println)
+
+}
+
+class PivotTableSink(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggregates: Seq[AggregateExpr], val format: TableFormatter, val includeHeader: Boolean) extends Sink {
+
+  private var fields: Seq[String] = Seq()
+  private var currentKey: String = null
+  private var current: Map[String, Seq[String]] = Map.empty
+
+  override def start() = {}
+
+  override def entry(e: LogEntry) = {
+    if (fields.isEmpty) {
+      fields = Seq(rotateOn.field) ++ pivot.distinctValues().flatMap(v => aggregates.map(v + " - " + _.field))
+      if (includeHeader) {
+        format.header(fields).foreach(println)
+      }
+    }
+    val thisKey = rotateOn(e)
+    if (thisKey != currentKey) {
+      outputRow()
+    }
+    currentKey = thisKey
+    current = current.updated(pivot(e), aggregates.map(_(e)))
+  }
+
+  def outputRow() = {
+    if (currentKey != null) {
+      val row = Seq(currentKey) ++ pivot.distinctValues().flatMap { v =>
+        current.getOrElse(v, aggregates.map(_ => "0"))
+      }
+      format.row(row).foreach(println)
+      current = Map.empty
+    }
+  }
+
+  override def finish() = {
+    outputRow()
+    format.footer().foreach(println)
+  }
 
 }
 

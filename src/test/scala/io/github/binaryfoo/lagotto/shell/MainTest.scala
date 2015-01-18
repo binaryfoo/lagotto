@@ -642,6 +642,15 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "pivot(mti)" should "do a basic pivot table operation" in {
+    val output = run("--csv", "time(mm:ss),pivot(mti),count", testFile("pivot-set.xml"))
+    output shouldBe """time(mm:ss),0200 - count,0210 - count
+                      |00:03,2,0
+                      |00:04,1,1
+                      |00:05,0,2
+                      |""".stripMargin
+  }
+
   "log4j log" should "be readable" in {
     val output = run("--csv", "timestamp,message", testFile("log4j.txt"))
     output shouldBe """timestamp,message

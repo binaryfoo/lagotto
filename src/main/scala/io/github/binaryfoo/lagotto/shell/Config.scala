@@ -49,4 +49,16 @@ case class Config (filters: Seq[LogFilter] = Seq(),
       case _ => Seq()
     }
   }
+
+  def pivot(): Option[PivotExpr] = {
+    outputFields().collectFirst {
+      case e: PivotExpr => e
+    }
+  }
+
+  def tableFormatter(): TableFormatter = {
+    format match {
+      case Tabular(_, f) => f
+    }
+  }
 }

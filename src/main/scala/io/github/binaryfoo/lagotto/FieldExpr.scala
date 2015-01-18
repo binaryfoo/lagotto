@@ -5,6 +5,8 @@ import java.util.regex.Pattern
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import org.joda.time.Period
 
+import scala.collection.mutable
+
 object FieldExpr {
 
   // Not sure how to avoid this global state. Implicit parameter?
@@ -15,6 +17,7 @@ object FieldExpr {
   val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
   val TranslateOp = """translate\((.+)\)""".r
   val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
+  val PivotOp = """pivot\((.+)\)""".r
 
   def unapply(expr: String): Option[FieldExpr] = {
     Some(expr match {
@@ -25,6 +28,7 @@ object FieldExpr {
       case AggregateOp(op) => AggregateExpr(expr, op)
       case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
       case RegexReplacementOp(path, regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
+      case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
       case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
       case s => PrimitiveExpr(s)
     })
@@ -434,4 +438,17 @@ case class RegexReplaceExpr(field: String, path: String, pattern: String, replac
     }
   }
 
+}
+
+case class PivotExpr(field: String, pivot: FieldExpr) extends DirectExpr {
+
+  private val values = new mutable.LinkedHashSet[String]()
+
+  def apply(e: LogEntry): String = {
+    val value = pivot(e)
+    values.add(value)
+    value
+  }
+
+  def distinctValues(): Seq[String] = values.toSeq
 }
