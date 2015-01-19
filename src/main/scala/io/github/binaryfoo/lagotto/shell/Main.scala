@@ -13,15 +13,15 @@ object Main extends App {
   FieldExpr.dictionary = Some(dictionary)
 
   Options.parse(args, dictionary).map { config =>
-    val sink = sinkFor(config)
-    val pipeline = new Pipeline(config)
+    val (pipeline, format) = (new Pipeline(config))()
+    val sink = sinkFor(config, format)
 
-    pipeline().foreach(sink.entry)
+    pipeline.foreach(sink.entry)
     sink.finish()
     config.progressMeter.finish()
   }
 
-  def sinkFor(config: Config) = {
+  def sinkFor(config: Config, format: OutputFormat) = {
     if (config.histogramFields.size == 1) {
       new SingleHistogramSink(config.histogramFields.head)
     } else if (config.histogramFields.size > 1) {
@@ -31,17 +31,12 @@ object Main extends App {
       val baseName = config.gnuplotFileName.get
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
-      val fields = config.outputFields()
+      val fields = OutputFormat.fieldsFor(format)
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
       new CompositeSink(Seq(dataFile, gnuplotScript))
-    } else if (config.pivot().isDefined) {
-      val fields = config.outputFields()
-      val rotateOn = fields.collectFirst { case e: DirectExpr => e }
-      val aggregates = config.aggregationConfig().aggregates
-      new PivotTableSink(rotateOn.get, config.pivot().get, aggregates.toSeq, config.tableFormatter(), config.header)
     } else {
-      new IncrementalSink(config.format, config.header)
+      new IncrementalSink(format, config.header)
     }
   }
 }
@@ -52,7 +47,7 @@ case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Se
 
 class Pipeline(val config: Config) {
 
-  def apply(): Iterator[LogEntry] = {
+  def apply(): (Iterator[LogEntry], OutputFormat) = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
 
@@ -64,8 +59,10 @@ class Pipeline(val config: Config) {
     val aggregated = applyAggregation(secondFilter)
     val thirdFilter = filter(aggregated, filters.aggregate)
     val secondSort = sort(thirdFilter, postAggregationSortKey, config.sortDescending)
-    if (config.limit.isDefined) secondSort.take(config.limit.get)
-    else secondSort
+    val pivot = applyPivot(secondSort)
+    val format = outputFormat(pivot)
+    val limited = if (config.limit.isDefined) pivot.take(config.limit.get) else pivot
+    (limited, format)
   }
 
   def partitionSortKey(): SortOrder = {
@@ -146,4 +143,23 @@ class Pipeline(val config: Config) {
       AggregateExpr.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq).toIterator
     }
   }
+
+  private def applyPivot(entries: Iterator[LogEntry]): Iterator[LogEntry] = {
+    if (config.pivot().isDefined) {
+      val fields = config.outputFields()
+      val rotateOn = fields.collectFirst { case e: DirectExpr => e}
+      val aggregates = config.aggregationConfig().aggregates
+      new PivotedIterator(rotateOn.get, config.pivot().get, aggregates.toSeq, entries)
+    } else {
+      entries
+    }
+  }
+
+  private def outputFormat(it: Iterator[LogEntry]): OutputFormat = {
+    (it, config.format) match {
+      case (pivoted: PivotedIterator, t@Tabular(fields, f)) => t.copy(fields = pivoted.fields.map(PrimitiveExpr))
+      case _ => config.format
+    }
+  }
+
 }

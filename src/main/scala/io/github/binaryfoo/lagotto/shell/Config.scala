@@ -43,12 +43,7 @@ case class Config (filters: Seq[LogFilter] = Seq(),
     AggregationSpec.fromExpressions(outputFields ++ aggregatesUsedInFilters)
   }
 
-  def outputFields(): Seq[FieldExpr] = {
-    format match {
-      case Tabular(fields, _) => fields
-      case _ => Seq()
-    }
-  }
+  def outputFields(): Seq[FieldExpr] = OutputFormat.fieldsFor(format)
 
   def pivot(): Option[PivotExpr] = {
     outputFields().collectFirst {
@@ -56,9 +51,4 @@ case class Config (filters: Seq[LogFilter] = Seq(),
     }
   }
 
-  def tableFormatter(): TableFormatter = {
-    format match {
-      case Tabular(_, f) => f
-    }
-  }
 }

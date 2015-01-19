@@ -8,6 +8,15 @@ trait OutputFormat {
   def footer(): Option[String]
 }
 
+object OutputFormat {
+  def fieldsFor(f: OutputFormat): Seq[FieldExpr] = {
+    f match {
+      case Tabular(fields, _) => fields
+      case _ => Seq()
+    }
+  }
+}
+
 object FullText extends OutputFormat {
   override def header(): Option[String] = None
   override def apply(e: LogEntry): Option[String] = Some(e.lines)

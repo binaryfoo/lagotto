@@ -127,8 +127,8 @@ object Options {
     parser.parse(args, Config())
   }
 
-  def parseFields(fields: String): Seq[FieldExpr] = {
-    fields.split(",").map { case FieldExpr(e) => e }
+  private def parseFields(fields: String): Seq[FieldExpr] = {
+    FieldExpr.expressionsFor(fields)
   }
 
   implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {
