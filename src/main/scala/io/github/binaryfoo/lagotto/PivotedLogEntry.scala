@@ -16,6 +16,24 @@ case class PivotedLogEntry(row: Map[String, String]) extends LogEntry {
 
 }
 
+/**
+ * Supports a use case like:
+ *
+ *   time(HH:mm),pivot(mti),count
+ *
+ * Instead of getting each time,mti,count pair in the vertical you get something like:
+ *
+ *   time(HH:mm),0200 - count,0210 - count,0400 - count, 0410 - count
+ *   13:59,10,9,1,1
+ *
+ * Without the pivot you'd have:
+ *
+ *   time(HH:mm),mti,count
+ *   13:59,0200,10
+ *   13:59,0210,9
+ *   13:59,0400,1
+ *   13:59,0410,1
+ */
 class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggregates: Seq[AggregateExpr], val entries: Iterator[LogEntry]) extends AbstractIterator[PivotedLogEntry] {
 
   val fields: Seq[String] = Seq(rotateOn.field) ++ pivot.distinctValues().flatMap(v => aggregates.map(v + " - " + _.field))
