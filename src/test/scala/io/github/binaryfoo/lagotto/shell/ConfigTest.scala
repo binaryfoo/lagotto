@@ -1,10 +1,12 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.FieldExpr._
-import io.github.binaryfoo.lagotto.LogFilter._
+import io.github.binaryfoo.lagotto.{LagoTest, FieldExprParser}
 import org.scalatest.{FlatSpec, Matchers}
 
-class ConfigTest extends FlatSpec with Matchers {
+class ConfigTest extends LagoTest {
+
+  import fieldParser.FieldExpr._
+  import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.LogFilter.filterFor
 
   "Aggregation config" should "split key and aggregate fields" in {
     val config = Config(format = Tabular(fields = expressionsFor("mti,count")))

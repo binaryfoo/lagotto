@@ -1,10 +1,11 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.{AndFilter, AggregateLogEntry, JposEntry}
-import io.github.binaryfoo.lagotto.LogFilter.filterFor
-import org.scalatest.{Matchers, FlatSpec}
+import io.github.binaryfoo.lagotto.{AggregateLogEntry, JposEntry, LagoTest}
 
-class LogFilterTest extends FlatSpec with Matchers {
+class LogFilterTest extends LagoTest {
+
+  import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.LogFilter.filterFor
+  import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.parseAndExpr
 
   "Contains operator" should "use a regex if value like /regex/" in {
     val filter = filterFor("""mti~/\d\d[13]\d/""")
@@ -67,19 +68,19 @@ class LogFilterTest extends FlatSpec with Matchers {
   }
 
   "AndFilter" should "pass when all children pass" in {
-    val filter = AndFilter.from("0=0200,realm=scheme")
+    val filter = parseAndExpr("0=0200,realm=scheme").get
     filter(JposEntry("0" -> "0200", "realm" -> "scheme")) shouldBe true
   }
 
   it should "pass fail when a children fails" in {
-    val filter = AndFilter.from("0=0200,realm=scheme")
+    val filter = parseAndExpr("0=0200,realm=scheme").get
     filter(JposEntry("0" -> "0210", "realm" -> "scheme")) shouldBe false
     filter(JposEntry("0" -> "0200", "realm" -> "silly")) shouldBe false
 
   }
 
   it should "work with only one child" in {
-    val filter = AndFilter.from("0=0210")
+    val filter = parseAndExpr("0=0210").get
     filter(JposEntry("0" -> "0200")) shouldBe false
     filter(JposEntry("0" -> "0210")) shouldBe true
   }

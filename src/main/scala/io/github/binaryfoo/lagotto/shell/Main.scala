@@ -10,9 +10,8 @@ import scala.util.Try
 object Main extends App {
 
   val dictionary = RootDataDictionary()
-  FieldExpr.dictionary = Some(dictionary)
 
-  Options.parse(args, dictionary).map { config =>
+  new OptionsParser(dictionary).parse(args).map { config =>
     val (pipeline, format) = (new Pipeline(config))()
     val sink = sinkFor(config, format)
 

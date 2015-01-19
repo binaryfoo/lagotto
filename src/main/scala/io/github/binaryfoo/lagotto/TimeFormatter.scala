@@ -47,7 +47,7 @@ object TimeFormatter {
   private val TimeExpression = """time\((.*)\)""".r
 
   def unapply(expr: FieldExpr): Option[TimeFormatter] = expr.field match {
-    case AggregateOp.OverExpression(TimeFormatter(format)) => Some(format)
+    case AggregateOps.OverExpression(TimeFormatter(format)) => Some(format)
     case TimeFormatter(format) => Some(format)
     case _ => None
   }

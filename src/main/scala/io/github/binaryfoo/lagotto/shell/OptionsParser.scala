@@ -2,13 +2,18 @@ package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
-import io.github.binaryfoo.lagotto.dictionary.{NameType, DataDictionary}
+import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, NameType}
 import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
 import scopt.Read
 
-object Options {
+class OptionsParser(val dictionary: DataDictionary) {
 
-  def parse(args: Array[String], dictionary: DataDictionary): Option[Config] = {
+  val fieldParser = new FieldExprParser(Some(dictionary))
+  val filterParser = new LogFilterParser(fieldParser)
+  import fieldParser.FieldExpr
+  import filterParser.LogFilter
+
+  def parse(args: Array[String]): Option[Config] = {
 
     val parser = new scopt.OptionParser[Config]("plog") {
       head(s"lagotto", "0.0.1")
@@ -40,27 +45,27 @@ object Options {
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"
 
       opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat("\t")))
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), DelimitedTableFormat("\t")))
       } text "Output tab separated values"
 
       opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat(",")))
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), DelimitedTableFormat(",")))
       } text "Output comma separated values"
 
       opt[String]('j', "jira-table") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), JiraTableFormat))
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), JiraTableFormat))
       } text "Output a table that can be pasted into Jira"
 
       opt[String]("html") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), HtmlTableFormat))
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), HtmlTableFormat))
       } text "Output an HTML table"
 
       opt[String]("ascii") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), new AsciiTableFormat()))
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), new AsciiTableFormat()))
       } text "Output an ASCII table"
 
       opt[String]("live-ascii") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), new IncrementalAsciiTableFormat()))
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), new IncrementalAsciiTableFormat()))
       } text "Output an ASCII table incrementally. Can be messy."
 
       opt[Unit]("json") action { (_, c) =>
@@ -125,10 +130,6 @@ object Options {
     }
 
     parser.parse(args, Config())
-  }
-
-  private def parseFields(fields: String): Seq[FieldExpr] = {
-    FieldExpr.expressionsFor(fields)
   }
 
   implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {

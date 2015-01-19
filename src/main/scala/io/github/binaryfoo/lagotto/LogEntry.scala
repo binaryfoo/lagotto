@@ -70,6 +70,4 @@ object LogEntry {
     def toTsv(ids: Iterable[String]): String = v.map(_.toTsv(ids)).mkString("\n")
 
   }
-
-  implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
 }

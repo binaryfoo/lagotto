@@ -4,6 +4,8 @@ import org.joda.time.DateTime
 
 class JposEntryTest extends LagoTest {
 
+  import fieldParser.stringAsFieldAccessor
+
   val timestamp = "Mon Nov 24 16:59:03 EST 2014.292"
   val realm = "some.channel/10.0.0.1:4321"
   val lifespan = """10005ms"""

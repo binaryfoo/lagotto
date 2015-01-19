@@ -1,12 +1,14 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.FieldExpr.expressionFor
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.{DateTime, LocalTime}
-import org.scalatest.{BeforeAndAfter, Matchers, FlatSpec}
 
 class FieldExprTest extends LagoTest {
+
+  val parser = new FieldExprParser()
+  import parser.FieldExpr
+  import parser.FieldExpr._
 
   "calc(max(a)-min(a))" should "diff two times" in {
     val expr = expressionFor("calc(max(time)-min(time))")
@@ -180,14 +182,12 @@ class FieldExprTest extends LagoTest {
   }
 
   "Primitive field access" should "fall back to dictionary lookup" in {
-    FieldExpr.dictionary = Some(RootDataDictionary())
-    val expr = expressionFor("stan")
+    val expr = parserWithRootDictionary.FieldExpr.expressionFor("stan")
     expr(JposEntry("11" -> "123456")) shouldBe "123456"
   }
 
   "translate(70)" should "show translated value" in {
-    FieldExpr.dictionary = Some(RootDataDictionary())
-    val expr = expressionFor("translate(70)")
+    val expr = parserWithRootDictionary.FieldExpr.expressionFor("translate(70)")
     expr(JposEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
   }
 }

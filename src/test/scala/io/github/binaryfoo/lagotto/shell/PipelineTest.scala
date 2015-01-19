@@ -1,9 +1,10 @@
 package io.github.binaryfoo.lagotto.shell
 
-import io.github.binaryfoo.lagotto.LogFilter.filterFor
-import org.scalatest.{FlatSpec, Matchers}
+import io.github.binaryfoo.lagotto.LagoTest
 
-class PipelineTest extends FlatSpec with Matchers {
+class PipelineTest extends LagoTest {
+
+  import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.LogFilter.filterFor
 
   "Filter partitioning" should "apply count(exception!=)>3 after aggregation" in {
     val moreThanOneException = filterFor("count(exception!=)>1)")

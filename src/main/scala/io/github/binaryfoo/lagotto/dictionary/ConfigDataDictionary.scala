@@ -80,7 +80,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
       val all: mutable.Buffer[_ <: ConfigObject] = config.getObjectList("translations")
       all.map { c =>
         val field = c.get("field").unwrapped().asInstanceOf[String]
-        val filter = Option(c.get("filter")).flatMap(v => AndFilter.unapply(v.unwrapped().asInstanceOf[String])).getOrElse(AllFilter)
+        val filter = Option(c.get("filter")).flatMap(v => LogFilters.NaiveParser.parseAndExpr(v.unwrapped().asInstanceOf[String])).getOrElse(AllFilter)
         val table: mutable.Map[String, String] = c.get("values").unwrapped().asInstanceOf[util.Map[String, String]]
         Translations(field, filter, table.toMap)
       }

@@ -4,10 +4,13 @@ import java.text.SimpleDateFormat
 import java.util.{GregorianCalendar, TimeZone}
 
 import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
+import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.DateTimeZone
 import org.scalatest.{FlatSpec, Matchers}
 
-class LagoTest extends FlatSpec with Matchers with TestInput {
+class LagoTest
+
+  extends FlatSpec with Matchers with TestInput {
 
   val SYSTEM_TZ_ID = new SimpleDateFormat("zzz").format(new GregorianCalendar().getTime)
   // Unfortunately this will be Australian EST (AEST) or US EST (New_York) depending on the TZ of the machine running the build
@@ -29,4 +32,7 @@ class LagoTest extends FlatSpec with Matchers with TestInput {
   def iteratorOver[T](e: T*): Iterator[T] = List(e :_*).iterator
 
   def configWithTestDictionary = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources/"))
+
+  val parserWithRootDictionary = new FieldExprParser(Some(RootDataDictionary()))
+  val fieldParser = new FieldExprParser()
 }

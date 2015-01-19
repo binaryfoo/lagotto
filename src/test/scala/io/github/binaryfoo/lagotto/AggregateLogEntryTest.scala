@@ -1,8 +1,6 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.FieldExpr._
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
-import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import io.github.binaryfoo.lagotto.output.Xsv.SeqToXsv
 import org.joda.time.DateTime
 
@@ -86,15 +84,13 @@ class AggregateLogEntryTest extends LagoTest {
   }
 
   it should "support group_concat(translate(70))" in {
-    FieldExpr.dictionary = Some(RootDataDictionary())
     val twoMtis = iteratorOver(JposEntry("0" -> "0800"), JposEntry("0" -> "0810"))
-    aggregateToCsv(twoMtis, "group_concat(translate(0))") shouldBe Seq("Network Management Request,Network Management Response")
+    aggregateToCsv(parserWithRootDictionary, twoMtis, "group_concat(translate(0))") shouldBe Seq("Network Management Request,Network Management Response")
   }
 
   it should "support translate() as an aggregation key" in {
-    FieldExpr.dictionary = Some(RootDataDictionary())
     val twoMtis = iteratorOver(JposEntry("0" -> "0800"), JposEntry("0" -> "0810"))
-    aggregateToCsv(twoMtis, "translate(0)", "count") shouldBe Seq("Network Management Request,1", "Network Management Response,1")
+    aggregateToCsv(parserWithRootDictionary, twoMtis, "translate(0)", "count") shouldBe Seq("Network Management Request,1", "Network Management Response,1")
   }
 
   private def twoStrings = iteratorOver(
@@ -110,7 +106,7 @@ class AggregateLogEntryTest extends LagoTest {
   }
 
   "group_sample" should "parse" in {
-    val expr = expressionFor("group_sample(line 3)")
+    val expr = new FieldExprParser().FieldExpr.expressionFor("group_sample(line 3)")
     expr.toString() shouldBe "group_sample(line 3)"
     val op = expr.asInstanceOf[AggregateExpr].op.asInstanceOf[GroupSampleBuilder]
     op.size shouldEqual 3
@@ -128,7 +124,11 @@ class AggregateLogEntryTest extends LagoTest {
   }
 
   private def aggregateToCsv(raw: Iterator[LogEntry], fields: String*): List[String] = {
-    val fieldExprs = FieldExpr.expressionsFor(fields)
+    aggregateToCsv(new FieldExprParser(), raw, fields :_*)
+  }
+
+  private def aggregateToCsv(parser: FieldExprParser, raw: Iterator[LogEntry], fields: String*): List[String] = {
+    val fieldExprs = parser.FieldExpr.expressionsFor(fields)
     val aggregationConfig = AggregationSpec.fromExpressions(fieldExprs)
     val aggregated = AggregateExpr.aggregate(raw.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     aggregated.map(_.exprToSeq(fieldExprs).toCsv).toList

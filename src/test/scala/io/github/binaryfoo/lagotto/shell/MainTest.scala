@@ -2,8 +2,7 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.ByteArrayOutputStream
 
-import io.github.binaryfoo.lagotto.{LagoTest, TestInput}
-import org.scalatest.{FlatSpec, Matchers}
+import io.github.binaryfoo.lagotto.LagoTest
 
 class MainTest extends LagoTest {
 

@@ -49,6 +49,7 @@ class Log4jEntryTest extends LagoTest {
   }
 
   "message(/regex/replacement/)" should "apply regex to message" in {
+    import fieldParser.stringAsFieldAccessor
     val entry = Log4jEntry.fromString(twoLines)
     entry.exprToSeq("message(/(^.*detail.*$)/$1/)") shouldBe Seq("With some details...")
   }

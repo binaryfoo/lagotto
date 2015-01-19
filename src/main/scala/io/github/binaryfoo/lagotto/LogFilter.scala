@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto
 
+import io.github.binaryfoo.lagotto.LogFilters.MatchOp
+
 import scala.util.matching.Regex
 
 trait LogFilter extends Function[LogEntry, Boolean] {
@@ -37,7 +39,7 @@ case class NegativeInsensitiveGrepFilter(pattern: String) extends LogFilter {
   override def toString(): String = s"igrep!($pattern)"
 }
 
-case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: String, op: LogFilter.MatchOp) extends FieldFilter {
+case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: String, op: MatchOp) extends FieldFilter {
   override def apply(entry: LogEntry): Boolean = {
     op(expr(entry), desired)
   }
@@ -65,35 +67,13 @@ case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true
   }
 }
 
-object LogFilter {
+object LogFilters {
   type MatchOp = (String, String) => Boolean
 
-  val LogFilterPattern = "(.+?)(!?)([=><~])([^=><~!]*)".r
-  val MatchAsRegexPattern = "(.+?)(!?)~/(.+)/".r
-
-  def unapply(s: String): Option[FieldFilter] = s match {
-    case MatchAsRegexPattern(FieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
-    case LogFilterPattern(FieldExpr(expr), negation, operator, value) =>
-      val op: MatchOp = operator match {
-        case "=" => equalsOp
-        case ">" => greaterThanAsIntWithStringFallback
-        case "<" => lessThanAsIntWithStringFallback
-        case "~" => containsOp
-      }
-      if (negation == "!") {
-        Some(FieldOpFilter(expr, value, negation + operator, (a, b) => !op(a, b)))
-      } else {
-        Some(FieldOpFilter(expr, value, operator, op))
-      }
-    case _ =>
-      None
-  }
-
-  def filterFor(expr: String) = expr match {
-    case LogFilter(f) => f
-  }
-
-  def deNull(s: String): String = if (s == null) "" else s
+  /**
+   * Applies no translations.
+   */
+  val NaiveParser = new LogFilterParser(new FieldExprParser())
 
   // Need vals for LogFilter equality to work
   val equalsOp = (a: String, b: String) => deNull(a) == b
@@ -101,7 +81,9 @@ object LogFilter {
   val greaterThanAsIntWithStringFallback = (left: String, right: String) => compareAsIntWithStringFallback(left, right) >= 0
   val lessThanAsIntWithStringFallback = (left: String, right: String) => compareAsIntWithStringFallback(left, right) <= 0
 
-  def compareAsIntWithStringFallback(left: String, right: String): Int = {
+  private def deNull(s: String): String = if (s == null) "" else s
+
+  private def compareAsIntWithStringFallback(left: String, right: String): Int = {
     val l = deNull(left)
     val r = deNull(right)
     try {
@@ -113,13 +95,48 @@ object LogFilter {
   }
 }
 
-object AndFilter {
+/**
+ * Parse filters where the field expressions can depend on dictionary translations.
+ */
+class LogFilterParser(val fieldParser: FieldExprParser) {
 
-  def unapply(commaSeparated: String): Option[AndFilter] = {
+  import fieldParser.FieldExpr
+  import LogFilters._
+
+  object LogFilter {
+
+    private val LogFilterPattern = "(.+?)(!?)([=><~])([^=><~!]*)".r
+    private val MatchAsRegexPattern = "(.+?)(!?)~/(.+)/".r
+
+    def unapply(s: String): Option[FieldFilter] = s match {
+      case MatchAsRegexPattern(FieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
+      case LogFilterPattern(FieldExpr(expr), negation, operator, value) =>
+        val op: MatchOp = operator match {
+          case "=" => equalsOp
+          case ">" => greaterThanAsIntWithStringFallback
+          case "<" => lessThanAsIntWithStringFallback
+          case "~" => containsOp
+        }
+        if (negation == "!") {
+          Some(FieldOpFilter(expr, value, negation + operator, (a, b) => !op(a, b)))
+        } else {
+          Some(FieldOpFilter(expr, value, operator, op))
+        }
+      case _ =>
+        None
+    }
+
+    def filterFor(expr: String) = expr match {
+      case LogFilter(f) => f
+    }
+
+  }
+
+  def parseAndExpr(commaSeparated: String): Option[AndFilter] = {
     val children = commaSeparated.split(',').flatMap(LogFilter.unapply)
     if (children.isEmpty) None
     else Some(AndFilter(children))
   }
 
-  def from(commaSeparated: String): AndFilter = unapply(commaSeparated).get
 }
+

@@ -6,45 +6,89 @@ import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import org.joda.time.Period
 
 import scala.collection.mutable
+import scala.language.implicitConversions
 
-object FieldExpr {
+/**
+ * Needed to be able to parse expressions using the dictionary for translations.
+ */
+class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
 
-  // Not sure how to avoid this global state. Implicit parameter?
-  var dictionary: Option[DataDictionary] = None
+  private val logFilterParser = new LogFilterParser(this)
 
-  val SubtractOp = """calc\((.+)-(.+)\)""".r
-  val DivideOp = """calc\((.+)/(.+)\)""".r
-  val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
-  val TranslateOp = """translate\((.+)\)""".r
-  val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
-  val PivotOp = """pivot\((.+)\)""".r
+  object FieldExpr {
 
-  def unapply(expr: String): Option[FieldExpr] = {
-    Some(expr match {
-      case SubtractOp(FieldExpr(left), FieldExpr(right)) => SubtractExpr(expr, left, right)
-      case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
-      case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
-      case "delay" => DelayExpr
-      case AggregateOp(op) => AggregateExpr(expr, op)
-      case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
-      case RegexReplacementOp(path, regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
-      case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
-      case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
-      case s => PrimitiveExpr(s)
-    })
+    val SubtractOp = """calc\((.+)-(.+)\)""".r
+    val DivideOp = """calc\((.+)/(.+)\)""".r
+    val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
+    val TranslateOp = """translate\((.+)\)""".r
+    val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
+    val PivotOp = """pivot\((.+)\)""".r
+
+    def unapply(expr: String): Option[FieldExpr] = {
+      Some(expr match {
+        case SubtractOp(FieldExpr(left), FieldExpr(right)) => SubtractExpr(expr, left, right)
+        case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
+        case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
+        case "delay" => DelayExpr
+        case AggregateOp(op) => AggregateExpr(expr, op)
+        case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
+        case RegexReplacementOp(path, regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
+        case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
+        case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
+        case s => PrimitiveExpr(s)
+      })
+    }
+
+    /**
+     * Unapply or die.
+     */
+    def expressionFor(expr: String): FieldExpr = unapply(expr).get
+
+    def expressionsFor(exprList: String): Seq[FieldExpr] = expressionsFor(exprList.split(","))
+
+    def expressionsFor(exprList: Seq[String]): Seq[FieldExpr] = {
+      exprList.map { case FieldExpr(e) => e }
+    }
   }
 
-  /**
-   * Unapply or die.
-   */
-  def expressionFor(expr: String): FieldExpr = unapply(expr).get
-
-  def expressionsFor(exprList: String): Seq[FieldExpr] = expressionsFor(exprList.split(","))
-
-  def expressionsFor(exprList: Seq[String]): Seq[FieldExpr] = {
-    exprList.map { case FieldExpr(e) => e }
+  object DirectExpr {
+    def unapply(expr: String): Option[DirectExpr] = FieldExpr.unapply(expr).flatMap {
+      case e: DirectExpr => Some(e)
+      case _ => None
+    }
   }
+
+  object AggregateOp {
+
+    import io.github.binaryfoo.lagotto.AggregateOps._
+    import logFilterParser.LogFilter
+
+    /**
+     * Unapply or die.
+     */
+    def operationFor(expr: String): AggregateOp = unapply(expr).get
+
+    def unapply(expr: String): Option[AggregateOp] = {
+      val op: AggregateOp = expr match {
+        case "count" => new CountBuilder
+        case CountDistinct(DirectExpr(field)) => new CountDistinctBuilder(field)
+        case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
+        case MinOp(DirectExpr(field)) => new TryLongOpBuilder(field, minLong, minString)
+        case MaxOp(DirectExpr(field)) => new TryLongOpBuilder(field, maxLong, maxString)
+        case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
+        case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
+        case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
+        case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)
+        case _ => null
+      }
+      Option(op)
+    }
+
+  }
+
+  implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
 }
+
 
 /**
  * Exists separately from FieldAccessor to allow passing lambdas to LogEntry.toXsv(). Maybe misguided.
@@ -120,13 +164,6 @@ object DelayExpr extends DirectExpr {
  */
 trait DirectExpr extends FieldExpr
 
-object DirectExpr {
-  def unapply(expr: String): Option[DirectExpr] = FieldExpr.unapply(expr).flatMap {
-    case e: DirectExpr => Some(e)
-    case _ => None
-  }
-}
-
 /**
  * An expression that requires an aggregation operation to be performed in order to retrieve the value.
  * @param field The expression to be calculated. Used as a lookup key for the aggregate value.
@@ -142,11 +179,6 @@ case class AggregateExpr(field: String, op: AggregateOp) extends FieldExpr {
 }
 
 object AggregateExpr {
-
-  def unapply(expr: String): Option[AggregateExpr] = expr match {
-    case AggregateOp(op) => Some(AggregateExpr(expr, op))
-    case _ => None
-  }
 
   /**
    * Calculate a set of aggregate values for each set of rows identified the keyFields.
@@ -224,15 +256,16 @@ trait DirectCalculationExpr extends DirectExpr {
 }
 
 object SubtractExpr {
+
   def apply(expr: String, l: FieldExpr, r: FieldExpr): FieldExpr = {
     (l, r) match {
       case (left: AggregateExpr, right: AggregateExpr) =>
         val leftFormat = left.field match {
-          case AggregateOp.OverExpression(TimeFormatter(format)) => format
+          case AggregateOps.OverExpression(TimeFormatter(format)) => format
           case _ => throw new IAmSorryDave(s"In calc(left-right) left must be time expression. ${left.field} is not a time expression.")
         }
         right.field match {
-          case AggregateOp.OverExpression(TimeFormatter(rightFormat)) => SubtractTwoAggregateTimesExpr(expr, left, right, leftFormat, rightFormat)
+          case AggregateOps.OverExpression(TimeFormatter(rightFormat)) => SubtractTwoAggregateTimesExpr(expr, left, right, leftFormat, rightFormat)
           case _ => SubtractAggregateMillisFromTimeExpr(expr, left, right, leftFormat)
         }
       case (left: DirectExpr, right: DirectExpr) =>

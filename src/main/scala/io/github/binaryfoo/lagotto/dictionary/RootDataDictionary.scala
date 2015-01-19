@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
-import io.github.binaryfoo.lagotto.{AndFilter, IAmSorryDave, LogFilter, LogEntry}
+import io.github.binaryfoo.lagotto._
 
 import scala.collection.JavaConversions.asScalaSet
 
@@ -52,7 +52,7 @@ case class RootDataDictionary(config: Config = ConfigFactory.load()) extends Dat
         val name = e.getKey
         val dictionary = custom.getConfig(s"dictionaries.$name")
         val filterText = dictionary.getString("filter")
-        val filter = AndFilter.unapply(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from ${f.getName}"))
+        val filter = LogFilters.NaiveParser.parseAndExpr(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from ${f.getName}"))
         filter -> ConfigDataDictionary(dictionary, name + "@" + f.getName)
       }
     }

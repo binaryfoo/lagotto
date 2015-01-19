@@ -35,7 +35,7 @@ trait AggregateOp extends mutable.Builder[LogEntry, String] {
   def copy(): AggregateOp
 }
 
-object AggregateOp {
+object AggregateOps {
 
   val OverExpression = """^[^(]+\((.+)\)$""".r
   val MinOp = """min\((.*)\)""".r
@@ -46,27 +46,6 @@ object AggregateOp {
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
   val GroupSample = """group_sample\((.*) (\d+)\)""".r
-
-  /**
-   * Unapply or die.
-   */
-  def operationFor(expr: String): AggregateOp = unapply(expr).get
-
-  def unapply(expr: String): Option[AggregateOp] = {
-    val op: AggregateOp = expr match {
-      case "count" => new CountBuilder
-      case CountDistinct(DirectExpr(field)) => new CountDistinctBuilder(field)
-      case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
-      case MinOp(DirectExpr(field)) => new TryLongOpBuilder(field, minLong, minString)
-      case MaxOp(DirectExpr(field)) => new TryLongOpBuilder(field, maxLong, maxString)
-      case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
-      case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
-      case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
-      case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)
-      case _ => null
-    }
-    Option(op)
-  }
 
   // these need to be vals for equality to work between two AggregateOp instances
   val minLong = (l: Long, r: Long) => math.min(l, r)
