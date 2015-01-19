@@ -9,7 +9,6 @@ import org.HdrHistogram.Histogram
 import scala.collection.mutable
 
 trait Sink {
-  def start()
   def entry(e: LogEntry)
   def finish()
 }
@@ -17,17 +16,21 @@ trait Sink {
 /**
  * Write each log record to the console as it pops out of the pipeline.
  */
-class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean) extends Sink {
+class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean, val out: PrintStream = Console.out) extends Sink {
 
-  override def start() = {
-    if (includeHeader) {
-      format.header().foreach(println)
+  private var headerWritten = false
+
+  override def entry(e: LogEntry) = {
+    if (!headerWritten) {
+      if (includeHeader) {
+        format.header().foreach(out.println)
+      }
+      headerWritten = true
     }
+    format(e).foreach(out.println)
   }
 
-  override def entry(e: LogEntry) = format(e).foreach(println)
-
-  override def finish() = format.footer().foreach(println)
+  override def finish() = format.footer().foreach(out.println)
 
 }
 
@@ -36,8 +39,6 @@ class PivotTableSink(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggrega
   private var fields: Seq[String] = Seq()
   private var currentKey: String = null
   private var current: Map[String, Seq[String]] = Map.empty
-
-  override def start() = {}
 
   override def entry(e: LogEntry) = {
     if (fields.isEmpty) {
@@ -74,20 +75,10 @@ class PivotTableSink(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggrega
 /**
  * Write each log record to a file as it pops out of the pipeline.
  */
-class FileSink(val format: OutputFormat, val includeHeader: Boolean, val fileName: String) extends Sink {
-
-  val out = new PrintStream(new FileOutputStream(fileName))
-
-  override def start() = {
-    if (includeHeader) {
-      format.header().foreach(out.println)
-    }
-  }
-
-  override def entry(e: LogEntry) = format(e).foreach(out.println)
+class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: String) extends IncrementalSink(format, includeHeader, new PrintStream(new FileOutputStream(fileName))) {
 
   override def finish() = {
-    format.footer().foreach(out.println)
+    super.finish()
     out.close()
     println(s"Wrote $fileName")
   }
@@ -101,8 +92,6 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
 
   var xRange = ("", "")
   
-  override def start() = {}
-
   override def entry(e: LogEntry) = {
     val time = fields.head(e)
     if (time != null) {
@@ -126,8 +115,6 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
 
 class CompositeSink(val sinks: Seq[Sink]) extends Sink {
 
-  override def start() = sinks.foreach(_.start())
-
   override def entry(e: LogEntry) = sinks.foreach(_.entry(e))
 
   override def finish() = sinks.foreach(_.finish())
@@ -141,8 +128,6 @@ class CompositeSink(val sinks: Seq[Sink]) extends Sink {
 class SingleHistogramSink(val field: FieldExpr) extends Sink {
 
   private val histogram = new Histogram(3600000000000L, 3)
-
-  override def start() = {}
 
   override def entry(e: LogEntry) = {
     val v = field(e)
@@ -163,8 +148,6 @@ class SingleHistogramSink(val field: FieldExpr) extends Sink {
 class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr) extends Sink {
 
   private val histograms = mutable.Map[String, Histogram]()
-
-  override def start() = {}
 
   override def entry(e: LogEntry) = {
     val v = field(e)

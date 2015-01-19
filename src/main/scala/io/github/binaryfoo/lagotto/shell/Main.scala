@@ -16,7 +16,6 @@ object Main extends App {
     val sink = sinkFor(config)
     val pipeline = new Pipeline(config)
 
-    sink.start()
     pipeline().foreach(sink.entry)
     sink.finish()
     config.progressMeter.finish()
