@@ -54,6 +54,10 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       val entry = logType(lines)
       if (entry != null) {
         recordCount += 1
+        if (recordCount % 100000 == 0) {
+          progressMeter.progressInFile(recordCount)
+          recordCount = 0
+        }
       } else {
         progressMeter.finishFile(recordCount)
         source.close()
