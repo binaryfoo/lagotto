@@ -6,7 +6,8 @@ import io.github.binaryfoo.lagotto._
  * What should main do? See Options for what each wonderful flag does.
  */
 case class CmdLineOptions (filters: Seq[LogFilter] = Seq(),
-                   input: Seq[String] = Seq(),
+                   input: Seq[String] = Seq(), 
+                   inputFormat: Option[String] = None,
                    format: OutputFormat = FullText,
                    pair: Boolean = false,
                    header: Boolean = true,

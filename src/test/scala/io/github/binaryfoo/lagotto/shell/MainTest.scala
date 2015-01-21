@@ -661,6 +661,15 @@ class MainTest extends LagoTest {
                       |""".stripMargin
   }
 
+  "apache log" should "be readable with --in-format=apache option" in {
+    val output = run("--csv", "time,url", "--in-format", "apache", testFile("apache.txt"))
+    output shouldBe
+      """time,url
+        |00:00:55.000,GET /some/url
+        |13:01:55.000,GET /another/url
+        |""".stripMargin
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {

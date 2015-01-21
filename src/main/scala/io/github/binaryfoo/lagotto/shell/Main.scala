@@ -49,18 +49,20 @@ case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Se
 
 class Pipeline(val opts: CmdLineOptions, val config: Config) {
 
-  def autoDetect = {
+  def inputFormat = {
     import io.github.binaryfoo.lagotto.reader.LogTypes.RichLogTypes
-    val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
-    val logTypes = LogTypes.load(config).list(autoTypes)
-    new AutoDetectLog(logTypes)
+    val logTypes = LogTypes.load(config)
+    opts.inputFormat.map(logTypes(_)).getOrElse {
+      val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
+      new AutoDetectLog(logTypes.list(autoTypes))
+    }
   }
 
   def apply(): (Iterator[LogEntry], OutputFormat) = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
 
-    val paired = if (opts.pair) read(JposLog).pair() else read(autoDetect)
+    val paired = if (opts.pair) read(JposLog).pair() else read(inputFormat)
     val firstFilter = filter(paired, filters.paired)
     val sorted = sort(firstFilter, preAggregationSortKey, opts.sortDescending)
     val withDelays = addDelays(sorted)

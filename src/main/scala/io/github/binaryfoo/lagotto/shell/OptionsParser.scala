@@ -1,8 +1,10 @@
 package io.github.binaryfoo.lagotto.shell
 
+import com.typesafe.config.ConfigFactory
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, NameType}
+import io.github.binaryfoo.lagotto.reader.LogTypes
 import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
 import scopt.Read
 
@@ -23,6 +25,10 @@ class OptionsParser(val dictionary: DataDictionary) {
       arg[String]("<log-file>...") unbounded() optional() action { (f, c) =>
         c.copy(input = c.input :+ f)
       } text "Optional list of log files. Otherwise read stdin."
+
+      opt[String]('i', "in-format") action { (fmt, c) =>
+        c.copy(inputFormat = Some(fmt))
+      } text s"Optional input log file format. Supported: ${LogTypes.load(ConfigFactory.load()).keys.mkString(",")}"
 
       opt[String]('g', "grep") unbounded() action { (expr, c) =>
         c.copy(filters = c.filters :+ GrepFilter(expr))
