@@ -2,11 +2,12 @@ package io.github.binaryfoo.lagotto.reader
 
 import java.util
 
-import com.typesafe.config.{ConfigValue, Config}
+import com.typesafe.config.{ConfigObject, ConfigValue, Config}
 import io.github.binaryfoo.lagotto.LogEntry
 
 import scala.collection.{mutable, JavaConversions}
 import JavaConversions.asScalaBuffer
+import JavaConversions.asScalaSet
 
 trait LogType[+T <: LogEntry] extends (SourceLineIterator => T) {
   def canParse(firstLine: String, fileName: String): Boolean = true
@@ -15,13 +16,14 @@ trait LogType[+T <: LogEntry] extends (SourceLineIterator => T) {
 object LogTypes {
 
   def load(config: Config): Map[String, LogType[LogEntry]] = {
-    load(asScalaBuffer(config.getList("logTypes")))
+    load(config.getObject("logTypes"))
   }
 
-  def load(types: Seq[ConfigValue]): Map[String, LogType[LogEntry]] = {
-    types.map { v =>
+  def load(types: ConfigObject): Map[String, LogType[LogEntry]] = {
+    types.entrySet().map { e =>
+      val name = e.getKey
+      val v = e.getValue
       val map = v.unwrapped().asInstanceOf[util.Map[String, ConfigValue]]
-      val name = map.get("name").asInstanceOf[String]
       val logType = if (map.containsKey("class")) {
         val clazz = map.get("class").asInstanceOf[String]
         val args = asScalaBuffer(map.get("args").asInstanceOf[util.List[String]])

@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto.reader
 import java.io.{BufferedInputStream, File, FileInputStream}
 import java.util.zip.GZIPInputStream
 
-import io.github.binaryfoo.lagotto.{LogEntry, NullProgressMeter, ProgressMeter}
+import io.github.binaryfoo.lagotto.{SourceRef, LogEntry, NullProgressMeter, ProgressMeter}
 
 import scala.collection.AbstractIterator
 import scala.io.{BufferedSource, Source}
@@ -74,7 +74,7 @@ class SourceLineIterator(val lines: Iterator[String], val sourceName: String, va
   private var sleeve: Option[String] = None
 
   def lineNumber: Int = lineNo
-  def sourceRef = sourceName + ":" + lineNumber
+  def sourceRef: SourceRef = SourceRef(sourceName, lineNo)
 
   def hasNext = sleeve.isDefined || lines.hasNext
 
