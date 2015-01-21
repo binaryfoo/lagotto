@@ -5,7 +5,7 @@ import io.github.binaryfoo.lagotto.IAmSorryDave
 
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.mutable
+import scala.collection.{JavaConversions, mutable}
 
 object ConfigWrapper {
 
@@ -26,9 +26,9 @@ object ConfigWrapper {
       config.getConfig(path)
     }
 
-    def getObjectOrDie(path: String): ConfigObject = {
+    def getObjectOrDie(path: String): mutable.Map[String, ConfigValue] = {
       checkPath(path)
-      config.getObject(path)
+      JavaConversions.mapAsScalaMap(config.getObject(path))
     }
 
     def checkPath(path: String): Unit = {

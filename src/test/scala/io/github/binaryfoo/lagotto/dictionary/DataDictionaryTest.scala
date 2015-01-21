@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.dictionary
 
+import java.io.File
+
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.{LagoTest, JposEntry}
 
@@ -98,5 +100,11 @@ class DataDictionaryTest extends LagoTest {
 
   it should "iterate through multiple dictionaries" in {
     shortNameOf("99", JposEntry("realm" -> acmeRealm, "0" -> "9200")) shouldBe Some("hot air balloons")
+  }
+
+  "Custom dictionaries" should "be found in application.conf too" in {
+    val config = ConfigFactory.load().withFallback(ConfigFactory.parseFile(new File(testFile("test-dictionary.conf"))))
+    val customFromMergeDictionary = RootDataDictionary(config)
+    customFromMergeDictionary.englishNameOf("48.1", acmeLog) shouldBe Some("Important 48.1")
   }
 }

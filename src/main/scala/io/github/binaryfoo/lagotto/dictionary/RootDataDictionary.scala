@@ -2,13 +2,11 @@ package io.github.binaryfoo.lagotto.dictionary
 
 import java.io.{File, FilenameFilter}
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ConfigObject, Config, ConfigFactory, ConfigValue}
+import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
-import io.github.binaryfoo.lagotto._
-
-import scala.collection.JavaConversions.asScalaSet
 
 /**
  * Field number to human name translation.
@@ -46,15 +44,21 @@ case class RootDataDictionary(config: Config = ConfigFactory.load()) extends Dat
 
   private def customDictionaries: Array[(LogFilter, DataDictionary)] = {
     val customDirectory = new File(config.getString("custom.dictionaries.dir"))
+    val customDictionariesFromClasspath = config.getObjectOrDie("dictionaries").toSeq.filterNot { case (name, _) => name == "global"}
     customDictionaryFiles(customDirectory).flatMap { f =>
       val custom = ConfigFactory.parseFile(f)
-      custom.getObjectOrDie("dictionaries").entrySet().map { e =>
-        val name = e.getKey
-        val dictionary = custom.getConfig(s"dictionaries.$name")
-        val filterText = dictionary.getString("filter")
-        val filter = LogFilters.NaiveParser.parseAndExpr(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from ${f.getName}"))
-        filter -> ConfigDataDictionary(dictionary, name + "@" + f.getName)
-      }
+      val dictionaries = custom.getObjectOrDie("dictionaries")
+      load(dictionaries.toSeq)
+    } ++ load(customDictionariesFromClasspath)
+  }
+
+  def load(dictionaries: Seq[(String, ConfigValue)]): Seq[(AndFilter, ConfigDataDictionary)] = {
+    dictionaries.map { case (name, v) =>
+      val dictionary = v.asInstanceOf[ConfigObject].toConfig
+      val filterText = dictionary.getString("filter")
+      val origin = dictionary.origin().description()
+      val filter = LogFilters.NaiveParser.parseAndExpr(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from $origin"))
+      filter -> ConfigDataDictionary(dictionary, s"$name@$origin")
     }
   }
 
