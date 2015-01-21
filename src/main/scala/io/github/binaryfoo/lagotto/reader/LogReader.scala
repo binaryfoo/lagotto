@@ -102,5 +102,3 @@ class SourceLineIterator(val lines: Iterator[String], val sourceName: String, va
     lineNo -= 1
   }
 }
-
-trait LogType[T <: LogEntry] extends (SourceLineIterator => T)

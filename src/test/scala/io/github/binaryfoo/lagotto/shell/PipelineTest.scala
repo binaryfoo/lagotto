@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
+import com.typesafe.config.ConfigFactory
 import io.github.binaryfoo.lagotto.LagoTest
 
 class PipelineTest extends LagoTest {
@@ -8,16 +9,16 @@ class PipelineTest extends LagoTest {
 
   "Filter partitioning" should "apply count(exception!=)>3 after aggregation" in {
     val moreThanOneException = filterFor("count(exception!=)>1)")
-    val config = Config(filters = Seq(moreThanOneException))
-    val Filters(aggregate, Nil, Nil) = new Pipeline(config).partitionFilters()
+    val opts = CmdLineOptions(filters = Seq(moreThanOneException))
+    val Filters(aggregate, Nil, Nil) = new Pipeline(opts, ConfigFactory.load()).partitionFilters()
 
     aggregate shouldBe Seq(moreThanOneException)
   }
 
   it should "apply delay>1 after delay but before aggregation" in {
     val slow = filterFor("delay>1")
-    val config = Config(filters = Seq(slow))
-    val Filters(Nil, delay, Nil) = new Pipeline(config).partitionFilters()
+    val opts = CmdLineOptions(filters = Seq(slow))
+    val Filters(Nil, delay, Nil) = new Pipeline(opts, ConfigFactory.load()).partitionFilters()
 
     delay shouldBe Seq(slow)
   }

@@ -25,4 +25,5 @@ object Log4jLog extends LogType[Log4jEntry] {
       null
   }
 
+  override def canParse(firstLine: String, fileName: String): Boolean = firstLine.charAt(0) == '['
 }

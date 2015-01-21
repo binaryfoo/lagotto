@@ -1,14 +1,14 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.reader.AutoDetectLog
+import io.github.binaryfoo.lagotto.reader.{RegexParsedLog, AutoDetectLog}
 import org.joda.time.DateTime
 
-class CustomLogEntryTest extends LagoTest {
+class RegexParsedLogEntryTest extends LagoTest {
 
   val lineOne = """[16/Jan/2015 00:00:55 AEDT] 192.168.0.1 10.0.0.1:443 - - "GET /some/url HTTP/1.1" 200 + 262 1064959 "-" "UserAgent/1.0" TLSv1 RC4-SHA "-" "-" "-" "-" "-""""
 
-  val pattern = AutoDetectLog.apachePattern
-  val parser = new CustomLogEntryParser(pattern, "dd/MMM/yyyy HH:mm:ss 'AEDT'")
+  val pattern = """\[(?<timestamp>\d{2}/\w{3}/\d{4} \d{2}:\d{2}:\d{2} \w{3,4})\].* "(?<url>[^"]+)" (?<responseCode>\d{3}) [+-X] [-0-9]+ (?<responseTime>\d+).*"""
+  val parser = new RegexParsedLog(pattern, "dd/MMM/yyyy HH:mm:ss 'AEDT'")
 
   "Apache log format" should "be parseable" in {
     val entry = parser.fromString(lineOne)

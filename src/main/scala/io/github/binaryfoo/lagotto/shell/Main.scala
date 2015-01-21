@@ -1,33 +1,36 @@
 package io.github.binaryfoo.lagotto.shell
 
+import com.typesafe.config.{ConfigFactory, Config}
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
-import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, AutoDetectLog, LogReader}
+import io.github.binaryfoo.lagotto.reader._
 
+import scala.collection.JavaConversions
 import scala.util.Try
 
 object Main extends App {
 
+  val config: Config = ConfigFactory.load()
   val dictionary = RootDataDictionary()
 
-  new OptionsParser(dictionary).parse(args).map { config =>
-    val (pipeline, format) = (new Pipeline(config))()
-    val sink = sinkFor(config, format)
+  new OptionsParser(dictionary).parse(args).map { opts =>
+    val (pipeline, format) = (new Pipeline(opts, config))()
+    val sink = sinkFor(opts, format)
 
     pipeline.foreach(sink.entry)
     sink.finish()
-    config.progressMeter.finish()
+    opts.progressMeter.finish()
   }
 
-  def sinkFor(config: Config, format: OutputFormat) = {
-    if (config.histogramFields.size == 1) {
-      new SingleHistogramSink(config.histogramFields.head)
-    } else if (config.histogramFields.size > 1) {
-      val fields = config.histogramFields.toList
+  def sinkFor(opts: CmdLineOptions, format: OutputFormat) = {
+    if (opts.histogramFields.size == 1) {
+      new SingleHistogramSink(opts.histogramFields.head)
+    } else if (opts.histogramFields.size > 1) {
+      val fields = opts.histogramFields.toList
       new MultipleHistogramSink(fields.dropRight(1), fields.last)
-    } else if (config.gnuplotFileName.isDefined) {
-      val baseName = config.gnuplotFileName.get
+    } else if (opts.gnuplotFileName.isDefined) {
+      val baseName = opts.gnuplotFileName.get
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
       val fields = OutputFormat.fieldsFor(format)
@@ -35,7 +38,7 @@ object Main extends App {
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
       new CompositeSink(Seq(dataFile, gnuplotScript))
     } else {
-      new IncrementalSink(format, config.header)
+      new IncrementalSink(format, opts.header)
     }
   }
 }
@@ -44,28 +47,35 @@ case class SortOrder(afterGrouping: Option[FieldExpr] = None, beforeGrouping: Op
 
 case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Seq(), paired: Seq[LogFilter] = Seq())
 
-class Pipeline(val config: Config) {
+class Pipeline(val opts: CmdLineOptions, val config: Config) {
+
+  def autoDetect = {
+    import io.github.binaryfoo.lagotto.reader.LogTypes.RichLogTypes
+    val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
+    val logTypes = LogTypes.load(config).list(autoTypes)
+    new AutoDetectLog(logTypes)
+  }
 
   def apply(): (Iterator[LogEntry], OutputFormat) = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
 
-    val paired = if (config.pair) read(JposLog).pair() else read(AutoDetectLog)
+    val paired = if (opts.pair) read(JposLog).pair() else read(autoDetect)
     val firstFilter = filter(paired, filters.paired)
-    val sorted = sort(firstFilter, preAggregationSortKey, config.sortDescending)
+    val sorted = sort(firstFilter, preAggregationSortKey, opts.sortDescending)
     val withDelays = addDelays(sorted)
     val secondFilter = filter(withDelays, filters.delay)
     val aggregated = applyAggregation(secondFilter)
     val thirdFilter = filter(aggregated, filters.aggregate)
-    val secondSort = sort(thirdFilter, postAggregationSortKey, config.sortDescending)
+    val secondSort = sort(thirdFilter, postAggregationSortKey, opts.sortDescending)
     val pivot = applyPivot(secondSort)
     val format = outputFormat(pivot)
-    val limited = if (config.limit.isDefined) pivot.take(config.limit.get) else pivot
+    val limited = if (opts.limit.isDefined) pivot.take(opts.limit.get) else pivot
     (limited, format)
   }
 
   def partitionSortKey(): SortOrder = {
-    config.sortBy.map {
+    opts.sortBy.map {
       case key@HasAggregateExpressions(_) => SortOrder(afterGrouping = Some(key))
       case DelayExpr => SortOrder(afterGrouping = Some(DelayExpr))
       case k => SortOrder(beforeGrouping = Some(k))
@@ -73,19 +83,19 @@ class Pipeline(val config: Config) {
   }
   
   def partitionFilters(): Filters = {
-    val aggregate = config.filters.collect {
+    val aggregate = opts.filters.collect {
       case f@FieldFilterOn(HasAggregateExpressions(_)) => f
     }
-    val delay = config.filters.collect {
+    val delay = opts.filters.collect {
       case f@FieldFilterOn(DelayExpr) => f
     }
-    val paired = config.filters.diff(aggregate ++ delay)
+    val paired = opts.filters.diff(aggregate ++ delay)
     Filters(aggregate, delay, paired)
   }
 
   private def read[T <: LogEntry](logType: LogType[T]): Iterator[T] = {
-    val reader = LogReader(strict = config.strict, progressMeter = config.progressMeter, logType = logType)
-    reader.readFilesOrStdIn(config.input.sortBy(LogFiles.sequenceNumber))
+    val reader = LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
+    reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber))
   }
 
   private def filter(v: Iterator[LogEntry], filters: Seq[LogFilter]): Iterator[LogEntry] = {
@@ -93,15 +103,15 @@ class Pipeline(val config: Config) {
 
     if (filters.isEmpty) {
       v
-    } else if (config.beforeContext == 0 && config.afterContext == 0) {
+    } else if (opts.beforeContext == 0 && opts.afterContext == 0) {
       // premature optimization for this case?
       v.filter(shouldInclude)
     } else {
-      val preceding = new BoundedQueue[LogEntry](config.beforeContext)
+      val preceding = new BoundedQueue[LogEntry](opts.beforeContext)
       var aftersNeeded = 0
       v.flatMap { item =>
         if (shouldInclude(item)) {
-          aftersNeeded = config.afterContext
+          aftersNeeded = opts.afterContext
           preceding.dump() :+ item
         } else if (aftersNeeded > 0) {
           aftersNeeded -= 1
@@ -128,14 +138,14 @@ class Pipeline(val config: Config) {
   }
 
   private def addDelays(v: Iterator[LogEntry]): Iterator[LogEntry] = {
-    if (config.requiresDelayCalculation())
+    if (opts.requiresDelayCalculation())
       DelayExpr.calculateDelays(v)
     else
       v
   }
 
   private def applyAggregation(v: Iterator[LogEntry]): Iterator[LogEntry] = {
-    val aggregationConfig = config.aggregationConfig()
+    val aggregationConfig = opts.aggregationConfig()
     if (aggregationConfig.aggregates.isEmpty) {
       v
     } else {
@@ -144,20 +154,20 @@ class Pipeline(val config: Config) {
   }
 
   private def applyPivot(entries: Iterator[LogEntry]): Iterator[LogEntry] = {
-    if (config.pivot().isDefined) {
-      val fields = config.outputFields()
+    if (opts.pivot().isDefined) {
+      val fields = opts.outputFields()
       val rotateOn = fields.collectFirst { case e: DirectExpr => e}
-      val aggregates = config.aggregationConfig().aggregates
-      new PivotedIterator(rotateOn.get, config.pivot().get, aggregates.toSeq, entries)
+      val aggregates = opts.aggregationConfig().aggregates
+      new PivotedIterator(rotateOn.get, opts.pivot().get, aggregates.toSeq, entries)
     } else {
       entries
     }
   }
 
   private def outputFormat(it: Iterator[LogEntry]): OutputFormat = {
-    (it, config.format) match {
+    (it, opts.format) match {
       case (pivoted: PivotedIterator, t@Tabular(fields, f)) => t.copy(fields = pivoted.fields.map(PrimitiveExpr))
-      case _ => config.format
+      case _ => opts.format
     }
   }
 

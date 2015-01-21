@@ -13,9 +13,9 @@ class OptionsParser(val dictionary: DataDictionary) {
   import fieldParser.FieldExpr
   import filterParser.LogFilter
 
-  def parse(args: Array[String]): Option[Config] = {
+  def parse(args: Array[String]): Option[CmdLineOptions] = {
 
-    val parser = new scopt.OptionParser[Config]("plog") {
+    val parser = new scopt.OptionParser[CmdLineOptions]("plog") {
       head(s"lagotto", "0.0.1")
 
       help("help") text "Show usage"
@@ -129,7 +129,7 @@ class OptionsParser(val dictionary: DataDictionary) {
       } text "Only output n entries"
     }
 
-    parser.parse(args, Config())
+    parser.parse(args, CmdLineOptions())
   }
 
   implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {

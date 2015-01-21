@@ -5,7 +5,7 @@ import io.github.binaryfoo.lagotto._
 /**
  * What should main do? See Options for what each wonderful flag does.
  */
-case class Config (filters: Seq[LogFilter] = Seq(),
+case class CmdLineOptions (filters: Seq[LogFilter] = Seq(),
                    input: Seq[String] = Seq(),
                    format: OutputFormat = FullText,
                    pair: Boolean = false,
