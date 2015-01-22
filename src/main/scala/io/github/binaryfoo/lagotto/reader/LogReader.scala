@@ -17,7 +17,7 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       read(args.map(new File(_)))
   }
 
-  def read(file: File*): Iterator[T] = read(file.toIterable)
+  def read(files: File*): Iterator[T] = read(files.toIterable)
 
   def read(files: Iterable[File]): Iterator[T] = {
     progressMeter.startRun(files.size)
