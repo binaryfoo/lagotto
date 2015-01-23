@@ -29,6 +29,9 @@ artifact in (Compile, assembly) := {
   art.copy(`classifier` = Some("assembly"))
 }
 
+// ignore tests
+//test in assembly := {}
+
 addArtifact(artifact in (Compile, assembly), assembly)
 
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
