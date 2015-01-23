@@ -45,25 +45,16 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
     private var recordCount = 0
     private val queue = new ArrayBlockingQueue[Future[T]](processors * processors)
-
-    if (sourceName != "")
-      progressMeter.startFile(sourceName)
-
-    val reader = new Thread(new Runnable {
+    private var current: T = null.asInstanceOf[T]
+    private var started = false
+    private val reader = new Thread(new Runnable {
       override def run(): Unit = {
         var more = true
         do {
           val f = try {
             val entry = logType.readLinesForNextRecord(lines)
             if (entry != null) {
-              Future {
-                try {
-                  logType.parse(entry)
-                }
-                catch {
-                  case e: Exception => throw new IAmSorryDave(s"Failed to process record ending line ${entry.source}", e)
-                }
-              }
+              parseInTheFuture(entry)
             } else {
               more = false
               Future.successful(null.asInstanceOf[T])
@@ -77,13 +68,18 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       }
     }, s"$sourceName-reader")
     reader.setDaemon(true)
-    reader.start()
 
-    private var current = readNext()
+    if (sourceName != "")
+      progressMeter.startFile(sourceName)
 
-    override def hasNext: Boolean = current != null
+
+    override def hasNext: Boolean = {
+      ensureStarted()
+      current != null
+    }
 
     override def next(): T = {
+      ensureStarted()
       val v = current
       current = readNext()
       v
@@ -91,17 +87,24 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 
     private def readNext(): T = {
       val entry = readNextWithRetry()
-      if (entry != null) {
+      val done = entry == null
+      publishProgress(done)
+      if (done) {
+        source.close()
+      }
+      entry
+    }
+
+    private def publishProgress(done: Boolean): Unit = {
+      if (done) {
+        progressMeter.finishFile(recordCount)
+      } else {
         recordCount += 1
         if (recordCount % 100000 == 0) {
           progressMeter.progressInFile(recordCount)
           recordCount = 0
         }
-      } else {
-        progressMeter.finishFile(recordCount)
-        source.close()
       }
-      entry
     }
 
     @tailrec
@@ -113,6 +116,15 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
         maybe.get
       } else {
         if (maybe.isSuccess) maybe.get else readNextWithRetry()
+      }
+    }
+
+    @inline
+    private def ensureStarted() = {
+      if (!started) {
+        reader.start()
+        started = true
+        current = readNext()
       }
     }
 
@@ -131,8 +143,20 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       reader.interrupt()
       source.close()
     }
-  }
 
+    @inline
+    private def parseInTheFuture(entry: LineSet): Future[T] = {
+      Future {
+        try {
+          logType.parse(entry)
+        }
+        catch {
+          case e: Exception => throw new IAmSorryDave(s"Failed record ending at ${entry.source}", e)
+        }
+      }
+    }
+
+  }
 }
 
 /**
