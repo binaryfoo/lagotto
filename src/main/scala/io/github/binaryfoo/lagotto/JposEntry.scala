@@ -14,6 +14,16 @@ import scala.collection.mutable.ArrayBuffer
  */
 case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String], lines: String = "", source: SourceRef = null) extends Coalesced with LogEntry {
 
+  /**
+   * The 'at' attribute parsed as a joda DateTime. Viewed as mandatory.
+   *
+   * @throws IllegalArgumentException If the record contains no 'at' attribute.
+   */
+  val timestamp: DateTime = _fields.get("at") match {
+    case Some(v) => JposTimestamp.parse(v)
+    case None => null
+  }
+
   val fields = _fields.withDefault {
     case "mti" => mti
     case "link" => realm.link
@@ -26,16 +36,6 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
     case TimeFormatter(format) => format.print(timestamp)
     case JposEntry.XPathAccess(path) => xpath(path)
     case _ => null
-  }
-
-  /**
-   * The 'at' attribute parsed as a joda DateTime. Viewed as mandatory.
-   *
-   * @throws IllegalArgumentException If the record contains no 'at' attribute.
-   */
-  lazy val timestamp: DateTime = fields.get("at") match {
-    case Some(v) => JposTimestamp.parse(v)
-    case None => throw new IllegalArgumentException(s"Missing 'at' in $lines")
   }
 
   /**
