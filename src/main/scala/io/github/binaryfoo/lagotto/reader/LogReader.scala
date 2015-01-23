@@ -1,11 +1,16 @@
 package io.github.binaryfoo.lagotto.reader
 
 import java.io.{BufferedInputStream, File, FileInputStream}
+import java.util.concurrent.ArrayBlockingQueue
 import java.util.zip.GZIPInputStream
 
-import io.github.binaryfoo.lagotto.{SourceRef, LogEntry, NullProgressMeter, ProgressMeter}
+import io.github.binaryfoo.lagotto._
 
+import scala.annotation.tailrec
 import scala.collection.AbstractIterator
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
+import scala.concurrent.duration._
 import scala.io.{BufferedSource, Source}
 
 case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) {
@@ -33,10 +38,47 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 
   def read(source: Source, sourceName: String = ""): Iterator[T] = new LogEntryIterator(source, sourceName, progressMeter)
 
+  private val processors = Runtime.getRuntime.availableProcessors()
+
   class LogEntryIterator(source: Source, sourceName: String = "", progressMeter: ProgressMeter) extends AbstractIterator[T] {
 
     private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
     private var recordCount = 0
+    private val queue = new ArrayBlockingQueue[Future[T]](processors * processors)
+
+    if (sourceName != "")
+      progressMeter.startFile(sourceName)
+
+    val reader = new Thread(new Runnable {
+      override def run(): Unit = {
+        var more = true
+        do {
+          val f = try {
+            val entry = logType.readLinesForNextRecord(lines)
+            if (entry != null) {
+              Future {
+                try {
+                  logType.parse(entry)
+                }
+                catch {
+                  case e: Exception => throw new IAmSorryDave(s"Failed to process record ending line ${entry.source}", e)
+                }
+              }
+            } else {
+              more = false
+              Future.successful(null.asInstanceOf[T])
+            }
+          }
+          catch {
+            case e: Exception => Future.failed(e)
+          }
+          queue.put(f)
+        } while (more)
+      }
+    }, s"$sourceName-reader")
+    reader.setDaemon(true)
+    reader.start()
+
     private var current = readNext()
 
     override def hasNext: Boolean = current != null
@@ -47,11 +89,8 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       v
     }
 
-    if (sourceName != "")
-      progressMeter.startFile(sourceName)
-
-    def readNext(): T = {
-      val entry = logType(lines)
+    private def readNext(): T = {
+      val entry = readNextWithRetry()
       if (entry != null) {
         recordCount += 1
         if (recordCount % 100000 == 0) {
@@ -65,6 +104,33 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       entry
     }
 
+    @tailrec
+    private def readNextWithRetry(): T = {
+      val future = queue.take()
+      Await.ready(future, 10.seconds)
+      val maybe = future.value.get
+      if (strict && maybe.isFailure) {
+        maybe.get
+      } else {
+        if (maybe.isSuccess) maybe.get else readNextWithRetry()
+      }
+    }
+
+    override def foreach[U](f: (T) => U): Unit = {
+      try {
+        super.foreach(f)
+      }
+      finally {
+        close()
+      }
+    }
+
+    override def finalize(): Unit = close()
+
+    def close(): Unit = {
+      reader.interrupt()
+      source.close()
+    }
   }
 
 }
@@ -78,6 +144,7 @@ class SourceLineIterator(val lines: Iterator[String], val sourceName: String, va
   private var sleeve: Option[String] = None
 
   def lineNumber: Int = lineNo
+
   def sourceRef: SourceRef = SourceRef(sourceName, lineNo)
 
   def hasNext = sleeve.isDefined || lines.hasNext

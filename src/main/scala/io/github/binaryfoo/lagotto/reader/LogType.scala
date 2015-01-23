@@ -3,15 +3,24 @@ package io.github.binaryfoo.lagotto.reader
 import java.util
 
 import com.typesafe.config.{ConfigObject, ConfigValue, Config}
-import io.github.binaryfoo.lagotto.LogEntry
+import io.github.binaryfoo.lagotto.{SourceRef, LogEntry}
 
 import scala.collection.{mutable, JavaConversions}
 import JavaConversions.asScalaBuffer
 import JavaConversions.asScalaSet
 
 trait LogType[+T <: LogEntry] extends (SourceLineIterator => T) {
-  def canParse(firstLine: String, fileName: String): Boolean = true
+  def canParse(firstLine: String): Boolean = true
+  def readLinesForNextRecord(it: SourceLineIterator): LineSet
+  def parse(s: LineSet): T
+  def apply(it: SourceLineIterator): T = {
+    val record = readLinesForNextRecord(it)
+    if (record != null) parse(record)
+    else null.asInstanceOf[T]
+  }
 }
+
+case class LineSet(lines: Seq[String], fullText: String, source: SourceRef)
 
 object LogTypes {
 

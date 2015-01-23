@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
  */
 object JposLog extends LogType[JposEntry] {
 
-  override def apply(lines: SourceLineIterator): JposEntry = {
+  override def readLinesForNextRecord(lines: SourceLineIterator): LineSet = {
     var record: ListBuffer[String] = null
     var startLineNumber = lines.lineNumber
     for (line <- lines) {
@@ -29,7 +29,7 @@ object JposLog extends LogType[JposEntry] {
         if (record != null) {
           try {
             val fullText = if (lines.keepFullText) record.mkString("\n") else ""
-            return JposEntry(JposEntry.extractFields(record), fullText, SourceRef(lines.sourceName, startLineNumber))
+            return LineSet(record, fullText, SourceRef(lines.sourceName, startLineNumber))
           }
           catch {
             case e: IllegalArgumentException =>
@@ -51,4 +51,5 @@ object JposLog extends LogType[JposEntry] {
       null
   }
 
+  override def parse(s: LineSet): JposEntry = JposEntry(JposEntry.extractFields(s.lines), s.fullText, s.source)
 }

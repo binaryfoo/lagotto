@@ -16,14 +16,19 @@ case class RegexParsedLog(pattern: String, timeFormat: String) extends LogType[S
   private val groupNames = extractGroupNames(compiledPattern)
   private val dateTimeFormat = DateTimeFormat.forPattern(timeFormat)
 
-  override def apply(lines: SourceLineIterator): SimpleLogEntry = {
-    if (lines.hasNext)
-      fromString(lines.next(), SourceRef(lines.sourceName, lines.lineNumber))
-    else
+  override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
+
+  override def readLinesForNextRecord(it: SourceLineIterator): LineSet = {
+    if (it.hasNext) {
+      val line = it.next()
+      LineSet(Seq(line), line, it.sourceRef)
+    }
+    else {
       null
+    }
   }
 
-  override def canParse(firstLine: String, fileName: String): Boolean = compiledPattern.matcher(firstLine).matches()
+  override def parse(s: LineSet): SimpleLogEntry = fromString(s.fullText, s.source)
 
   def fromString(s: String, source: SourceRef = null): SimpleLogEntry = {
     val matcher = compiledPattern.matcher(s)
