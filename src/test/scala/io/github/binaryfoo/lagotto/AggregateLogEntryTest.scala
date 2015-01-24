@@ -19,6 +19,10 @@ class AggregateLogEntryTest extends LagoTest {
     aggregateToCsv(threeStans, "count(distinct(mti))") shouldBe List("2")
   }
 
+  it should "support group_concat(distinct(field))" in {
+    aggregateToCsv(threeStans, "group_concat(distinct(mti))") shouldBe List("0200,0210")
+  }
+
   private def twoLifespans = iteratorOver(JposEntry("lifespan" -> "100"), JposEntry("lifespan" -> "200"))
 
   it should "support avg(field)" in {

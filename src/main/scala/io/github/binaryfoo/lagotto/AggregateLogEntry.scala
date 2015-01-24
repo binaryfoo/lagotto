@@ -45,6 +45,7 @@ object AggregateOps {
   val CountDistinct = """count\(distinct\((.*)\)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
+  val GroupConcatDistinct = """group_concat\(distinct\((.*)\)\)""".r
   val GroupSample = """group_sample\((.*) (\d+)\)""".r
 
   // these need to be vals for equality to work between two AggregateOp instances
@@ -129,6 +130,19 @@ case class GroupConcatBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   override def toString: String = s"group_concat($field){values=$values}"
 
   override def copy() = new GroupConcatBuilder(expr)
+}
+
+case class GroupConcatDistinctBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
+
+  private val values = mutable.HashSet[String]()
+
+  override def add(v: String) = values += v
+
+  override def result(): String = values.toSeq.sorted.mkString(",")
+
+  override def toString: String = s"group_concat(distinct($field)){values=$values}"
+
+  override def copy() = new GroupConcatDistinctBuilder(expr)
 }
 
 case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAggregateOp {

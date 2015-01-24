@@ -77,6 +77,7 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case MaxOp(DirectExpr(field)) => new TryLongOpBuilder(field, maxLong, maxString)
         case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
         case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
+        case GroupConcatDistinct(DirectExpr(field)) => new GroupConcatDistinctBuilder(field)
         case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
         case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)
         case _ => null
