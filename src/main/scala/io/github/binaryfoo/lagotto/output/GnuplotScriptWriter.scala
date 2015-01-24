@@ -9,6 +9,7 @@ object GnuplotScriptWriter {
       case "time(HH:mm:s0)" => "%H:%M:%S"
       case "time(HH:mm)" => "%H:%M"
       case "time(HH:m0)" => "%H:%M"
+      case "datetime" => "%Y-%m-%d %H:%M:%S"
     }
     val columns = fields.tail
     val (firstTime, lastTime) = xRange

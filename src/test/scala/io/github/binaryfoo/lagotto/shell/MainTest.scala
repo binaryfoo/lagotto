@@ -671,11 +671,11 @@ class MainTest extends LagoTest {
   }
 
   "gc log" should "be readable with --in-format=gc option" in {
-    val output = run("--csv", "time,pause", "--in-format", "gc", testFile("gc.log"))
+    val output = run("--csv", "time,pause,before,after,heap", "--in-format", "gc", testFile("gc.log"))
     output shouldBe
-      """time,pause
-        |10:18:13.300,2.42
-        |15:16:55.969,2.37
+      """time,pause,before,after,heap
+        |10:18:13.300,2.42,2804197,1454927,4170176
+        |15:16:55.969,2.37,2798349,1171035,4166784
         |""".stripMargin
   }
 

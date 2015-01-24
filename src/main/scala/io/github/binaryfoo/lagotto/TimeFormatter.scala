@@ -56,6 +56,7 @@ object TimeFormatter {
     case "time" => Some(DefaultTimeFormat)
     case "timestamp" => Some(DefaultDateTimeFormat)
     case "date" => Some(DefaultDateFormat)
+    case "datetime" => Some(DefaultDateTimeFormat)
     case "time(ms)" => Some(EpochTimeFormatter)
     case "time(millis)" => Some(EpochTimeFormatter)
     case "time(s)" => Some(EpochSecondsFormatter)
