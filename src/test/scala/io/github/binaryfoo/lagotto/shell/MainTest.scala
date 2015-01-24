@@ -670,6 +670,15 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "gc log" should "be readable with --in-format=gc option" in {
+    val output = run("--csv", "time,pause", "--in-format", "gc", testFile("gc.log"))
+    output shouldBe
+      """time,pause
+        |10:18:13.300,2.42
+        |15:16:55.969,2.37
+        |""".stripMargin
+  }
+
   def run(args: String*): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out) {
