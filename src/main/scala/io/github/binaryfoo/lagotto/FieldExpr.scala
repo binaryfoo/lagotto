@@ -444,7 +444,13 @@ case class TranslateExpr(field: String, path: String, dictionary: DataDictionary
 
   override def calculate(e: LogEntry): String = {
     val value = e(path)
-    dictionary.translateValue(path, e, value).getOrElse(value)
+    (if (value == null) {
+      dictionary.fieldForShortName(path, e).map(f => (f, e(f)))
+    } else {
+      Some((path, value))
+    }).flatMap { case (f, v) =>
+      dictionary.translateValue(f, e, v)
+    }.orNull
   }
 
 }

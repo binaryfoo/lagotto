@@ -190,4 +190,9 @@ class FieldExprTest extends LagoTest {
     val expr = parserWithRootDictionary.FieldExpr.expressionFor("translate(70)")
     expr(JposEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
   }
+
+  "translate(nmic)" should "show translated value" in {
+    val expr = parserWithRootDictionary.FieldExpr.expressionFor("translate(nmic)")
+    expr(JposEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
+  }
 }
