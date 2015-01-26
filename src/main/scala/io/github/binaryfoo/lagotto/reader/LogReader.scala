@@ -72,7 +72,6 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     if (sourceName != "")
       progressMeter.startFile(sourceName)
 
-
     override def hasNext: Boolean = {
       ensureStarted()
       current != null
