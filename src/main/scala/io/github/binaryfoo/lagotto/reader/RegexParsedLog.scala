@@ -16,7 +16,7 @@ case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: L
 
   private val compiledPattern = Pattern.compile(pattern)
   private val groupNames = extractGroupNames(compiledPattern)
-  private val dateTimeFormat = DateTimeFormat.forPattern(timeFormat)
+  private val dateTimeFormat = DateTimeFormat.forPattern(timeFormat).withOffsetParsed()
 
   override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
 
