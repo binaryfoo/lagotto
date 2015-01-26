@@ -109,7 +109,7 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     @tailrec
     private def readNextWithRetry(): T = {
       val future = queue.take()
-      Await.ready(future, 10.seconds)
+      Await.ready(future, 1.minute)
       val maybe = future.value.get
       if (strict && maybe.isFailure) {
         maybe.get
