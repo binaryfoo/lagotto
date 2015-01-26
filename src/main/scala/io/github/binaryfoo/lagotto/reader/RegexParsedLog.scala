@@ -8,9 +8,9 @@ import org.joda.time.format.DateTimeFormat
 import scala.collection.mutable
 
 /**
- * Assumes single line records.
+ * Assumes single line records. Ignores lines not matched by lineRecogniser.
  */
-case class RegexParsedLog(pattern: String, timeFormat: String) extends LogType[SimpleLogEntry] {
+case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: LineRecogniser = AnyLineRecogniser) extends LogType[SimpleLogEntry] {
 
   private val compiledPattern = Pattern.compile(pattern)
   private val groupNames = extractGroupNames(compiledPattern)
@@ -19,13 +19,12 @@ case class RegexParsedLog(pattern: String, timeFormat: String) extends LogType[S
   override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
 
   override def readLinesForNextRecord(it: SourceLineIterator): LineSet = {
-    if (it.hasNext) {
+    while (it.hasNext) {
       val line = it.next()
-      LineSet(Seq(line), line, it.sourceRef)
+      if (lineRecogniser.isLogEntry(line))
+        return LineSet(Seq(line), line, it.sourceRef)
     }
-    else {
-      null
-    }
+    null
   }
 
   override def parse(s: LineSet): SimpleLogEntry = fromString(s.fullText, s.source)
@@ -50,5 +49,19 @@ case class RegexParsedLog(pattern: String, timeFormat: String) extends LogType[S
     val nameToIndex = method.invoke(pattern).asInstanceOf[java.util.Map[String, Integer]].keySet()
     val nameSet: mutable.Set[String] = nameToIndex
     nameSet.toSeq
+  }
+}
+
+trait LineRecogniser {
+  def isLogEntry(line: String): Boolean
+}
+
+object AnyLineRecogniser extends LineRecogniser {
+  override def isLogEntry(line: String): Boolean = true
+}
+
+object GcLogLineRecogniser extends LineRecogniser {
+  override def isLogEntry(line: String): Boolean = {
+    line.length > 4 && line.substring(0, 4).forall(Character.isDigit) && line.contains("real=")
   }
 }

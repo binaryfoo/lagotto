@@ -47,11 +47,15 @@ object LogTypes {
 
   def newInstance(name: String, args: mutable.Buffer[String]): LogType[LogEntry] = {
     val constructor = Class.forName(name).getConstructors()(0)
-    constructor.newInstance(args: _*).asInstanceOf[LogType[LogEntry]]
+    val preparedArgs = constructor.getParameterTypes.zip(args).map {
+      case (t, v) if t == classOf[String] => v
+      case (t, v) if t == classOf[LineRecogniser] => newObject[LineRecogniser](v)
+    }
+    constructor.newInstance(preparedArgs :_*).asInstanceOf[LogType[LogEntry]]
   }
 
-  def newObject(name: String): LogType[LogEntry] = {
-    Class.forName(name + "$").getField("MODULE$").get(null).asInstanceOf[LogType[LogEntry]]
+  def newObject[T](name: String): T = {
+    Class.forName(name + "$").getField("MODULE$").get(null).asInstanceOf[T]
   }
 
   implicit class RichLogTypes(val m: Map[String, LogType[LogEntry]]) extends AnyVal {

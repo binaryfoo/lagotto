@@ -11,15 +11,17 @@ class AutoDetectLogTest extends LagoTest {
                      |  "a": {
                      |    class: "io.github.binaryfoo.lagotto.reader.RegexParsedLog"
                      |    args: [
-                     |    "(?<timestamp>\\d{2}/\\d{2}/\\d{4}): (?<message>.+)"
-                     |    "dd/MM/yyyy"
+                     |      "(?<timestamp>\\d{2}/\\d{2}/\\d{4}): (?<message>.+)"
+                     |      "dd/MM/yyyy"
+                     |      "io.github.binaryfoo.lagotto.reader.AnyLineRecogniser"
                      |    ]
                      |  }
                      |  "b": {
                      |    class: "io.github.binaryfoo.lagotto.reader.RegexParsedLog"
                      |    args: [
-                     |    "SILLY (?<timestamp>\\d{2}-\\w{3}-\\d{4}) \\*\\*\\* (?<message>.+)"
-                     |    "dd-MMM-yyyy"
+                     |      "SILLY (?<timestamp>\\d{2}-\\w{3}-\\d{4}) \\*\\*\\* (?<message>.+)"
+                     |      "dd-MMM-yyyy"
+                     |      "io.github.binaryfoo.lagotto.reader.AnyLineRecogniser"
                      |    ]
                      |  }
                      |}""".stripMargin
