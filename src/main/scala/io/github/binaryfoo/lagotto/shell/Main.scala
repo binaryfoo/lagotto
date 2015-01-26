@@ -11,16 +11,19 @@ import scala.util.Try
 
 object Main extends App {
 
-  val config: Config = ConfigFactory.load()
-  val dictionary = RootDataDictionary()
+  runWith(args, ConfigFactory.load())
 
-  new OptionsParser(dictionary).parse(args).map { opts =>
-    val (pipeline, format) = (new Pipeline(opts, config))()
-    val sink = sinkFor(opts, format)
+  def runWith(args: Array[String], config: Config) = {
+    val dictionary = RootDataDictionary(config)
 
-    pipeline.foreach(sink.entry)
-    sink.finish()
-    opts.progressMeter.finish()
+    new OptionsParser(dictionary).parse(args).map { opts =>
+      val (pipeline, format) = (new Pipeline(opts, config))()
+      val sink = sinkFor(opts, format)
+
+      pipeline.foreach(sink.entry)
+      sink.finish()
+      opts.progressMeter.finish()
+    }
   }
 
   def sinkFor(opts: CmdLineOptions, format: OutputFormat) = {

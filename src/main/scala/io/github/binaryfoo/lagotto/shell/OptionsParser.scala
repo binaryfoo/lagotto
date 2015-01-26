@@ -79,10 +79,10 @@ class OptionsParser(val dictionary: DataDictionary) {
       } text "Output a line of JSON per log entry."
 
       opt[Unit]("digest") action { (_, c) =>
-        c.copy(format = DigestedFormat(dictionary, NameType.English))
+        c.copy(format = DigestedFormat(dictionary, Some(NameType.English)))
       } text "Output full message in a compact format."
 
-      opt[NameType]("digest-as") action { (nameType, c) =>
+      opt[Option[NameType]]("digest-as") action { (nameType, c) =>
         c.copy(format = DigestedFormat(dictionary, nameType))
       } text "Output full message in a compact format with name type: English, Short or Export."
 
@@ -149,12 +149,12 @@ class OptionsParser(val dictionary: DataDictionary) {
     }
   }
 
-  implicit def nameTypeRead: Read[NameType] = new Read[NameType] {
+  implicit def nameTypeRead: Read[Option[NameType]] = new Read[Option[NameType]] {
 
     val arity = 1
     val reads = { (s: String) =>
       try {
-        NameType.withName(s)
+        if (s == "") None else Some(NameType.withName(s))
       }
       catch {
         case e: NoSuchElementException => throw new IllegalArgumentException(s"Unknown name type '$s'. Known types are ${NameType.values.mkString(", ")}")

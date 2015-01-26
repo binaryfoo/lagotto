@@ -2,6 +2,7 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.ByteArrayOutputStream
 
+import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
 import io.github.binaryfoo.lagotto.LagoTest
 
 class MainTest extends LagoTest {
@@ -541,43 +542,53 @@ class MainTest extends LagoTest {
   "With --digest" should "show full log with fewer characters" in {
     val output = run("--digest", testFile("a-pair.xml"))
     output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="send" lifespan="10005">
-                      |  0 (mti): 0800 (Network Management Request)
-                      |  7 (Transmission date and time): 1124000003
-                      |  11 (System trace audit number): 28928
-                      |  24 (Function code): 831
+                      |  0: 0800 (Network Management Request) [mti]
+                      |  7: 1124000003 [Transmission date and time]
+                      |  11: 28928 [System trace audit number]
+                      |  24: 831 [Function code]
+                      |</log>
+                      |
                       |<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:04.100" type="receive" lifespan="1000">
-                      |  0 (mti): 0810 (Network Management Response)
-                      |  7 (Transmission date and time): 1124000003
-                      |  11 (System trace audit number): 28928
-                      |  24 (Function code): 831
+                      |  0: 0810 (Network Management Response) [mti]
+                      |  7: 1124000003 [Transmission date and time]
+                      |  11: 28928 [System trace audit number]
+                      |  24: 831 [Function code]
                       |  48.1: subfield 48.1
+                      |</log>
+                      |
                       |<log realm="rotate-log-listener" at="2014-11-24 13:10:55.000">
+                      |
+                      |</log>
                       |
                       |""".stripMargin
   }
 
-// TODO deal with global state vs concurrent tests ...
-//  it should "unzip gzipped strings" in {
-//    System.setProperty("custom.dictionaries.dir", "src/test/resources")
-//    val output = run("--digest", testFile("gzip.xml"))
-//    output should include("259 (A zipped message): hello digest")
-//    System.clearProperty("custom.dictionaries.dir")
-//  }
+  it should "unzip gzipped strings" in {
+    val config = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources"))
+    val output = standardOutFrom { Main.runWith(Array("--digest", testFile("gzip.xml")), config) }
+    output should include("259: hello digest [A zipped message]")
+  }
 
   "With --digest-as" should "show full log with even fewer characters" in {
     val output = run("--digest-as", "Export", testFile("a-pair.xml"))
     output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="send" lifespan="10005">
-                      |  0 (mti): 0800 (Network Management Request)
-                      |  7 (transmissionDateAndTime): 1124000003
-                      |  11 (stan): 28928
-                      |  24 (functionCode): 831
+                      |  0: 0800 (Network Management Request) [mti]
+                      |  7: 1124000003 [transmissionDateAndTime]
+                      |  11: 28928 [stan]
+                      |  24: 831 [functionCode]
+                      |</log>
+                      |
                       |<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:04.100" type="receive" lifespan="1000">
-                      |  0 (mti): 0810 (Network Management Response)
-                      |  7 (transmissionDateAndTime): 1124000003
-                      |  11 (stan): 28928
-                      |  24 (functionCode): 831
+                      |  0: 0810 (Network Management Response) [mti]
+                      |  7: 1124000003 [transmissionDateAndTime]
+                      |  11: 28928 [stan]
+                      |  24: 831 [functionCode]
                       |  48.1: subfield 48.1
+                      |</log>
+                      |
                       |<log realm="rotate-log-listener" at="2014-11-24 13:10:55.000">
+                      |
+                      |</log>
                       |
                       |""".stripMargin
   }
@@ -679,11 +690,11 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
-  def run(args: String*): String = {
+  def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
+
+  def standardOutFrom(thunk: => Unit): String = {
     val out = new ByteArrayOutputStream()
-    Console.withOut(out) {
-      Main.main(args.toArray)
-    }
+    Console.withOut(out)(thunk)
     out.toString
   }
 }

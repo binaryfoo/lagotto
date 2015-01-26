@@ -6,7 +6,7 @@ import io.github.binaryfoo.lagotto.output.GZip
 import io.github.binaryfoo.lagotto.shell.OutputFormat
 import io.github.binaryfoo.lagotto.{DefaultDateTimeFormat, JposEntry, LogEntry}
 
-case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extends OutputFormat {
+case class DigestedFormat(dictionary: DataDictionary, nameType: Option[NameType]) extends OutputFormat {
 
   override def header(): Option[String] = None
 
@@ -23,10 +23,12 @@ case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extend
     e.exportAsSeq.collect { case (k, v) if !headerAttributes.contains(k) =>
       val translatedValue = dictionary.typeOf(k, e) match {
         case FieldType.GZippedString => GZip.unzip(v)
-        case _ => dictionary.translateValue(k, e, v).map(t => s"$v ($t)").getOrElse(v)
+        case _ => dictionary.translateValue(k, e, v).map(t => s"$v ($t)").getOrElse(cleanJson(v))
       }
-      dictionary.nameOf(nameType, k, e).map(name => s"  $k ($name): $translatedValue").getOrElse(s"  $k: $translatedValue")
-    }.mkString(entryHeading(e), "\n", "")
+      nameType.flatMap(dictionary.nameOf(_, k, e))
+        .map(name => s"  $k: $translatedValue [$name]")
+        .getOrElse(s"  $k: $translatedValue")
+    }.mkString(entryHeading(e), "\n", "\n</log>\n")
   }
 
   private def entryHeading(e: JposEntry) = {
@@ -47,6 +49,8 @@ case class DigestedFormat(dictionary: DataDictionary, nameType: NameType) extend
   private def addAttribute(b: StringBuilder, name: String, value: String) = {
     b.append(' ').append(name).append("=\"").append(value).append('"')
   }
+
+  private def cleanJson(s: String) = s.replace("&quot;", "\"")
 
   private val headerAttributes = Set("realm", "at", "msgType", "lifespan")
 }
