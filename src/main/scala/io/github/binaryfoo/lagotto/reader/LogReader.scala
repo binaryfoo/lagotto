@@ -44,7 +44,7 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 
     private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
     private var recordCount = 0
-    private val queue = new ArrayBlockingQueue[Future[T]](processors * processors)
+    private val queue = new ArrayBlockingQueue[Future[T]](processors * processors * 2)
     private var current: T = null.asInstanceOf[T]
     private var started = false
     private val reader = new Thread(new Runnable {
