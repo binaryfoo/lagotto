@@ -12,22 +12,24 @@ import scala.collection.mutable
  */
 case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: LineRecogniser = AnyLineRecogniser) extends LogType[SimpleLogEntry] {
 
+  type P = TextAndSource
+
   private val compiledPattern = Pattern.compile(pattern)
   private val groupNames = extractGroupNames(compiledPattern)
   private val dateTimeFormat = DateTimeFormat.forPattern(timeFormat)
 
   override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
 
-  override def readLinesForNextRecord(it: SourceLineIterator): LineSet = {
+  override def readLinesForNextRecord(it: SourceLineIterator): TextAndSource = {
     while (it.hasNext) {
       val line = it.next()
       if (lineRecogniser.isLogEntry(line))
-        return LineSet(Seq(line), line, it.sourceRef)
+        return TextAndSource(line, it.sourceRef)
     }
     null
   }
 
-  override def parse(s: LineSet): SimpleLogEntry = fromString(s.fullText, s.source)
+  override def parse(s: TextAndSource): SimpleLogEntry = fromString(s.text, s.source)
 
   def fromString(s: String, source: SourceRef = null): SimpleLogEntry = {
     val matcher = compiledPattern.matcher(s)

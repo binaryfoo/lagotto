@@ -9,6 +9,8 @@ import scala.collection.mutable.ListBuffer
  */
 object JposLog extends LogType[JposEntry] {
 
+  type P = LineSet
+
   override def readLinesForNextRecord(lines: SourceLineIterator): LineSet = {
     var record: ListBuffer[String] = null
     var startLineNumber = lines.lineNumber

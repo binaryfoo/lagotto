@@ -33,7 +33,7 @@ class RegexParsedLogEntryTest extends LagoTest {
     val log = new RegexParsedLog(".*", "yyyy-MM-dd", GcLogLineRecogniser)
     val iterator = new SourceLineIterator(Seq("one", "2015 real=", "three").iterator, "", false, false)
     val lineSet = log.readLinesForNextRecord(iterator)
-    lineSet.fullText shouldBe "2015 real="
+    lineSet.text shouldBe "2015 real="
 
     log.readLinesForNextRecord(iterator) shouldBe null
   }

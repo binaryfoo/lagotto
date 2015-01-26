@@ -4,22 +4,26 @@ import io.github.binaryfoo.lagotto.{SourceRef, IAmSorryDave, LogEntry}
 
 class AutoDetectLog(val types: Seq[LogType[LogEntry]] = Seq()) extends LogType[LogEntry] {
 
-  override def readLinesForNextRecord(lines: SourceLineIterator): LineSet = {
+  type P = UnParsedEntry
+  
+  override def readLinesForNextRecord(lines: SourceLineIterator): UnParsedEntry = {
     if (lines.hasNext) {
-      findType(lines.peek(), lines.sourceRef).readLinesForNextRecord(lines)
+      val logType = findType(lines.peek(), lines.sourceRef)
+      val record = logType.readLinesForNextRecord(lines)
+      UnParsedEntry(record, logType)
     } else {
       null
     }
   }
 
-  override def parse(s: LineSet): LogEntry = findType(s.lines.head, s.source).parse(s)
+  override def parse(s: UnParsedEntry): LogEntry = s.logType.parse(s.entry.asInstanceOf[s.logType.P])
 
   def findType(first: String, ref: SourceRef): LogType[LogEntry] = {
-    val logType = types.collectFirst {
-      case t if t.canParse(first) => t
-    }
-      .getOrElse(throw new IAmSorryDave(s"Can't parse $ref '$first'"))
-    logType
+    types.collectFirst { case t if t.canParse(first) => t }.getOrElse(throw new IAmSorryDave(s"Can't parse $ref '$first'"))
   }
 
+}
+
+case class UnParsedEntry(entry: LogType[LogEntry]#P, logType: LogType[LogEntry]) extends Sourced {
+  override def source: SourceRef = entry.source
 }

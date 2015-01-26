@@ -145,7 +145,7 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     }
 
     @inline
-    private def parseInTheFuture(entry: LineSet): Future[T] = {
+    private def parseInTheFuture(entry: logType.P): Future[T] = {
       Future {
         try {
           logType.parse(entry)

@@ -9,10 +9,24 @@ import scala.collection.{mutable, JavaConversions}
 import JavaConversions.asScalaBuffer
 import JavaConversions.asScalaSet
 
+/**
+ * Convert one or more lines of text into a LogEntry instance.
+ *
+ * The default apply() implementation identifies the set of lines to parse into a single record and does the work of parsing.
+ * The split two steps: readLinesForNexRecord() and parse() allows the reading to be done by a single thread whilst
+ * the grunt work of parsing is split over N threads.
+ *
+ * @tparam T The specific type of LogEntry.
+ */
 trait LogType[+T <: LogEntry] extends (SourceLineIterator => T) {
+  type P <: Sourced
+
   def canParse(firstLine: String): Boolean = true
-  def readLinesForNextRecord(it: SourceLineIterator): LineSet
-  def parse(s: LineSet): T
+
+  def readLinesForNextRecord(it: SourceLineIterator): P
+
+  def parse(s: P): T
+
   def apply(it: SourceLineIterator): T = {
     val record = readLinesForNextRecord(it)
     if (record != null) parse(record)
@@ -20,8 +34,17 @@ trait LogType[+T <: LogEntry] extends (SourceLineIterator => T) {
   }
 }
 
-case class LineSet(lines: Seq[String], fullText: String, source: SourceRef)
+trait Sourced {
+  def source: SourceRef
+}
 
+case class TextAndSource(text: String, source: SourceRef) extends Sourced
+
+case class LineSet(lines: Seq[String], fullText: String, source: SourceRef) extends Sourced
+
+/**
+ * Load the set of log types from a configuration file.
+ */
 object LogTypes {
 
   def load(config: Config): Map[String, LogType[LogEntry]] = {

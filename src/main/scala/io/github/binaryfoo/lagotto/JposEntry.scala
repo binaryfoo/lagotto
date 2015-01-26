@@ -251,10 +251,6 @@ object JposEntry {
   val XPathAccess = """xpath\((.+)\)""".r
 }
 
-case class SourceRef(file: String, line: Int) {
-  override def toString: String = s"$file:$line"
-}
-
 object TagType extends Enumeration {
   type TagType = Value
   val Start, End = Value

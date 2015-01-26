@@ -7,7 +7,9 @@ import io.github.binaryfoo.lagotto.Log4jEntry
  */
 object Log4jLog extends LogType[Log4jEntry] {
 
-  override def readLinesForNextRecord(lines: SourceLineIterator): LineSet = {
+  type P = TextAndSource
+
+  override def readLinesForNextRecord(lines: SourceLineIterator): TextAndSource = {
     val buffer = new StringBuffer()
     for (line <- lines) {
       if (buffer.length() > 0 && line.startsWith("[")) {
@@ -24,12 +26,11 @@ object Log4jLog extends LogType[Log4jEntry] {
   }
 
   @inline
-  private def newLineSet(lines: SourceLineIterator, buffer: StringBuffer): LineSet = {
-    val line = buffer.toString
-    LineSet(Seq(line), line, lines.sourceRef)
+  private def newLineSet(lines: SourceLineIterator, buffer: StringBuffer): TextAndSource = {
+    TextAndSource(buffer.toString, lines.sourceRef)
   }
 
   override def canParse(firstLine: String): Boolean = firstLine.charAt(0) == '['
 
-  override def parse(s: LineSet): Log4jEntry = Log4jEntry.fromString(s.fullText, s.source)
+  override def parse(s: TextAndSource): Log4jEntry = Log4jEntry.fromString(s.text, s.source)
 }
