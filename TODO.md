@@ -3,7 +3,7 @@
  - needs a data dictionary. perhaps use ISO 8583 defaults (public spec?)
 * Dictionary could be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
-* Wildcard field names in --csv and friends. Eg 43.* or 48.* ?
+** Wildcard field names in --csv and friends. Eg 43.* or 48.* ?
 * Type dictionary/schema?
  - mti, timestamp (with format), number
  - 11,lifespan,rtt,delay = number, timestamp,7 = datetime
@@ -33,6 +33,9 @@
 * Split some pieces like ascii table and gnuplot out. Could run independently.
  - Eg csv -> ascii, csv -> gnuplot per column, csv -> jira table, csv -> html
 * Would interning some strings help performance?
+* Add filter grep(text). Will allow count(grep(text))
+* Deep custom dictionaries have pathetic performance
+* Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
