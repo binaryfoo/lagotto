@@ -2,6 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -111,10 +112,12 @@ object JposEntry {
         path = path.substring(0, dot)
     }
 
-    for (line <- lines) {
+    val it = lines.iterator
+    while (it.hasNext) {
+      val line = it.next()
       tagNameAndType(line) match {
         case ("field", Start) =>
-          val (id, value) = extractIdAndValue(line)
+          val (id, value) = extractIdAndValue(line, it)
           fields += ((pathTo(id), value))
         case ("isomsg", Start) =>
           val (_, id) = extractId(line)
@@ -214,20 +217,44 @@ object JposEntry {
     fields
   }
 
-  def extractIdAndValue(line: String): (String, String) = {
+  private val CDataTag = "![CDATA["
+
+  def extractIdAndValue(line: String, more: Iterator[String]): (String, String) = {
     val (idEnd: Int, id: String) = extractId(line)
     if (id == null)
       throw new IllegalArgumentException(s"Missing id in $line")
 
     val valueIndex = line.indexOf("value=\"", idEnd)
-    if (valueIndex == -1) {
-      throw new IllegalArgumentException(s"Missing value in $line")
+    if (valueIndex != -1) {
+      val valueStart = valueIndex + 7
+      val valueEnd = line.indexOf('"', valueStart)
+      val value = line.substring(valueStart, valueEnd)
+      (id, value)
+    } else {
+      val cdataIndex = line.indexOf(CDataTag)
+      if (cdataIndex != -1) {
+        val cdata = new StringBuilder()
+        readCData(line.substring(cdataIndex + CDataTag.length), more, cdata)
+        (id, cdata.toString())
+      } else {
+        throw new IllegalArgumentException(s"Missing value in $line")
+      }
     }
-    val valueStart = valueIndex + 7
-    val valueEnd = line.indexOf('"', valueStart)
-    val value = line.substring(valueStart, valueEnd)
+  }
 
-    (id, value)
+  @tailrec
+  private def readCData(current: String, lines: Iterator[String], cdata: StringBuilder): Unit = {
+    if (cdata.nonEmpty)
+      cdata.append('\n')
+    val endCdataIndex = current.indexOf("]]>")
+    if (endCdataIndex == -1) {
+      cdata.append(current)
+      if (lines.hasNext) {
+        readCData(lines.next(), lines, cdata)
+      }
+    } else {
+      cdata.append(current.substring(0, endCdataIndex))
+    }
   }
 
   def extractId(line: String): (Int, String) = {

@@ -1,0 +1,18 @@
+<log realm="some.channel/59.167.223.117:58012" at="Wed Dec 20 16:43:23 EST 2014.43" lifespan="3296ms">
+    <receive>
+        <isomsg direction="incoming">
+            <!-- net.moneyswitch.jpos.SkinnyXMLPackager -->
+            <field id="0" value="0800"/>
+            <isomsg id="48">
+                <field id="1"><![CDATA[<isomsg>
+  <f id="0" v="0810"/>
+  <f id="11" v="378180"/>
+  <f id="39" v="00"/>
+</isomsg>
+]]></field>
+                <field id="2" value="48.2"/>
+                <field id="3" value="00.00"/>
+            </isomsg>
+        </isomsg>
+    </receive>
+</log>

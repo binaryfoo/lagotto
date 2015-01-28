@@ -157,7 +157,7 @@ class JposEntryTest extends LagoTest {
   }
 
   "Id and value" should "be extracted" in {
-    val attributes = JposEntry.extractIdAndValue("""<field id="7" value="1124000003"/>""")
+    val attributes = JposEntry.extractIdAndValue("""<field id="7" value="1124000003"/>""", Iterator.empty)
     attributes shouldEqual ("7", "1124000003")
   }
 
@@ -169,6 +169,22 @@ class JposEntryTest extends LagoTest {
   "Bad XML" should "be extracted" in {
     val entry = JposEntry.fromLines(linesFrom("exception-with-bad-xml.xml"))
     entry("exception") shouldBe "Sourced file: inline evaluation of: ``DATE=new Date();      MTI="
+  }
+
+  "CDATA[" should "be extracted" in {
+    val entry = JposEntry.fromLines(linesFrom("with-cdata.xml"))
+    entry("48.1") shouldBe """<isomsg>
+                             |  <f id="0" v="0810"/>
+                             |  <f id="11" v="378180"/>
+                             |  <f id="39" v="00"/>
+                             |</isomsg>
+                             |""".stripMargin
+  }
+
+  it should "be extracted from one line" in {
+    val entry = JposEntry.fromLines(linesFrom("one-line-cdata.xml"))
+    entry("48.1") shouldBe "Character Data"
+    entry("48.3") shouldBe "00.00"
   }
 
   def oneEntry(realm: String = realm, timestamp: String = timestamp, lifespan: String = lifespan, msgType: String = "receive") = {
