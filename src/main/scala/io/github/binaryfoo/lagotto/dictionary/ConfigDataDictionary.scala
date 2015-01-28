@@ -63,7 +63,7 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
   private def loadEnglishNames(config: Config): Map[String, String] = {
     val fields = config.entries("fields")
     val subfields = config.entries("subfields")
-    (fields ++ subfields).map(toPair).toMap
+    (fields ++ subfields).map(toPair).flatMap(FieldPath.expandPair).toMap
   }
 
   private def loadShortNames(config: Config): Map[String, String] = {
