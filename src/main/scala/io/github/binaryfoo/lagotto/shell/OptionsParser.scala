@@ -22,7 +22,7 @@ class OptionsParser(val dictionary: DataDictionary) {
 
       help("help") text "Show usage"
 
-      arg[String]("<log-file>...") unbounded() optional() action { (f, c) =>
+      arg[String]("<log-file>...") maxOccurs Int.MaxValue optional() action { (f, c) =>
         c.copy(input = c.input :+ f)
       } text "Optional list of log files. Otherwise read stdin."
 

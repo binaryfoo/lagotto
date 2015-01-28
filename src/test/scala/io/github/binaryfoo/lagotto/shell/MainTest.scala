@@ -1,9 +1,11 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.ByteArrayOutputStream
+import java.io.{FileNotFoundException, ByteArrayOutputStream}
 
 import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
 import io.github.binaryfoo.lagotto.LagoTest
+
+import scala.collection.mutable.ArrayBuffer
 
 class MainTest extends LagoTest {
 
@@ -688,6 +690,13 @@ class MainTest extends LagoTest {
         |10:18:13.300,2.42,2804197,1454927,4170176
         |15:16:55.969,2.37,2798349,1171035,4166784
         |""".stripMargin
+  }
+
+  "silly number of files" should "be handled" in {
+    val tooManyFiles = (1 to 1025)./:(new ArrayBuffer[String])((buf, i) => buf += s"file_$i.log")
+    the [FileNotFoundException] thrownBy {
+      run(tooManyFiles :_*)
+    } should have message "file_1.log (No such file or directory)"
   }
 
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }

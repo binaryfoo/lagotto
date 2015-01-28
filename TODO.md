@@ -36,9 +36,6 @@
 * Deep custom dictionaries have pathetic performance
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
 
-BUGS:
-* Why "Unknown argument" from scopt with 2000 files? Even when calling via Main.main()...
-
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
 * Warn about typos like count(exception)
