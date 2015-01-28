@@ -22,10 +22,10 @@ trait DataDictionary {
   }
 
   /**
-   * Intent: short name, then camel cased english name, finally just fall back to field.
+   * Intent: short name, then snake cased english name, finally just fall back to field.
    */
   final def exportNameOf(field: String, context: LogEntry): String = {
-    nameOf(NameType.Export, field, context)
+    nameOf(NameType.Snake, field, context)
       .getOrElse(sanitizeForSQL(field))
   }
 
@@ -59,7 +59,7 @@ trait DataDictionary {
 
 object NameType extends Enumeration {
   type NameType = Value
-  val English, Short, Export = Value
+  val English, Short, Snake, Camel = Value
 }
 
 object FieldType extends Enumeration {

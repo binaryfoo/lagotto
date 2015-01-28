@@ -608,19 +608,19 @@ class MainTest extends LagoTest {
   }
 
   "With --digest-as" should "show full log with even fewer characters" in {
-    val output = run("--digest-as", "Export", testFile("a-pair.xml"))
+    val output = run("--digest-as", "Snake", testFile("a-pair.xml"))
     output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="send" lifespan="10005">
                       |  0: 0800 (Network Management Request) [mti]
-                      |  7: 1124000003 [transmissionDateAndTime]
+                      |  7: 1124000003 [transmission_date_and_time]
                       |  11: 28928 [stan]
-                      |  24: 831 [functionCode]
+                      |  24: 831 [function_code]
                       |</log>
                       |
                       |<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:04.100" type="receive" lifespan="1000">
                       |  0: 0810 (Network Management Response) [mti]
-                      |  7: 1124000003 [transmissionDateAndTime]
+                      |  7: 1124000003 [transmission_date_and_time]
                       |  11: 28928 [stan]
-                      |  24: 831 [functionCode]
+                      |  24: 831 [function_code]
                       |  48.1: subfield 48.1
                       |</log>
                       |
@@ -633,8 +633,8 @@ class MainTest extends LagoTest {
 
   "With --json" should "dump each record as a line of JSON" in {
     val output = run("--json", testFile("a-pair-uyst.xml"))
-    output shouldBe """{"at":"2014-11-24T00:00:03.292-0200","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831"}
-                      |{"at":"2014-11-24T00:00:04.100-0200","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","transmissionDateAndTime":"1124000003","stan":28928,"functionCode":"831","f_48_1":"subfield 48.1"}
+    output shouldBe """{"at":"2014-11-24T00:00:03.292-0200","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmission_date_and_time":"1124000003","stan":28928,"function_code":"831"}
+                      |{"at":"2014-11-24T00:00:04.100-0200","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","transmission_date_and_time":"1124000003","stan":28928,"function_code":"831","f_48_1":"subfield 48.1"}
                       |{"at":"2014-11-24T13:10:55.000-0200","realm":"rotate-log-listener"}
                       |""".stripMargin
   }

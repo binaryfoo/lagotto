@@ -19,6 +19,6 @@ class JSONOutputTest extends LagoTest {
   it should "unpack a gzipped string" in {
     val entry = JposEntry("at" -> new DateTime(0L, UYST_TZ).asJposAt, "realm" -> "acme-terminal", "259" -> GZip.zip("line one\nline two"))
     val output = JSONOutput(RootDataDictionary(configWithTestDictionary)).apply(entry).get
-    output shouldBe """{"at":"1969-12-31T21:00:00.000-0300","realm":"acme-terminal","aZippedMessage":"line one\nline two"}"""
+    output shouldBe """{"at":"1969-12-31T21:00:00.000-0300","realm":"acme-terminal","a_zipped_message":"line one\nline two"}"""
   }
 }

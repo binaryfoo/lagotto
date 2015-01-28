@@ -30,12 +30,12 @@ class DigestedFormatTest extends LagoTest {
   }
 
   it should "allow export names" in {
-    val output = DigestedFormat(RootDataDictionary(), Some(NameType.Export)).format(entry)
+    val output = DigestedFormat(RootDataDictionary(), Some(NameType.Snake)).format(entry)
     output shouldBe """<log realm="some.channel/10.0.0.1:4321" at="2014-11-24 00:00:03.292" type="receive" lifespan="10005">
                       |  0: 0800 (Network Management Request) [mti]
-                      |  7: 1124000003 [transmissionDateAndTime]
+                      |  7: 1124000003 [transmission_date_and_time]
                       |  11: 28928 [stan]
-                      |  24: 831 [functionCode]
+                      |  24: 831 [function_code]
                       |</log>
                       |""".stripMargin
   }

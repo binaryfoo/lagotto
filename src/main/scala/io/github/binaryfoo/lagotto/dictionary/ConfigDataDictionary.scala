@@ -22,9 +22,10 @@ import scala.collection.mutable
 case class ConfigDataDictionary(config: Config, name: String = "root") extends DataDictionary {
 
   val englishNames = loadEnglishNames(config)
-  lazy val exportNames = englishNames.mapValues(CamelCase.toCamelCase)
+  lazy val snakeNames = englishNames.mapValues(SnakeCase.toSnakeCase)
+  lazy val camelNames = englishNames.mapValues(CamelCase.toCamelCase)
   val shortNames = loadShortNames(config)
-  lazy val reverseShortNames = inverse(exportNames) ++ inverse(shortNames)
+  lazy val reverseShortNames = inverse(snakeNames) ++ inverse(camelNames) ++ inverse(shortNames)
   val types = loadTypes(config)
   val translations = loadTranslations(config)
 
@@ -39,7 +40,8 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
     nameType match {
       case NameType.English => englishNames.get(field).orElse(nameOf(NameType.Short, field, context))
       case NameType.Short => shortNames.get(field)
-      case NameType.Export => shortNames.get(field).orElse(exportNames.get(field))
+      case NameType.Snake => shortNames.get(field).orElse(snakeNames.get(field))
+      case NameType.Camel => shortNames.get(field).orElse(camelNames.get(field))
     }
   }
 
