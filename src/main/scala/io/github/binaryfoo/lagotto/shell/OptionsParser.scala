@@ -46,7 +46,7 @@ class OptionsParser(val dictionary: DataDictionary) {
         c.copy(filters = c.filters :+ NegativeInsensitiveGrepFilter(expr))
       } text "Case insensitive grep!. Slower."
 
-      opt[FieldFilter]('f', "field") unbounded() action { case (filter, c) =>
+      opt[LogFilter]('f', "field") unbounded() action { case (filter, c) =>
           c.copy(filters = c.filters :+ filter)
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"
 
@@ -138,7 +138,7 @@ class OptionsParser(val dictionary: DataDictionary) {
     parser.parse(args, CmdLineOptions())
   }
 
-  implicit def logFilterRead: Read[FieldFilter] = new Read[FieldFilter] {
+  implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
     val arity = 2
     val reads = { (s: String) =>
       s match {

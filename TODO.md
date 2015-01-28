@@ -32,7 +32,6 @@
 * Convert part of jpos CMF into dictionary: https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml
 * Allow short names everywhere a PrimitiveExpr is being used. Eg
  group_concat(distinct(translate(mti)))
-* Add filter grep(text). Will allow count(grep(text))
 * Deep custom dictionaries have pathetic performance
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
 

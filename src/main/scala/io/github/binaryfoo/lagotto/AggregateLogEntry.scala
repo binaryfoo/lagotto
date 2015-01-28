@@ -88,7 +88,7 @@ case class CountBuilder() extends AggregateOp {
   override def copy() = new CountBuilder
 }
 
-case class CountIfBuilder(condition: FieldFilter) extends AggregateOp {
+case class CountIfBuilder(condition: LogFilter) extends AggregateOp {
   
   private var count = 0
   

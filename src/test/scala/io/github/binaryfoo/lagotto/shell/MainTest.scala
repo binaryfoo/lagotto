@@ -251,6 +251,42 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
+  "grep(...)" should "create a filter behaving like --grep" in {
+    val output = run("-f", "grep(threshold)", testFile("basic.xml"))
+    output shouldEqual """<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
+                         |   maxSize (50000000) threshold reached
+                         |</log>
+                         |""".stripMargin
+  }
+
+  "grep!(...)" should "create a filter behaving like --grep!" in {
+    val output = run("-f", "grep!(threshold)", "-t" , "realm", testFile("basic.xml"))
+    output shouldEqual """realm
+                         |some.channel/10.0.0.1:4321
+                         |""".stripMargin
+  }
+
+  "igrep(...)" should "create a filter behaving like --igrep" in {
+    val output = run("-f", "igrep(ThREsholD)", "-t", "realm", testFile("basic.xml"))
+    output shouldEqual """realm
+                         |rotate-log-listener
+                         |""".stripMargin
+  }
+
+  "igrep!(...)" should "create a filter behaving like --grep!" in {
+    val output = run("-f", "igrep!(tHREshold)", "-t", "realm", testFile("basic.xml"))
+    output shouldEqual """realm
+                         |some.channel/10.0.0.1:4321
+                         |""".stripMargin
+  }
+
+  "count(grep(...))" should "count rows with a text match" in {
+    val output = run("--csv", "count(grep(threshold)),count(grep!(threshold))", testFile("a-pair.xml"))
+    output shouldEqual """count(grep(threshold)),count(grep!(threshold))
+                         |1,2
+                         |""".stripMargin
+  }
+
   "--pair" should "produce pair entries" in {
     val output = run("--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     // output ends up in ordered by response received time...

@@ -107,8 +107,12 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
 
     private val LogFilterPattern = "(.+?)(!?)([=><~])([^=><~!]*)".r
     private val MatchAsRegexPattern = "(.+?)(!?)~/(.+)/".r
+    private val GrepPattern = """grep\(([^)]+?)\)""".r
+    private val GrepNotPattern = """grep!\(([^)]+?)\)""".r
+    private val IGrepPattern = """igrep\(([^)]+?)\)""".r
+    private val IGrepNotPattern = """igrep!\(([^)]+?)\)""".r
 
-    def unapply(s: String): Option[FieldFilter] = s match {
+    def unapply(s: String): Option[LogFilter] = s match {
       case MatchAsRegexPattern(FieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
       case LogFilterPattern(FieldExpr(expr), negation, operator, value) =>
         val op: MatchOp = operator match {
@@ -122,12 +126,16 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
         } else {
           Some(FieldOpFilter(expr, value, operator, op))
         }
+      case GrepPattern(text) => Some(GrepFilter(text))
+      case GrepNotPattern(text) => Some(NegativeGrepFilter(text))
+      case IGrepPattern(text) => Some(InsensitiveGrepFilter(text))
+      case IGrepNotPattern(text) => Some(NegativeInsensitiveGrepFilter(text))
       case _ =>
         None
     }
 
-    def filterFor(expr: String) = expr match {
-      case LogFilter(f) => f
+    def filterFor(expr: String): FieldFilter = expr match {
+      case LogFilter(f) if f.isInstanceOf[FieldFilter] => f.asInstanceOf[FieldFilter]
     }
 
   }
