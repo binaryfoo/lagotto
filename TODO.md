@@ -1,7 +1,3 @@
-* Should grep be case insensitive? Cost? --igrep?
-* Translate field numbers into names on output
- - needs a data dictionary. perhaps use ISO 8583 defaults (public spec?)
-* Dictionary could be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
 ** Wildcard field names in --csv and friends. Eg 43.* or 48.* ?
 * Type dictionary/schema?
@@ -29,10 +25,13 @@
  - might ease path to Spark
 * Can --pair idea by expanded to a SQL like join. One case for keeping memoized streams...
 * Graceful error reporting...
-* Other input log formats: log4j, httpd
 * Split some pieces like ascii table and gnuplot out. Could run independently.
  - Eg csv -> ascii, csv -> gnuplot per column, csv -> jira table, csv -> html
 * Would interning some strings help performance?
+* Describe repeating groups in dictionary: Eg signon response
+* Convert part of jpos CMF into dictionary: https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml
+* Allow short names everywhere a PrimitiveExpr is being used. Eg
+ group_concat(distinct(translate(mti)))
 * Add filter grep(text). Will allow count(grep(text))
 * Deep custom dictionaries have pathetic performance
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
@@ -62,6 +61,7 @@ Politeness:
  - regex mode is partial match by default (link to javadoc)
  - field(/regex/$1/)
  - can filter on calc() expressions like calc(max(time)-min(time))>N
+ - Dictionary names can be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
 
 use cases:
 * fraction of auths as total messages calc(count(mti=0200)/count)
@@ -82,3 +82,7 @@ charting options:
 * http://code.shutterstock.com/rickshaw/
 * http://beakernotebook.com/
 * https://github.com/andypetrella/spark-notebook
+
+* use parbolied https://github.com/sirthias/parboiled or built in parser combinators for parsing expressions?
+* integrated with beaker ? https://github.com/twosigma/beaker-notebook/wiki/Create-an-OutputDisplay
+* publish to m2 repos https://github.com/xerial/sbt-sonatype
