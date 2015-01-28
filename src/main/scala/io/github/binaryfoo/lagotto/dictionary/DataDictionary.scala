@@ -26,7 +26,15 @@ trait DataDictionary {
    */
   final def exportNameOf(field: String, context: LogEntry): String = {
     nameOf(NameType.Export, field, context)
-      .getOrElse(field)
+      .getOrElse(sanitizeForSQL(field))
+  }
+
+  final def sanitizeForSQL(field: String): String = {
+    if (field.nonEmpty && field.charAt(0).isDigit) {
+      "f_" + field.replace('.', '_')
+    } else {
+      field
+    }
   }
 
   def nameOf(nameType: NameType, field: String, context: LogEntry): Option[String]

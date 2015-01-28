@@ -33,6 +33,20 @@ object CamelCase {
 
 }
 
+object SnakeCase {
+
+  val DropConsecutiveWhiteSpace = WordRule("\\s+", {m => Some(" ") })
+  val LowerThenUpper = WordRule("([a-z])([A-Z])", {m => Some(m.group(1) + "_" + m.group(2).toLowerCase) })
+
+  val All = CamelCase.DropIllegals
+    .andThen(DropConsecutiveWhiteSpace)
+    .andThen(CamelCase.LeadingDigit)
+    .andThen(LowerThenUpper)
+    .andThen(_.toLowerCase.replace(' ', '_'))
+
+  def toSnakeCase(s: String): String = All(s)
+}
+
 object SentenceCase {
 
   val HeadCap = new WordRule("(?<=^.)(\\w+)", {m => Some(m.group(1).toLowerCase)})
@@ -43,7 +57,7 @@ object SentenceCase {
 
 }
 
-case class WordRule(regex: String, replacer: Regex.Match => Option[String]) {
+case class WordRule(regex: String, replacer: Regex.Match => Option[String]) extends (String => String) {
   val r = regex.r.unanchored
   def apply(s: String): String = {
     r.replaceSomeIn(s, replacer)

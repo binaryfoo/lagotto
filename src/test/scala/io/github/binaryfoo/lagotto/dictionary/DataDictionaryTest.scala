@@ -42,8 +42,8 @@ class DataDictionaryTest extends LagoTest {
     exportNameOf("48", logEntry) shouldBe "additionalDataPrivate"
   }
 
-  it should "finally just use the field path" in {
-    exportNameOf("128.1", logEntry) shouldBe "128.1"
+  it should "finally just use the field path sanitized for SQL" in {
+    exportNameOf("128.1", logEntry) shouldBe "f_128_1"
   }
 
   "Type of" should "use types key" in {
