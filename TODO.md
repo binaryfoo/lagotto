@@ -1,5 +1,4 @@
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
-** Wildcard field names in --csv and friends. Eg 43.* or 48.* ?
 * Type dictionary/schema?
  - mti, timestamp (with format), number
  - 11,lifespan,rtt,delay = number, timestamp,7 = datetime
@@ -28,7 +27,6 @@
 * Split some pieces like ascii table and gnuplot out. Could run independently.
  - Eg csv -> ascii, csv -> gnuplot per column, csv -> jira table, csv -> html
 * Would interning some strings help performance?
-* Describe repeating groups in dictionary: Eg signon response
 * Convert part of jpos CMF into dictionary: https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml
 * Allow short names everywhere a PrimitiveExpr is being used. Eg
  group_concat(distinct(translate(mti)))
@@ -58,6 +56,7 @@ Politeness:
  - field(/regex/$1/)
  - can filter on calc() expressions like calc(max(time)-min(time))>N
  - Dictionary names can be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
+* Document repeating groups in dictionary: Eg 48.{1..10} = "Blah"
 
 use cases:
 * fraction of auths as total messages calc(count(mti=0200)/count)

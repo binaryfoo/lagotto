@@ -230,4 +230,10 @@ class FieldExprTest extends LagoTest {
     val expr = expressionFor("48.min.1")
     expr(JposEntry("48.1.1" -> "one", "48.3.1" -> "two")) shouldBe "one"
   }
+
+  "48.*" should "concatenate all children of 48" in {
+    val expr = expressionFor("48.*")
+    expr(JposEntry("48.1" -> "one", "48.1.1" -> "one.one", "48.2" -> "two")) shouldBe "one,one.one,two"
+  }
+
 }

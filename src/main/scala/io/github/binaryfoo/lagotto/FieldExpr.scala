@@ -500,7 +500,7 @@ case class PivotExpr(field: String, pivot: FieldExpr) extends DirectExpr {
 }
 
 /**
- * Handles 48.max and 48.min
+ * Handles 48.max, 48.min and 48.*.
  */
 case class PathExpr(field: String, path: Seq[String], op: String) extends DirectExpr {
 
@@ -508,16 +508,25 @@ case class PathExpr(field: String, path: Seq[String], op: String) extends Direct
 
   override def apply(e: LogEntry): String = {
     (e match {
-      case JposEntry(fields, _, _) if op == "min" => withPrefix(fields).headOption
-      case JposEntry(fields, _, _) => withPrefix(fields).lastOption
+      case JposEntry(fields, _, _) if op == "*" => Some(pathsWithPrefix(fields).map(e(_)).mkString(","))
+      case JposEntry(fields, _, _) if op == "min" => nextItemsAfterPrefix(fields).headOption.map(u => concat(e, u))
+      case JposEntry(fields, _, _) => nextItemsAfterPrefix(fields).lastOption.map(u => concat(e, u))
       case _ => None
-    }).map(u => e(FieldPath((left :+ u) ++ right)))
-      .getOrElse(e(field))
+    }).getOrElse(e(field))
   }
 
-  private def withPrefix(fields: mutable.Map[String, String]): Seq[String] = {
+  private def nextItemsAfterPrefix(fields: mutable.Map[String, String]): Seq[String] = {
     fields.keySet.collect {
       case FieldPath(k) if k.startsWith(left) && k.length > left.length => k(left.length)
     }.toSeq.sorted
   }
+
+  private def pathsWithPrefix(fields: mutable.Map[String, String]): Seq[String] = {
+    fields.keySet.collect {
+      case FieldPath(k) if k.startsWith(left) && k.length > left.length => FieldPath(k)
+    }.toSeq.sorted
+  }
+
+  private def concat(e: LogEntry, u: String): String = e(FieldPath((left :+ u) ++ right))
+
 }

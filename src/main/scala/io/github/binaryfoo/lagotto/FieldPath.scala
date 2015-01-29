@@ -48,6 +48,7 @@ object FieldPathWithOp {
     FieldPath.unapply(path).flatMap {
       case s if s.contains("max") => Some((s, "max"))
       case s if s.contains("min") => Some((s, "min"))
+      case s if s.endsWith(Seq("*")) => Some((s, "*"))
       case _ => None
     }
   }
