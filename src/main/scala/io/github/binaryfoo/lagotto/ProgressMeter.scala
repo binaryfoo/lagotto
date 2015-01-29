@@ -100,8 +100,12 @@ class ConsoleProgressMeter(val out: PrintStream = System.err) extends ProgressMe
 
   private def formatRunTime(elapsed: Long): String = {
     val formatter = new PeriodFormatterBuilder()
+      .appendHours()
+      .appendSuffix(" hour", "hours")
+      .appendSeparatorIfFieldsBefore(" ")
       .appendMinutes()
-      .appendSuffix(" minute ", " minutes ")
+      .appendSuffix(" minute", " minutes")
+      .appendSeparatorIfFieldsBefore(" ")
       .appendSeconds()
       .appendSuffix("s")
       .toFormatter
