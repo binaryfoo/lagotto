@@ -1,7 +1,6 @@
 package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
-import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import org.joda.time.{DateTime, LocalTime}
 
 class FieldExprTest extends LagoTest {
@@ -194,5 +193,41 @@ class FieldExprTest extends LagoTest {
   "translate(nmic)" should "show translated value" in {
     val expr = parserWithRootDictionary.FieldExpr.expressionFor("translate(nmic)")
     expr(JposEntry("0" -> "0800", "70" -> "301")) shouldBe "Echo"
+  }
+
+  "48.max" should "pick max immediate child of 48 in jpos entries" in {
+    val expr = expressionFor("48.max")
+    expr(JposEntry("48.1" -> "one", "48.2" -> "two")) shouldBe "two"
+  }
+
+  it should "handle plain old 48" in {
+    val expr = expressionFor("48.max")
+    expr(JposEntry("48" -> "no subfields")) shouldBe null
+  }
+
+  it should "do a simple lookup on other record types" in {
+    val expr = expressionFor("48.max")
+    expr(AggregateLogEntry(Map("48.max" -> "value"), Seq())) shouldBe "value"
+  }
+
+  it should "allow regex replacement" in {
+    val expr = expressionFor("48.max(/ \\$.*//)")
+    expr(JposEntry("48.2" -> "Purchase $135.98")) shouldBe "Purchase"
+    expr(JposEntry("48.2" -> "No Purchase")) shouldBe "No Purchase"
+  }
+
+  "48.max.1" should "pick subfield 1 of max immediate child of 48" in {
+    val expr = expressionFor("48.max.1")
+    expr(JposEntry("48.1.1" -> "one", "48.3.1" -> "two")) shouldBe "two"
+  }
+
+  "48.min" should "pick min immediate child of 48" in {
+    val expr = expressionFor("48.min")
+    expr(JposEntry("48.1" -> "one", "48.2" -> "two")) shouldBe "one"
+  }
+
+  "48.min.1" should "pick subfield 1 of min immediate child of 48" in {
+    val expr = expressionFor("48.min.1")
+    expr(JposEntry("48.1.1" -> "one", "48.3.1" -> "two")) shouldBe "one"
   }
 }

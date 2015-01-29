@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.dictionary
 
-import io.github.binaryfoo.lagotto.LagoTest
+import io.github.binaryfoo.lagotto.{FieldPath, LagoTest}
 
 class FieldPathTest extends LagoTest {
 

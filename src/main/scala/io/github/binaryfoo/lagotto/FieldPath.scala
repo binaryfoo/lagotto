@@ -1,6 +1,10 @@
-package io.github.binaryfoo.lagotto.dictionary
+package io.github.binaryfoo.lagotto
 
 object FieldPath {
+
+  def apply(path: Seq[String]): String = path.mkString(".")
+
+  def unapply(path: String): Option[Seq[String]] = Some(path.split('.'))
 
   def expand(path: String): Seq[String] = {
     val parts = split(path)
@@ -31,11 +35,20 @@ object FieldPath {
   case class Literal(value: Int) extends Part {
     override def begin(): Seq[String] = Seq(value.toString)
     override def appendTo(paths: Seq[String]): Seq[String] = paths.map(addNode(_, value))
-
   }
 
   case class Range(start: Int, end: Int) extends Part {
     override def begin(): Seq[String] = (start to end).map(_.toString)
     override def appendTo(paths: Seq[String]): Seq[String] = (start to end).flatMap(i => paths.map(addNode(_, i)))
+  }
+}
+
+object FieldPathWithOp {
+  def unapply(path: String): Option[(Seq[String], String)] = {
+    FieldPath.unapply(path).flatMap {
+      case s if s.contains("max") => Some((s, "max"))
+      case s if s.contains("min") => Some((s, "min"))
+      case _ => None
+    }
   }
 }

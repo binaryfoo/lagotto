@@ -32,8 +32,9 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case "delay" => DelayExpr
         case AggregateOp(op) => AggregateExpr(expr, op)
         case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
-        case RegexReplacementOp(path, regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
+        case RegexReplacementOp(p@DirectExpr(path), regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
+        case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
       })
@@ -458,21 +459,26 @@ case class TranslateExpr(field: String, path: String, dictionary: DataDictionary
 /**
  * Find lines in a field of a log entry that match a pattern. Replace the match with replacement.
  */
-case class RegexReplaceExpr(field: String, path: String, pattern: String, replacement: String) extends DirectCalculationExpr {
+case class RegexReplaceExpr(field: String, expr: DirectExpr, pattern: String, replacement: String) extends DirectCalculationExpr {
 
   val regex = Pattern.compile(pattern)
 
   override def calculate(e: LogEntry): String = {
-    val raw = e(path)
+    val raw = expr(e)
     if (raw != null) {
-      raw.split('\n').flatMap { line =>
-        val m = regex.matcher(line)
-        if (m.find()) {
-          Some(m.replaceAll(replacement))
-        } else {
-          None
-        }
-      }.mkString("\n")
+      val lines = raw.split('\n')
+      if (lines.length > 1) {
+        lines.flatMap { line =>
+          val m = regex.matcher(line)
+          if (m.find()) {
+            Some(m.replaceAll(replacement))
+          } else {
+            None
+          }
+        }.mkString("\n")
+      } else {
+        regex.matcher(lines.head).replaceAll(replacement)
+      }
     } else {
       null
     }
@@ -491,4 +497,27 @@ case class PivotExpr(field: String, pivot: FieldExpr) extends DirectExpr {
   }
 
   def distinctValues(): Seq[String] = values.toSeq
+}
+
+/**
+ * Handles 48.max and 48.min
+ */
+case class PathExpr(field: String, path: Seq[String], op: String) extends DirectExpr {
+
+  private val (left, Seq(_, right @ _*)) = path.splitAt(path.indexOf(op))
+
+  override def apply(e: LogEntry): String = {
+    (e match {
+      case JposEntry(fields, _, _) if op == "min" => withPrefix(fields).headOption
+      case JposEntry(fields, _, _) => withPrefix(fields).lastOption
+      case _ => None
+    }).map(u => e(FieldPath((left :+ u) ++ right)))
+      .getOrElse(e(field))
+  }
+
+  private def withPrefix(fields: mutable.Map[String, String]): Seq[String] = {
+    fields.keySet.collect {
+      case FieldPath(k) if k.startsWith(left) && k.length > left.length => k(left.length)
+    }.toSeq.sorted
+  }
 }
