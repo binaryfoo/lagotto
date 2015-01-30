@@ -32,6 +32,8 @@
  group_concat(distinct(translate(mti)))
 * Deep custom dictionaries have pathetic performance
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
+* 48.x.2 = "a" stomps on 48.x.1 = "a" in dictionary. Useless
+* Dump dictionary as a table for sane MTI-NMIC combinations
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
