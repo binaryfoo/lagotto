@@ -67,6 +67,14 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
+  it should "calculate delays when converted to seconds" in {
+    val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,(delay millis as seconds)", testFile("a-bunch.xml"))
+    output shouldEqual """time,mti,11,(delay millis as seconds)
+                         |00:00:03.292,0200,1,0
+                         |00:00:04.992,0210,1,1
+                         |""".stripMargin
+  }
+
   it should "group rows when count field included in --csv option" in {
     val output = run("--csv", "time(mm:ss),count", testFile("a-bunch.xml"))
     output shouldEqual """time(mm:ss),count

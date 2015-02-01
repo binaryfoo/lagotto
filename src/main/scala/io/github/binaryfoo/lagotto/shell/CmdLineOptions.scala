@@ -23,7 +23,10 @@ case class CmdLineOptions (filters: Seq[LogFilter] = Seq(),
   
   def requiresDelayCalculation(): Boolean = includesDelayInFieldList() || includesDelayInFilters()
   
-  def includesDelayInFieldList(): Boolean = outputFields().contains(DelayExpr)
+  def includesDelayInFieldList(): Boolean = outputFields().collectFirst {
+      case DelayExpr => true
+      case e: ConvertExpr if e.expr == DelayExpr => true
+    }.isDefined
   
   def includesDelayInFilters(): Boolean = {
     filters.collectFirst {

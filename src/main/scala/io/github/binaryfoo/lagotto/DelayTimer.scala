@@ -2,6 +2,9 @@ package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
 
+/**
+ * Calculates the delay between two log entries.
+ */
 case class DelayTimer(current: LogEntry, previous: Option[LogEntry]) extends LogEntry {
 
   override def timestamp: DateTime = current.timestamp
