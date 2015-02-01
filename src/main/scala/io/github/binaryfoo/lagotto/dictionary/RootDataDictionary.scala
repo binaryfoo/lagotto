@@ -8,6 +8,8 @@ import io.github.binaryfoo.lagotto.dictionary.ConfigWrapper.RichConfig
 import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 
+import scala.collection.JavaConversions
+
 /**
  * Field number to human name translation.
  *
@@ -16,7 +18,7 @@ import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
  */
 case class RootDataDictionary(config: Config = ConfigFactory.load()) extends DataDictionary {
 
-  val chain: DataDictionary = buildChain() 
+  val chain: ChainedDictionary = buildChain()
 
   override def nameOf(nameType: NameType, field: String, context: LogEntry): Option[String] = {
     chain.nameOf(nameType, field, context)
@@ -34,31 +36,39 @@ case class RootDataDictionary(config: Config = ConfigFactory.load()) extends Dat
     chain.fieldForShortName(name, context)
   }
 
-  def buildChain(): DataDictionary = {
+  def nameChain(): Seq[String] = chain.nameChain()
+
+  private def buildChain(): ChainedDictionary = {
+    val dictionariesFromClasspath = JavaConversions.asScalaBuffer(config.getList("dictionaries"))
+    val defaultDictionary = ChainedDictionary(ConfigDataDictionary(dictionariesFromClasspath.head.asInstanceOf[ConfigObject].toConfig))
+    val customDirectory = new File(config.getString("custom.dictionaries.dir"))
+    val customDictionaries = customDictionaryFiles(customDirectory).flatMap { f =>
+      val custom = ConfigFactory.parseFile(f).resolve()
+      val dictionaries = JavaConversions.asScalaBuffer(custom.getList("dictionaries"))
+      load(dictionaries)
+    } ++ load(dictionariesFromClasspath.drop(1))
+
     customDictionaries.foldRight(defaultDictionary) { case ((filter, dictionary), tail) =>
       ChainedDictionary(dictionary, filter, tail)
     }
   }
 
-  private def defaultDictionary = ChainedDictionary(ConfigDataDictionary(config.getConfig("dictionaries.global")))
-
-  private def customDictionaries: Array[(LogFilter, DataDictionary)] = {
-    val customDirectory = new File(config.getString("custom.dictionaries.dir"))
-    val customDictionariesFromClasspath = config.getObjectOrDie("dictionaries").toSeq.filterNot { case (name, _) => name == "global"}
-    customDictionaryFiles(customDirectory).flatMap { f =>
-      val custom = ConfigFactory.parseFile(f)
-      val dictionaries = custom.getObjectOrDie("dictionaries")
-      load(dictionaries.toSeq)
-    } ++ load(customDictionariesFromClasspath)
+  private def load(dictionaries: Seq[ConfigValue]): Seq[(LogFilter, ConfigDataDictionary)] = {
+    dictionaries.map { case v =>
+      val dictionary = v.asInstanceOf[ConfigObject].toConfig
+      val name = dictionary.getString("name")
+      val origin = dictionary.origin().description()
+      val filter = filterFor(dictionary, origin)
+      filter -> ConfigDataDictionary(dictionary, s"$name@$origin")
+    }
   }
 
-  def load(dictionaries: Seq[(String, ConfigValue)]): Seq[(AndFilter, ConfigDataDictionary)] = {
-    dictionaries.map { case (name, v) =>
-      val dictionary = v.asInstanceOf[ConfigObject].toConfig
+  private def filterFor(dictionary: Config, origin: String): LogFilter = {
+    if (dictionary.hasPath("filter")) {
       val filterText = dictionary.getString("filter")
-      val origin = dictionary.origin().description()
-      val filter = LogFilters.NaiveParser.parseAndExpr(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from $origin"))
-      filter -> ConfigDataDictionary(dictionary, s"$name@$origin")
+      LogFilters.NaiveParser.parseAndExpr(filterText).getOrElse(throw new IAmSorryDave(s"Failed to parse filter '$filterText' from $origin"))
+    } else {
+      AllFilter
     }
   }
 

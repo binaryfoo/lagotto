@@ -29,6 +29,13 @@ case class ChainedDictionary(current: DataDictionary, filter: LogFilter = AllFil
      else None)
     .orElse(next.optionalTypeOf(field, context))
   }
+
+  def nameChain(): Seq[String] = {
+    Seq(current.toString) ++ (next match {
+      case c: ChainedDictionary => c.nameChain()
+      case ChainEnd => Seq.empty
+    })
+  }
 }
 
 object ChainEnd extends DataDictionary {

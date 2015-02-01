@@ -37,28 +37,42 @@ case class ConfigDataDictionary(config: Config, name: String = "root") extends D
    */
 
   override def nameOf(nameType: NameType, field: String, context: LogEntry): Option[String] = {
-    nameType match {
+    val hit = nameType match {
       case NameType.English => englishNames.get(field).orElse(nameOf(NameType.Short, field, context))
       case NameType.Short => shortNames.get(field)
       case NameType.Snake => shortNames.get(field).orElse(snakeNames.get(field))
       case NameType.Camel => shortNames.get(field).orElse(camelNames.get(field))
     }
+    if (hit.isDefined)
+      Debug.log(s"nameOf type $nameType field $field = ${hit.get} from $name")
+    hit
   }
 
   override def optionalTypeOf(field: String, context: LogEntry): Option[FieldType] = {
-    types.get(field)
+    val hit = types.get(field)
+    if (hit.isDefined)
+      Debug.log(s"typeOf field $field = ${hit.get} from $name")
+    hit
   }
 
   override def translateValue(field: String, context: LogEntry, value: String): Option[String] = {
     val table = translations.collectFirst {
       case Translations(f, filter, t) if f == field && filter(context) => t
     }
-    table.flatMap(_.get(value))
+    val hit = table.flatMap(_.get(value))
+    if (hit.isDefined)
+      Debug.log(s"translation of value $value in field $field = ${hit.get} from $name")
+    hit
   }
 
   override def fieldForShortName(name: String, context: LogEntry): Option[String] = {
-    reverseShortNames.get(name)
+    val hit = reverseShortNames.get(name)
+    if (hit.isDefined)
+      Debug.log(s"field '$name' = ${hit.get} from ${this.name}")
+    hit
   }
+
+  override def toString: String = name
 
   private def loadEnglishNames(config: Config): Map[String, String] = {
     val fields = config.entries("fields")

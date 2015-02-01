@@ -114,22 +114,24 @@ class DataDictionaryTest extends LagoTest {
   }
 
   "Range expression" should "be allowed in field path" in {
-    val config = ConfigFactory.load().withFallback(ConfigFactory.parseString(
-      """dictionaries {
-        |  global {
+    val config = ConfigFactory.parseString(
+      """dictionaries +=
+        |  {
+        |    name = confused
         |    fields {
         |      "48.48.{1..10}.1" = "Some Label"
         |    }
         |  }
-        |}""".stripMargin
-    ))
+        |""".stripMargin
+    ).withFallback(ConfigFactory.load()).resolve()
     val dict = RootDataDictionary(config)
     dict.englishNameOf("48.48.1.1", logEntry) shouldBe Some("Some Label")
   }
 
   "Custom dictionaries" should "be found in application.conf too" in {
-    val config = ConfigFactory.load().withFallback(ConfigFactory.parseFile(new File(testFile("test-dictionary.conf"))))
-    val customFromMergeDictionary = RootDataDictionary(config)
-    customFromMergeDictionary.englishNameOf("48.1", acmeLog) shouldBe Some("Important 48.1")
+    val config = ConfigFactory.parseFile(new File(testFile("test-dictionary.conf"))).withFallback(ConfigFactory.load()).resolve()
+    val appDictionary = RootDataDictionary(config)
+    appDictionary.shortNameOf("99", JposEntry("realm" -> acmeRealm, "0" -> "9999")) shouldBe Some("hot air balloons")
+    appDictionary.englishNameOf("48.1", acmeLog) shouldBe Some("Important 48.1")
   }
 }
