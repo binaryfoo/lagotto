@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto
 
+import java.text.DecimalFormat
 import java.util.regex.Pattern
 
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
@@ -420,12 +421,14 @@ object ConvertExpr {
     }
   }
 
+  private val oneDpFormat = new DecimalFormat("0.#")
+
   val millisToPeriod    = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(new Period(v.toLong))
   val timeToMillisOfDay = (v: String, input: TimeFormatter, output: TimeFormatter) => input.parseDateTime(v).getMillisOfDay.toString
   val timeToPeriod      = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(input.parseDateTime(v))
-  val microToSeconds    = (v: String, input: TimeFormatter, output: TimeFormatter) => (v.toLong / 1000000).toString
+  val microToSeconds    = (v: String, input: TimeFormatter, output: TimeFormatter) => oneDpFormat.format(v.toDouble / 1000000)
   val microToMillis     = (v: String, input: TimeFormatter, output: TimeFormatter) => (v.toLong / 1000).toString
-  val millisToSeconds   = (v: String, input: TimeFormatter, output: TimeFormatter) => (v.toLong / 1000).toString
+  val millisToSeconds   = (v: String, input: TimeFormatter, output: TimeFormatter) => oneDpFormat.format(v.toDouble / 1000)
 }
 
 case class ConvertAggregateExpr(field: String, expr: AggregateExpr, op: ConvertExpr.TimeConversionOp, input: TimeFormatter, output: TimeFormatter)

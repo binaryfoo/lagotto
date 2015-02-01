@@ -71,7 +71,7 @@ class MainTest extends LagoTest {
     val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,(delay millis as seconds)", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,(delay millis as seconds)
                          |00:00:03.292,0200,1,0
-                         |00:00:04.992,0210,1,1
+                         |00:00:04.992,0210,1,1.7
                          |""".stripMargin
   }
 
