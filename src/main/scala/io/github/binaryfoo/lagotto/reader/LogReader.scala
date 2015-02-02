@@ -13,7 +13,9 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scala.io.{BufferedSource, Source}
 
-case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) {
+trait SkeletonLogReader[T <: LogEntry] {
+
+  def progressMeter: ProgressMeter
 
   def readFilesOrStdIn(args: Iterable[String]): Iterator[T] = {
     if (args.isEmpty)
@@ -29,6 +31,8 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     files.toIterator.flatMap(f => read(open(f), f.getName))
   }
 
+  def read(source: Source, sourceName: String = ""): Iterator[T]
+
   private def open(f: File): BufferedSource = {
     if (f.getName.endsWith(".gz"))
       Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(f))))
@@ -36,7 +40,20 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       Source.fromFile(f)
   }
 
-  def read(source: Source, sourceName: String = ""): Iterator[T] = new LogEntryIterator(source, sourceName, progressMeter)
+}
+
+/**
+ * Kicks off a daemon thread to read lines. Parsing is delegated to the default ExecutionContext.
+ *
+ * @param strict Whinge with an exception on unexpected input
+ * @param keepFullText If false keep only the parsed fields. If true keep the full text of every record. Maybe this should be removed.
+ * @param progressMeter
+ * @param logType
+ * @tparam T
+ */
+case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
+
+  override def read(source: Source, sourceName: String = ""): Iterator[T] = new LogEntryIterator(source, sourceName, progressMeter)
 
   private val processors = Runtime.getRuntime.availableProcessors()
 
@@ -155,6 +172,24 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
       }
     }
 
+  }
+}
+
+case class SingleThreadLogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
+  override def read(source: Source, sourceName: String): Iterator[T] = new AbstractIterator[T] {
+
+    private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
+    private var current = readNext()
+
+    override def next(): T = {
+      val c = current
+      current = readNext()
+      c
+    }
+
+    override def hasNext: Boolean = current != null
+
+    private def readNext(): T = logType.apply(lines)
   }
 }
 

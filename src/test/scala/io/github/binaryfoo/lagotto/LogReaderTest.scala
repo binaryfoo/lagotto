@@ -4,7 +4,7 @@ import java.io.File
 
 import io.github.binaryfoo.lagotto.LogEntry.IterableOfLogEntry
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
-import io.github.binaryfoo.lagotto.reader.LogReader
+import io.github.binaryfoo.lagotto.reader.{SingleThreadLogReader, LogReader}
 
 class LogReaderTest extends LagoTest {
 
@@ -78,7 +78,23 @@ class LogReaderTest extends LagoTest {
                       |00:00:04.100,a-second-bunch.xml #2""".stripMargin
   }
 
-  def readEntries(s: String): Iterator[JposEntry] = {
+  "A single thread log reader" should "read a single entry" in {
+    val entries = SingleThreadLogReader().read(sourceFrom("basic.xml")).toList
+    val head = entries.head
+    head.at shouldEqual "Mon Nov 24 00:00:03 EST 2014.292"
+    head("7") shouldEqual "1124000003"
+  }
+
+  it should "tag each record with a line starting line number" in {
+    val entries = SingleThreadLogReader().read(new File(testFile("a-bunch.xml")))
+    val csv = entries.toCsv("48.1", "file")
+    csv shouldEqual """a-bunch.xml #1,a-bunch.xml:3
+                      |a-bunch.xml #2,a-bunch.xml:15
+                      |a-bunch.xml #3,a-bunch.xml:27
+                      |a-bunch.xml #4,a-bunch.xml:39""".stripMargin
+  }
+
+  private def readEntries(s: String): Iterator[JposEntry] = {
     LogReader().read(sourceFrom(s))
   }
 
