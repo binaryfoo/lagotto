@@ -176,21 +176,23 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 }
 
 case class SingleThreadLogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
-  override def read(source: Source, sourceName: String): Iterator[T] = new AbstractIterator[T] {
+  override def read(source: Source, sourceName: String): Iterator[T] = new EntryIterator[T](source, sourceName, strict, keepFullText, logType)
+}
 
-    private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
-    private var current = readNext()
+class EntryIterator[T <: LogEntry](val source: Source, val sourceName: String, val strict: Boolean = false, val keepFullText: Boolean = true, logType: LogType[T] = JposLog) extends AbstractIterator[T] {
 
-    override def next(): T = {
-      val c = current
-      current = readNext()
-      c
-    }
+  private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
+  private var current = readNext()
 
-    override def hasNext: Boolean = current != null
-
-    private def readNext(): T = logType.apply(lines)
+  override def next(): T = {
+    val c = current
+    current = readNext()
+    c
   }
+
+  override def hasNext: Boolean = current != null
+
+  private def readNext(): T = logType.apply(lines)
 }
 
 /**
