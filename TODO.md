@@ -39,6 +39,9 @@
 * Convert millis delay to HH:mm like other time formats
 * Remote -persist from gnuplot
  for i in {1..4}; do echo "switch $i"; lago se$i*.gz --in-format gc -t datetime,delay,pause --gnuplot $i-gc ; done
+* Read .csv as --in-format
+* Pair on ip,mti,nmic,time threshold?
+* Can --progress estimate end time with one large file?
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
