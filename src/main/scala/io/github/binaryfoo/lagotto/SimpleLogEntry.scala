@@ -1,19 +1,20 @@
 package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormatter
 
 import scala.collection.mutable
 
 /**
  * Ceremony around a Map.
  */
-case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, String], private val timeFormat: DateTimeFormatter, lines: String, source: SourceRef = null) extends LogEntry {
+case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, String], private val timeFormat: Option[TimeExpression] = None, lines: String, source: SourceRef = null) extends LogEntry {
 
   val timestamp: DateTime = {
-    _fields.get("timestamp")
-      .map(timeFormat.parseDateTime)
+    timeFormat.map { case TimeExpression(expr, formatter) =>
+      _fields.get(expr)
+      .map(formatter.parseDateTime)
       .getOrElse(throw new IAmSorryDave(s"Missing 'timestamp' in ${_fields}"))
+    }.orNull
   }
 
   val fields = _fields.withDefault {

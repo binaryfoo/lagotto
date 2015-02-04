@@ -101,6 +101,7 @@ trait FieldExpr extends FieldAccessor[LogEntry] {
    * The source text of this expression. This name is confusing. Maybe expr or sourceText would be better.
    */
   def field: String
+  def contains(other: FieldExpr): Boolean = this == other
   override def toString(): String = field
 }
 
@@ -179,6 +180,18 @@ case class AggregateExpr(field: String, op: AggregateOp) extends FieldExpr {
     }
     e(field)
   }
+
+  /**
+   * The field being aggregated. Optional because count doesn't have to act on a single field.
+   */
+  def expr: Option[DirectExpr] = {
+    op match {
+      case e: FieldBasedAggregateOp => Some(e.expr)
+      case _ => None
+    }
+  }
+
+  override def contains(other: FieldExpr) = expr.exists(e => e.contains(other))
 }
 
 object AggregateExpr {
@@ -388,6 +401,7 @@ trait ConvertExpr {
   def op: ConvertExpr.TimeConversionOp
   def input: TimeFormatter
   def output: TimeFormatter
+  def contains(other: FieldExpr): Boolean = expr.contains(other)
 
   def calculate(e: LogEntry): String = {
     val value = expr(e)
@@ -406,13 +420,19 @@ object ConvertExpr {
     val (op: TimeConversionOp, input: TimeFormatter, output: TimeFormatter) = (expr.field, from, to) match {
       case (_, "millis", "period") => (millisToPeriod, DefaultDateTimeFormat, DefaultDateTimeFormat)
       case (_, "millis", TimeFormatter(f)) => (millisToPeriod, f, f)
+      case (_, "ms", TimeFormatter(f)) => (millisToPeriod, f, f)
       case (_, null, TimeFormatter(f)) => (millisToPeriod, f, f)
       case (TimeFormatter(inputFormat), null, "millis") => (timeToMillisOfDay, inputFormat, inputFormat)
+      case (TimeFormatter(inputFormat), null, "ms") => (timeToMillisOfDay, inputFormat, inputFormat)
       case (_, "time", TimeFormatter(outputFormat)) => (timeToPeriod, DefaultTimeFormat, outputFormat)
       case (_, "time", "millis") => (timeToMillisOfDay, DefaultDateTimeFormat, DefaultDateTimeFormat)
+      case (_, "time", "ms") => (timeToMillisOfDay, DefaultDateTimeFormat, DefaultDateTimeFormat)
       case (_, "micro", "seconds") => (microToSeconds, DefaultDateTimeFormat, DefaultDateFormat)
+      case (_, "us", "s") => (microToSeconds, DefaultDateTimeFormat, DefaultDateFormat)
       case (_, "micro", "millis") => (microToMillis, DefaultDateTimeFormat, DefaultDateFormat)
+      case (_, "us", "ms") => (microToMillis, DefaultDateTimeFormat, DefaultDateFormat)
       case (_, "millis", "seconds") => (millisToSeconds, DefaultDateTimeFormat, DefaultDateFormat)
+      case (_, "ms", "s") => (millisToSeconds, DefaultDateTimeFormat, DefaultDateFormat)
       case _ => throw new IAmSorryDave(s"Unknown conversion $field")
     }
     expr match {
@@ -434,10 +454,12 @@ object ConvertExpr {
 case class ConvertAggregateExpr(field: String, expr: AggregateExpr, op: ConvertExpr.TimeConversionOp, input: TimeFormatter, output: TimeFormatter)
   extends ConvertExpr with CalculationOverAggregates {
   override def dependencies(): Seq[AggregateExpr] = Seq(expr)
+  override def contains(other: FieldExpr): Boolean = super[ConvertExpr].contains(other)
 }
 
 case class ConvertDirectExpr(field: String, expr: DirectExpr, op: ConvertExpr.TimeConversionOp, input: TimeFormatter, output: TimeFormatter)
   extends ConvertExpr with DirectCalculationExpr {
+  override def contains(other: FieldExpr): Boolean = super[ConvertExpr].contains(other)
 }
 
 /**

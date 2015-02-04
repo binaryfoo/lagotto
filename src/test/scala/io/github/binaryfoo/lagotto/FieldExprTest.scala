@@ -88,6 +88,9 @@ class FieldExprTest extends LagoTest {
   "(lifespan millis as time(HH:mm))" should "convert millis to a time period with only hour and minute fields" in {
     val expr = expressionFor("(lifespan millis as time(HH:mm))")
     expr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00"
+
+    val shortExpr = expressionFor("(lifespan ms as time(HH:mm))")
+    shortExpr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00"
   }
 
   "(max(lifespan) millis as time(HH:mm))" should "confess to containing an aggregate expression" in {
@@ -99,22 +102,33 @@ class FieldExprTest extends LagoTest {
   "(time(HH:mm) as millis)" should "convert time to millis period" in {
     val expr = expressionFor("(time(HH:mm) as millis)")
     expr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
+
+    val shortExpr = expressionFor("(time(HH:mm) as ms)")
+    shortExpr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt)) shouldBe "3600000"
   }
 
   "(max(responseTime) micro as seconds)" should "convert microseconds to seconds" in {
     val expr = expressionFor("(max(responseTime) micro as seconds)")
-//    expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20005046"))) shouldBe "20"
     expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20105046"))) shouldBe "20.1"
+
+    val shortExpr = expressionFor("(max(responseTime) us as s)")
+    shortExpr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20105046"))) shouldBe "20.1"
   }
 
   "(max(responseTime) micro as millis)" should "convert microseconds to millis" in {
     val expr = expressionFor("(max(responseTime) micro as millis)")
     expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20005046"))) shouldBe "20005"
+
+    val shortExpr = expressionFor("(max(responseTime) us as ms)")
+    shortExpr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "20005046"))) shouldBe "20005"
   }
 
   "(max(responseTime) millis as seconds)" should "convert millis to seconds" in {
     val expr = expressionFor("(max(responseTime) millis as seconds)")
     expr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "21005"))) shouldBe "21"
+
+    val shortExpr = expressionFor("(max(responseTime) ms as s)")
+    shortExpr(AggregateLogEntry(Map(), Seq("max(responseTime)" -> "21005"))) shouldBe "21"
   }
 
   "(calc(timestamp-lifespan) as millis)" should "convert the calc output to millis period" in {

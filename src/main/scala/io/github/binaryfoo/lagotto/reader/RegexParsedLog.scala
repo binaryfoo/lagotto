@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.reader
 
 import java.util.regex.Pattern
 
-import io.github.binaryfoo.lagotto.{SimpleLogEntry, SourceRef}
+import io.github.binaryfoo.lagotto._
 import org.joda.time.format.DateTimeFormat
 
 import scala.collection.mutable
@@ -16,7 +16,7 @@ case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: L
 
   private val compiledPattern = Pattern.compile(pattern)
   private val groupNames = extractGroupNames(compiledPattern)
-  private val dateTimeFormat = DateTimeFormat.forPattern(timeFormat).withOffsetParsed()
+  private val timeExpression = TimeExpression("timestamp", BasicJodaFormatter(DateTimeFormat.forPattern(timeFormat).withOffsetParsed()))
 
   override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
 
@@ -40,7 +40,7 @@ case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: L
     groupNames.foreach { name =>
       fields.put(name, matcher.group(name))
     }
-    SimpleLogEntry(fields, dateTimeFormat, s, source)
+    SimpleLogEntry(fields, Some(timeExpression), s, source)
   }
 
   private def extractGroupNames(pattern: Pattern): Seq[String] = {

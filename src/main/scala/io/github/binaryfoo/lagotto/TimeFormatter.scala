@@ -9,7 +9,7 @@ trait TimeFormatter {
   def parseDateTime(s: String): DateTime
 }
 
-class HumanTimeFormatter(val pattern: String) extends TimeFormatter {
+case class HumanTimeFormatter(pattern: String) extends TimeFormatter {
   type TimestampPrinter = (DateTime, DateTimeFormatter) => String
 
   val (jodaPattern, printer): (String, TimestampPrinter) = pattern match {
@@ -23,6 +23,12 @@ class HumanTimeFormatter(val pattern: String) extends TimeFormatter {
   override def print(timestamp: DateTime): String = printer(timestamp, jodaFormatter)
   override def print(period: Period): String = periodFormatter.print(period)
   override def parseDateTime(s: String) = jodaFormatter.parseDateTime(s)
+}
+
+case class BasicJodaFormatter(pattern: DateTimeFormatter) extends TimeFormatter {
+  override def print(timestamp: DateTime): String = pattern.print(timestamp)
+  override def parseDateTime(s: String): DateTime = pattern.parseDateTime(s)
+  override def print(period: Period): String = period.toString
 }
 
 object EpochTimeFormatter extends TimeFormatter {
@@ -70,6 +76,14 @@ object TimeFormatter {
    * Unapply or die.
    */
   def formatterFor(expr: String) = unapply(expr).get
+}
+
+case class TimeExpression(expr: String, formatter: TimeFormatter)
+
+object TimeExpression {
+  def unapply(expr: String): Option[TimeExpression] = {
+    TimeFormatter.unapply(expr).map(f => TimeExpression(expr, f))
+  }
 }
 
 object PeriodFormatTranslator {

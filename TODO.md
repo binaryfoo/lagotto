@@ -32,14 +32,12 @@
  group_concat(distinct(translate(mti)))
 * Deep custom dictionaries have pathetic performance
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
-* 48.x.2 = "a" stomps on 48.x.1 = "a" in dictionary. Useless
+* Remove fields vs subfields distinction from dictionaries
 * Dump dictionary as a table for sane MTI-NMIC combinations
-* Allow "file" as a property in SimpleLogEntry
 * Add alias like SQL expr as 'sane name'
-* Convert millis delay to HH:mm like other time formats
 * Remote -persist from gnuplot
  for i in {1..4}; do echo "switch $i"; lago se$i*.gz --in-format gc -t datetime,delay,pause --gnuplot $i-gc ; done
-* Read .csv as --in-format
+* Make xpath() a FieldExpr. Avoids need to cache expressions
 * Pair on ip,mti,nmic,time threshold?
 * Can --progress estimate end time with one large file?
 

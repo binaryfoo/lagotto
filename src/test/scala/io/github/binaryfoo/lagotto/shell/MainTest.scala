@@ -74,6 +74,37 @@ class MainTest extends LagoTest {
                          |00:00:04.992,0210,1,1.7
                          |""".stripMargin
   }
+  it should "calculate delays when included in aggregate" in {
+    val individual = run("--csv", "delay", testFile("a-bunch.xml"))
+    individual shouldEqual """delay
+                             |0
+                             |1000
+                             |600
+                             |100
+                             |""".stripMargin
+    val average = run("--csv", "avg(delay)", testFile("a-bunch.xml"))
+    average shouldEqual """avg(delay)
+                         |425
+                         |""".stripMargin
+    val bounds = run("--csv", "min(delay),max(delay)", testFile("a-bunch.xml"))
+    bounds shouldEqual """min(delay),max(delay)
+                         |0,1000
+                         |""".stripMargin
+  }
+
+  it should "calculate delays for conversion of max(delay)" in {
+    val output = run("-f", "socket=10.0.0.1:4321", "--csv", "(max(delay) millis as seconds)", testFile("a-bunch.xml"))
+    output shouldEqual """(max(delay) millis as seconds)
+                         |1.7
+                         |""".stripMargin
+  }
+
+  it should "calculate delays for max of converted delay" in {
+    val output = run("--csv", "max((delay millis as seconds))", testFile("a-bunch.xml"))
+    output shouldEqual """max((delay millis as seconds))
+                         |1
+                         |""".stripMargin
+  }
 
   it should "group rows when count field included in --csv option" in {
     val output = run("--csv", "time(mm:ss),count", testFile("a-bunch.xml"))
@@ -733,6 +764,15 @@ class MainTest extends LagoTest {
       """time,pause,before,after,heap
         |10:18:13.300,2.42,2804197,1454927,4170176
         |15:16:55.969,2.37,2798349,1171035,4166784
+        |""".stripMargin
+  }
+
+  "csv" should "be readable with --in-format=csv" in {
+    val output = run("--csv", "type,count", "--in-format", "csv", testFile("some.csv"))
+    output shouldBe
+      """type,count
+        |buy,2
+        |sell,1
         |""".stripMargin
   }
 
