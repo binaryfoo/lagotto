@@ -9,7 +9,7 @@ import scala.collection.mutable
 /**
  * Stateful. Not thread safe. Stores header when it sees line 1.
  */
-object CsvLog extends LogType[SimpleLogEntry] {
+class XsvLog(val delimiter: Char = ',') extends LogType[SimpleLogEntry] {
 
   override type P = TextAndSource
 
@@ -17,7 +17,7 @@ object CsvLog extends LogType[SimpleLogEntry] {
 
   override def readLinesForNextRecord(it: SourceLineIterator): TextAndSource = {
     if (it.lineNumber == 0 && it.hasNext) {
-      val fields = it.next().split(',')
+      val fields = split(it.next())
       val timeFormat = fields.collectFirst {
         case TimeExpression(formatter) => formatter
       }
@@ -34,9 +34,12 @@ object CsvLog extends LogType[SimpleLogEntry] {
   override def parse(s: TextAndSource): SimpleLogEntry = {
     val Header(headerFields, timeFormat) = header.get()
     val fields = new mutable.LinkedHashMap[String, String]()
-    fields ++= headerFields.zip(s.text.split(','))
+    fields ++= headerFields.zip(split(s.text))
     SimpleLogEntry(fields, timeFormat, s.text, s.source)
   }
+
+  @inline
+  private def split(line: String) = line.split(delimiter)
 
   case class Header(fields: Seq[String], timeFormat: Option[TimeExpression])
 }

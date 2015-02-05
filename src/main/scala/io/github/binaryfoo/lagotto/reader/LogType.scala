@@ -72,6 +72,7 @@ object LogTypes {
     val constructor = Class.forName(name).getConstructors()(0)
     val preparedArgs = constructor.getParameterTypes.zip(args).map {
       case (t, v) if t == classOf[String] => v
+      case (t, v) if t == classOf[Char] => Character.valueOf(v.charAt(0))
       case (t, v) if t == classOf[LineRecogniser] => newObject[LineRecogniser](v)
     }
     constructor.newInstance(preparedArgs :_*).asInstanceOf[LogType[LogEntry]]

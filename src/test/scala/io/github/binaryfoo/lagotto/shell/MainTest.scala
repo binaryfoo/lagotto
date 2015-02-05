@@ -776,6 +776,15 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "tsv" should "be readable with --in-format=csv" in {
+    val output = run("--csv", "type,count", "--in-format", "tsv", testFile("some.tsv"))
+    output shouldBe
+      """type,count
+        |buy,2
+        |sell,1
+        |""".stripMargin
+  }
+
   "silly number of files" should "be handled" in {
     val tooManyFiles = (1 to 1025)./:(new ArrayBuffer[String])((buf, i) => buf += s"file_$i.log")
     the [FileNotFoundException] thrownBy {
