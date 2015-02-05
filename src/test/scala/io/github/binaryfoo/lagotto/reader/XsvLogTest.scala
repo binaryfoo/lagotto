@@ -30,5 +30,5 @@ class XsvLogTest extends LagoTest {
     csvLog.apply(iterator).timestamp shouldBe new DateTime(2015, 1, 17, 16, 12, 18, 483)
   }
 
-  private def iteratorOver(text: String) = new SourceLineIterator(text.split('\n').iterator, "testSource", true, true)
+  private def iteratorOver(text: String) = new LineIterator(inputStreamFrom(text), "testSource", true, true)
 }

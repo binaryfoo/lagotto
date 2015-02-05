@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.reader
 
-import java.io.{BufferedInputStream, File, FileInputStream}
+import java.io._
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.zip.GZIPInputStream
 
@@ -19,7 +19,7 @@ trait SkeletonLogReader[T <: LogEntry] {
 
   def readFilesOrStdIn(args: Iterable[String]): Iterator[T] = {
     if (args.isEmpty)
-      read(new BufferedSource(System.in))
+      read(System.in)
     else
       read(args.map(new File(_)))
   }
@@ -31,13 +31,29 @@ trait SkeletonLogReader[T <: LogEntry] {
     files.toIterator.flatMap(f => read(open(f), f.getName))
   }
 
-  def read(source: Source, sourceName: String = ""): Iterator[T]
+  /**
+   * @deprecated Use read(InputStream,String) instead.
+   */
+  def read(source: Source): Iterator[T] = read(source, "")
 
-  private def open(f: File): BufferedSource = {
-    if (f.getName.endsWith(".gz"))
-      Source.fromInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(f))))
-    else
-      Source.fromFile(f)
+  /**
+   * @deprecated Use read(InputStream,String) instead.
+   */
+  def read(source: Source, sourceName: String): Iterator[T] = {
+    source match {
+      case s: BufferedSource =>
+        val field = classOf[BufferedSource].getDeclaredField("inputStream")
+        field.setAccessible(true)
+        read(field.get(s).asInstanceOf[InputStream], sourceName)
+    }
+  }
+
+  def read(in: InputStream, sourceName: String = ""): Iterator[T]
+
+  private def open(f: File): InputStream = {
+    val in = new BufferedInputStream(new FileInputStream(f))
+    if (f.getName.endsWith(".gz")) new GZIPInputStream(in)
+    else in
   }
 
 }
@@ -53,13 +69,13 @@ trait SkeletonLogReader[T <: LogEntry] {
  */
 case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
 
-  override def read(source: Source, sourceName: String = ""): Iterator[T] = new LogEntryIterator(source, sourceName, progressMeter)
+  override def read(source: InputStream, sourceName: String = ""): Iterator[T] = new LogEntryIterator(source, sourceName, progressMeter)
 
   private val processors = Runtime.getRuntime.availableProcessors()
 
-  class LogEntryIterator(source: Source, sourceName: String = "", progressMeter: ProgressMeter) extends AbstractIterator[T] {
+  class LogEntryIterator(source: InputStream, sourceName: String = "", progressMeter: ProgressMeter) extends AbstractIterator[T] {
 
-    private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
+    private val lines = new LineIterator(source, sourceName, strict, keepFullText)
     private var recordCount = 0
     private val queue = new ArrayBlockingQueue[Future[T]](processors * processors * 2)
     private var current: T = null.asInstanceOf[T]
@@ -176,12 +192,15 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 }
 
 case class SingleThreadLogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
-  override def read(source: Source, sourceName: String): Iterator[T] = new EntryIterator[T](source, sourceName, strict, keepFullText, logType)
+  override def read(source: InputStream, sourceName: String): Iterator[T] = new EntryIterator[T](source, sourceName, strict, keepFullText, logType)
 }
 
-class EntryIterator[T <: LogEntry](val source: Source, val sourceName: String, val strict: Boolean = false, val keepFullText: Boolean = true, logType: LogType[T] = JposLog) extends AbstractIterator[T] {
+/**
+ * Each entry may consume more than one line.
+ */
+class EntryIterator[T <: LogEntry](val source: InputStream, val sourceName: String, val strict: Boolean = false, val keepFullText: Boolean = true, logType: LogType[T] = JposLog) extends AbstractIterator[T] {
 
-  private val lines = new SourceLineIterator(source.getLines(), sourceName, strict, keepFullText)
+  private val lines = new LineIterator(source, sourceName, strict, keepFullText)
   private var current = readNext()
 
   override def next(): T = {
@@ -198,38 +217,49 @@ class EntryIterator[T <: LogEntry](val source: Source, val sourceName: String, v
 /**
  * Adds a line number, name and a single line push back over Source.getLines().
  */
-class SourceLineIterator(val lines: Iterator[String], val sourceName: String, val strict: Boolean, val keepFullText: Boolean) extends AbstractIterator[String] {
+class LineIterator(in: InputStream, val sourceName: String, val strict: Boolean, val keepFullText: Boolean) extends AbstractIterator[String] with BufferedIterator[String] {
 
-  private var lineNo = 0
-  private var sleeve: Option[String] = None
+  private val progressIn = new ProgressInputStream(in)
+  private val lines = new BufferedReader(new InputStreamReader(progressIn))
+  private var linesRead = 0
+  private var currentLineNo = 0
+  private var current: String = null
 
-  def lineNumber: Int = lineNo
+  readNext()
 
-  def sourceRef: SourceRef = SourceRef(sourceName, lineNo)
+  /**
+   * Zero when next() has not been called.
+   * After next() has been called, the line number for the most recently returned value of next().
+   */
+  def lineNumber: Int = currentLineNo
 
-  def hasNext = sleeve.isDefined || lines.hasNext
+  /**
+   * @return Line number and file name for most recently returned value of next().
+   */
+  def sourceRef: SourceRef = SourceRef(sourceName, currentLineNo)
 
-  def next() = {
-    lineNo += 1
-    if (sleeve.isDefined) {
-      val line = sleeve.get
-      sleeve = None
-      line
-    } else {
-      lines.next()
+  /**
+   * @return Line number and file name for most recently returned value of head.
+   */
+  def headRef: SourceRef = SourceRef(sourceName, linesRead)
+
+  def hasNext = current != null || readNext()
+
+  def next(): String = {
+    val c = current
+    currentLineNo = linesRead
+    readNext()
+    c
+  }
+
+  def head: String = current
+
+  private def readNext(): Boolean = {
+    current = lines.readLine()
+    val readOne = current != null
+    if (readOne) {
+      linesRead += 1
     }
-  }
-
-  def peek() = {
-    val line = next()
-    pushBack(line)
-    line
-  }
-
-  def pushBack(line: String) = {
-    if (sleeve.isDefined)
-      throw new IllegalStateException(s"Already one line pushed back '${sleeve.get}'")
-    sleeve = Some(line)
-    lineNo -= 1
+    readOne
   }
 }

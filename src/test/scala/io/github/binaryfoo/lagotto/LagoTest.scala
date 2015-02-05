@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto
 
+import java.io.ByteArrayInputStream
 import java.text.SimpleDateFormat
 import java.util.{GregorianCalendar, TimeZone}
 
@@ -30,6 +31,8 @@ class LagoTest
   }
 
   def iteratorOver[T](e: T*): Iterator[T] = List(e :_*).iterator
+
+  def inputStreamFrom(s: String*) = new ByteArrayInputStream(s.mkString("\n").getBytes)
 
   def configWithTestDictionary = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources/"))
 

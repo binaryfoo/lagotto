@@ -18,16 +18,16 @@ import JavaConversions.asScalaSet
  *
  * @tparam T The specific type of LogEntry.
  */
-trait LogType[+T <: LogEntry] extends (SourceLineIterator => T) {
+trait LogType[+T <: LogEntry] extends (LineIterator => T) {
   type P <: Sourced
 
   def canParse(firstLine: String): Boolean = true
 
-  def readLinesForNextRecord(it: SourceLineIterator): P
+  def readLinesForNextRecord(it: LineIterator): P
 
   def parse(s: P): T
 
-  def apply(it: SourceLineIterator): T = {
+  def apply(it: LineIterator): T = {
     val record = readLinesForNextRecord(it)
     if (record != null) parse(record)
     else null.asInstanceOf[T]

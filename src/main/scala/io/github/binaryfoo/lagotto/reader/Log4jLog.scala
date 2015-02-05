@@ -9,16 +9,15 @@ object Log4jLog extends LogType[Log4jEntry] {
 
   type P = TextAndSource
 
-  override def readLinesForNextRecord(lines: SourceLineIterator): TextAndSource = {
+  override def readLinesForNextRecord(lines: LineIterator): TextAndSource = {
     val buffer = new StringBuffer()
-    for (line <- lines) {
-      if (buffer.length() > 0 && line.startsWith("[")) {
-        lines.pushBack(line)
+    while (lines.hasNext) {
+      if (buffer.length() > 0 && lines.head.startsWith("[")) {
         return newLineSet(lines, buffer)
       } else {
         if (buffer.length() > 0)
           buffer.append('\n')
-        buffer.append(line)
+        buffer.append(lines.next())
       }
     }
     if (buffer.length() > 0) newLineSet(lines, buffer)
@@ -26,7 +25,7 @@ object Log4jLog extends LogType[Log4jEntry] {
   }
 
   @inline
-  private def newLineSet(lines: SourceLineIterator, buffer: StringBuffer): TextAndSource = {
+  private def newLineSet(lines: LineIterator, buffer: StringBuffer): TextAndSource = {
     TextAndSource(buffer.toString, lines.sourceRef)
   }
 

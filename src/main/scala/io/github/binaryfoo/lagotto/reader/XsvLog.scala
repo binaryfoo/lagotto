@@ -15,7 +15,7 @@ class XsvLog(val delimiter: Char = ',') extends LogType[SimpleLogEntry] {
 
   private val header: AtomicReference[Header] = new AtomicReference[Header]()
 
-  override def readLinesForNextRecord(it: SourceLineIterator): TextAndSource = {
+  override def readLinesForNextRecord(it: LineIterator): TextAndSource = {
     if (it.lineNumber == 0 && it.hasNext) {
       val fields = split(it.next())
       val timeFormat = fields.collectFirst {

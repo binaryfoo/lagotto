@@ -20,7 +20,7 @@ case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: L
 
   override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
 
-  override def readLinesForNextRecord(it: SourceLineIterator): TextAndSource = {
+  override def readLinesForNextRecord(it: LineIterator): TextAndSource = {
     while (it.hasNext) {
       val line = it.next()
       if (lineRecogniser.isLogEntry(line))

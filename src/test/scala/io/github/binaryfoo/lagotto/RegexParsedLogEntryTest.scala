@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.reader.{SourceLineIterator, GcLogLineRecogniser, RegexParsedLog, AutoDetectLog}
+import io.github.binaryfoo.lagotto.reader.{LineIterator, GcLogLineRecogniser, RegexParsedLog, AutoDetectLog}
 import org.joda.time.DateTime
 
 class RegexParsedLogEntryTest extends LagoTest {
@@ -31,7 +31,7 @@ class RegexParsedLogEntryTest extends LagoTest {
 
   "GcLogLineRecogniser" should "ignore boring lines" in {
     val log = new RegexParsedLog(".*", "yyyy-MM-dd", GcLogLineRecogniser)
-    val iterator = new SourceLineIterator(Seq("one", "2015 real=", "three").iterator, "", false, false)
+    val iterator = new LineIterator(inputStreamFrom("one", "2015 real=", "three"), "", false, false)
     val lineSet = log.readLinesForNextRecord(iterator)
     lineSet.text shouldBe "2015 real="
 
