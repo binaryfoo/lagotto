@@ -214,7 +214,7 @@ object AggregateExpr {
       val aggregates = aggregateFields.map(e => (e.field, e.op.copy()))
       new AggregateLogEntryBuilder(k.toMap, aggregates)
     }
-    OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).values.iterator
+    OrderedGroupBy.groupByOrdered(s, keyFor, newBuilder).iterator
   }
 }
 
