@@ -17,7 +17,7 @@ class OptionsParser(val dictionary: DataDictionary) {
 
   def parse(args: Array[String]): Option[CmdLineOptions] = {
 
-    val parser = new scopt.OptionParser[CmdLineOptions]("plog") {
+    val parser = new scopt.OptionParser[CmdLineOptions]("lago") {
       head(s"lagotto", "0.0.1")
 
       help("help") text "Show usage"

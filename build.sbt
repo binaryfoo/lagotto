@@ -24,6 +24,8 @@ libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.9" % "test"
 
 mainClass in assembly := Some("io.github.binaryfoo.lagotto.shell.Main")
 
+assemblyOption in assembly := (assemblyOption in assembly).value.copy(prependShellScript = Some(sbtassembly.AssemblyPlugin.defaultShellScript))
+
 artifact in (Compile, assembly) := {
   val art = (artifact in (Compile, assembly)).value
   art.copy(`classifier` = Some("assembly"))
