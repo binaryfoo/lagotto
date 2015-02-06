@@ -1,9 +1,9 @@
 package io.github.binaryfoo.lagotto
 
-import java.io.{PrintStream, ByteArrayOutputStream}
+import java.io.{ByteArrayOutputStream, PrintStream}
 
 import org.joda.time.DateTimeUtils
-import org.scalatest.{BeforeAndAfter, Matchers, FlatSpec}
+import org.scalatest.BeforeAndAfter
 
 class ConsoleProgressMeterTest extends LagoTest with BeforeAndAfter {
 
@@ -14,20 +14,20 @@ class ConsoleProgressMeterTest extends LagoTest with BeforeAndAfter {
     meter.startRun(10)
     meter.startFile("number-1.log")
     DateTimeUtils.setCurrentMillisFixed(start + 1000)
-    meter.finishFile(10000)
+    meter.finishFile(10000, 0)
     meter.startFile("number-2.log")
     DateTimeUtils.setCurrentMillisFixed(start + 1000)
-    meter.finishFile(1)
+    meter.finishFile(1, 0)
     meter.startFile("3.log")
     DateTimeUtils.setCurrentMillisFixed(start + 61001)
-    meter.finishFile(1)
+    meter.finishFile(1, 0)
     meter.finish()
 
     sane(out) shouldEqual "\n" +
-                          "\\rOn number-1.log 1 of 10 (0 logs/ms) T+ 0s T- 0s\n" +
-                          "\\rOn number-2.log 2 of 10 (10 logs/ms) T+ 1s T- 8s\n" +
-                          "\\rOn 3.log 3 of 10 (1 logs/ms) T+ 1s T-           \n" +
-                          "\\rTook 1 minute 1s for 10002 logs (0:0:10/ms)\n"
+                          "\\rOn number-1.log 1 of 10 (0 logs/ms) (0B/ms) T+ 0s T- 0s\n" +
+                          "\\rOn number-2.log 2 of 10 (10 logs/ms) (0B/ms) T+ 1s T- 8s\n" +
+                          "\\rOn 3.log 3 of 10 (10 logs/ms) (0B/ms) T+ 1s T-          \n" +
+                          "\\rTook 1 minute 1s for 10k logs (0:0:10/ms) 0B (0:0:0B/ms)\n"
   }
 
   it should "write progress within a file" in {
@@ -38,11 +38,11 @@ class ConsoleProgressMeterTest extends LagoTest with BeforeAndAfter {
     meter.startRun(2)
     meter.startFile("number-1.log")
     DateTimeUtils.setCurrentMillisFixed(start + 1000)
-    meter.progressInFile(10000)
+    meter.progressInFile(10000, 0)
 
     sane(out) shouldEqual "\n" +
-      "\\rOn number-1.log 1 of 2 (0 logs/ms) T+ 0s T- 0s\n" +
-      "\\rOn number-1.log 1 of 2 (10 logs/ms) T+ 1s T- 0s"
+      "\\rOn number-1.log 1 of 2 (0 logs/ms) (0B/ms) T+ 0s T- 0s\n" +
+      "\\rOn number-1.log 1 of 2 (10 logs/ms) (0B/ms) T+ 1s T- 0s"
   }
 
   private def newMeter() = {

@@ -75,12 +75,14 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 
   class LogEntryIterator(source: InputStream, sourceName: String = "", progressMeter: ProgressMeter) extends AbstractIterator[T] {
 
-    private val lines = new LineIterator(source, sourceName, strict, keepFullText)
     private var recordCount = 0
     private val queue = new ArrayBlockingQueue[Future[T]](processors * processors * 2)
     private var current: T = null.asInstanceOf[T]
     private var started = false
+    private val progressIn = new ProgressInputStream(source)
     private val reader = new Thread(new Runnable {
+      private val lines = new LineIterator(progressIn, sourceName, strict, keepFullText)
+
       override def run(): Unit = {
         var more = true
         do {
@@ -129,11 +131,11 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 
     private def publishProgress(done: Boolean): Unit = {
       if (done) {
-        progressMeter.finishFile(recordCount)
+        progressMeter.finishFile(recordCount, progressIn.offset)
       } else {
         recordCount += 1
         if (recordCount % 100000 == 0) {
-          progressMeter.progressInFile(recordCount)
+          progressMeter.progressInFile(recordCount, progressIn.offset)
           recordCount = 0
         }
       }
@@ -219,8 +221,7 @@ class EntryIterator[T <: LogEntry](val source: InputStream, val sourceName: Stri
  */
 class LineIterator(in: InputStream, val sourceName: String, val strict: Boolean, val keepFullText: Boolean) extends AbstractIterator[String] with BufferedIterator[String] {
 
-  private val progressIn = new ProgressInputStream(in)
-  private val lines = new BufferedReader(new InputStreamReader(progressIn))
+  private val lines = new BufferedReader(new InputStreamReader(in))
   private var linesRead = 0
   private var currentLineNo = 0
   private var current: String = null
