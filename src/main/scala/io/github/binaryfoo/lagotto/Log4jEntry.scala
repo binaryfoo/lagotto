@@ -9,6 +9,9 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
 
   val fields = _fields.withDefault {
     case TimeFormatter(format) => format.print(timestamp)
+    case "src" if source != null => source.toString
+    case "file" if source != null => source.file
+    case "line" if source != null => source.line.toString
     case _ => null
   }
 
@@ -41,7 +44,7 @@ object Log4jEntry {
           "realm" -> realm,
           "message" -> message
         ), s, source)
-      case s => throw new IllegalArgumentException(s"Not a log4j record: '$s'")
+      case _ => throw new IllegalArgumentException(s"Not a log4j record: '$s'")
     }
   }
 

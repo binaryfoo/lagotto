@@ -32,7 +32,8 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
     case "socket" => realm.socket
     case "ipAddress" => realm.ipAddress
     case "port" => realm.port
-    case "file" if source != null => source.toString
+    case "src" if source != null => source.toString
+    case "file" if source != null => source.file
     case "line" if source != null => source.line.toString
     case TimeFormatter(format) => format.print(timestamp)
     case JposEntry.XPathAccess(path) => xpath(path)

@@ -392,8 +392,8 @@ class MainTest extends LagoTest {
   }
 
   it should "filter using case insensitive contains operator with -f 48.1~suBfield option" in {
-    val output = run("-f", "48.1~suBfield", "--csv", "time,mti,11,file", testFile("a-pair.xml"))
-    output shouldEqual """time,mti,11,file
+    val output = run("-f", "48.1~suBfield", "--csv", "time,mti,11,src", testFile("a-pair.xml"))
+    output shouldEqual """time,mti,11,src
                          |00:00:04.100,0810,28928,a-pair.xml:14
                          |""".stripMargin
   }
