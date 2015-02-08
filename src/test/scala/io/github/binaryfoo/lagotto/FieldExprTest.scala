@@ -150,6 +150,12 @@ class FieldExprTest extends LagoTest {
     } should have message "Unknown conversion (time(HH:mm) as peanuts)"
   }
 
+  "xpath(expr)" should "evaluate the xpath expression over log text" in {
+    val expr = expressionFor("xpath(//jobs[text()])")
+    val entry = JposEntry.fromLines(linesFrom("pool-exhaustion.xml"))
+    expr(entry) shouldEqual "12413"
+  }
+
   "Format expression (calc(time-lifespan) time as time(HH:mm:ss))" should "drop millis from the modified timestamp" in {
     val loggedAt = new DateTime()
     val expr = expressionFor("(calc(time-lifespan) time as time(HH:mm:ss))")

@@ -24,6 +24,7 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
     val TranslateOp = """translate\((.+)\)""".r
     val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
     val PivotOp = """pivot\((.+)\)""".r
+    val XPathAccess = """xpath\((.+)\)""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -35,6 +36,7 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
         case RegexReplacementOp(p@DirectExpr(path), regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
+        case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -554,4 +556,11 @@ case class PathExpr(field: String, path: Seq[String], op: String) extends Direct
 
   private def concat(e: LogEntry, u: String): String = e(FieldPath((left :+ u) ++ right))
 
+}
+
+case class XPathExpr(field: String, xpath: String) extends DirectExpr {
+
+  private val expr = XPathEval.compile(xpath)
+
+  override def apply(e: LogEntry): String = expr(e.lines)
 }

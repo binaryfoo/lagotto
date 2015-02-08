@@ -17,11 +17,10 @@ object XPathEval {
 
   def apply(xml: String, expr: String): String = {
     val expression = cache.getOrElseUpdate(expr, compile(expr))
-    if (expression.couldApply(xml)) expression.evaluate(parse(xml))
-    else null
+    expression(xml)
   }
 
-  private def compile(path: String): HintedXPathExpression = {
+  def compile(path: String): HintedXPathExpression = {
     val xPathFactory = XPathFactory.newInstance()
     val xPath = xPathFactory.newXPath()
     val compiled = xPath.compile(path)
@@ -32,20 +31,20 @@ object XPathEval {
     HintedXPathExpression(hint, compiled)
   }
 
-  private def parse(xml: String): Document = {
-    val factory = DocumentBuilderFactory.newInstance()
-    factory.setNamespaceAware(false)
-    factory.setValidating(false)
-    val builder = factory.newDocumentBuilder()
-    builder.parse(new ByteArrayInputStream(xml.getBytes))
-  }
-
   val NodeReference = "/+([^\\[/]*)[\\[/].*".r
 
 }
 
 case class HintedXPathExpression(hint: Option[String], compiled: XPathExpression) {
 
+  def apply(xml: String): String = {
+    if (couldApply(xml)) evaluate(parse(xml))
+    else null
+  }
+
+  /**
+   * Try to avoid parsing XML and evaluating the XPath expression.
+   */
   def couldApply(xml: String): Boolean = {
     if (hint.isDefined) hint.exists(xml.contains)
     else true
@@ -54,5 +53,13 @@ case class HintedXPathExpression(hint: Option[String], compiled: XPathExpression
   def evaluate(doc: Document) = {
     val v = compiled.evaluate(doc)
     if (v == "") null else v
+  }
+
+  private def parse(xml: String): Document = {
+    val factory = DocumentBuilderFactory.newInstance()
+    factory.setNamespaceAware(false)
+    factory.setValidating(false)
+    val builder = factory.newDocumentBuilder()
+    builder.parse(new ByteArrayInputStream(xml.getBytes))
   }
 }

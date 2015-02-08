@@ -36,7 +36,6 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
     case "file" if source != null => source.file
     case "line" if source != null => source.line.toString
     case TimeFormatter(format) => format.print(timestamp)
-    case JposEntry.XPathAccess(path) => xpath(path)
     case _ => null
   }
 
@@ -275,8 +274,6 @@ object JposEntry {
   }
 
   def coalesce(seq: Iterator[JposEntry], selector: JposEntry => String): Iterator[Coalesced] = Collapser.coalesce(seq, selector)
-
-  val XPathAccess = """xpath\((.+)\)""".r
 }
 
 object TagType extends Enumeration {

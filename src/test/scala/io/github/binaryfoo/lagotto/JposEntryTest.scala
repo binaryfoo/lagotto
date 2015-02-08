@@ -107,11 +107,6 @@ class JposEntryTest extends LagoTest {
     JposEntry.fromLines(oneEntry(msgType = "send")).msgType shouldEqual "send"
   }
 
-  it should "expose log contents via xpath" in {
-    val entry = JposEntry.fromLines(linesFrom("pool-exhaustion.xml"))
-    entry("xpath(//jobs[text()])") shouldEqual "12413"
-  }
-
   it should "report a <warn> in msgType" in {
     val entry = JposEntry.fromLines(linesFrom("pool-exhaustion.xml"))
     entry("msgType") shouldEqual "warn"
