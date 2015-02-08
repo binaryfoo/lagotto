@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.reader
 
 import java.util.concurrent.atomic.AtomicReference
 
-import io.github.binaryfoo.lagotto.{SimpleLogEntry, TimeExpression}
+import io.github.binaryfoo.lagotto.{SimpleLogEntry, TimeExpr}
 
 import scala.collection.mutable
 
@@ -19,7 +19,7 @@ class XsvLog(val delimiter: Char = ',') extends LogType[SimpleLogEntry] {
     if (it.lineNumber == 0 && it.hasNext) {
       val fields = split(it.next())
       val timeFormat = fields.collectFirst {
-        case TimeExpression(formatter) => formatter
+        case TimeExpr(formatter) => formatter
       }
       header.set(Header(fields, timeFormat))
     }
@@ -41,5 +41,5 @@ class XsvLog(val delimiter: Char = ',') extends LogType[SimpleLogEntry] {
   @inline
   private def split(line: String) = line.split(delimiter)
 
-  case class Header(fields: Seq[String], timeFormat: Option[TimeExpression])
+  case class Header(fields: Seq[String], timeFormat: Option[TimeExpr])
 }

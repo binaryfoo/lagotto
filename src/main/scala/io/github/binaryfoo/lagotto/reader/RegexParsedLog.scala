@@ -16,7 +16,7 @@ case class RegexParsedLog(pattern: String, timeFormat: String, lineRecogniser: L
 
   private val compiledPattern = Pattern.compile(pattern)
   private val groupNames = extractGroupNames(compiledPattern)
-  private val timeExpression = TimeExpression("timestamp", BasicJodaFormatter(DateTimeFormat.forPattern(timeFormat).withOffsetParsed()))
+  private val timeExpression = TimeExpr("timestamp", BasicJodaFormatter(DateTimeFormat.forPattern(timeFormat).withOffsetParsed()))
 
   override def canParse(firstLine: String): Boolean = compiledPattern.matcher(firstLine).matches()
 

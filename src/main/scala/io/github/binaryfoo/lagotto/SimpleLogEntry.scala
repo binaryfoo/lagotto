@@ -7,10 +7,10 @@ import scala.collection.mutable
 /**
  * Ceremony around a Map.
  */
-case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, String], private val timeFormat: Option[TimeExpression] = None, lines: String, source: SourceRef = null) extends LogEntry {
+case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, String], private val timeFormat: Option[TimeExpr] = None, lines: String, source: SourceRef = null) extends LogEntry {
 
   val timestamp: DateTime = {
-    timeFormat.map { case TimeExpression(expr, formatter) =>
+    timeFormat.map { case TimeExpr(expr, formatter) =>
       _fields.get(expr)
       .map(formatter.parseDateTime)
       .getOrElse(throw new IAmSorryDave(s"Missing 'timestamp' in ${_fields}"))

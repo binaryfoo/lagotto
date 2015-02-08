@@ -37,6 +37,7 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case RegexReplacementOp(p@DirectExpr(path), regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
+        case TimeFormatter(formatter) => TimeExpr(expr, formatter)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -93,7 +94,6 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
 
   implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
 }
-
 
 /**
  * Exists separately from FieldAccessor to allow passing lambdas to LogEntry.toXsv(). Maybe misguided.
@@ -563,4 +563,19 @@ case class XPathExpr(field: String, xpath: String) extends DirectExpr {
   private val expr = XPathEval.compile(xpath)
 
   override def apply(e: LogEntry): String = expr(e.lines)
+}
+
+case class TimeExpr(field: String, formatter: TimeFormatter) extends DirectCalculationExpr {
+  override def calculate(e: LogEntry): String = {
+    e match {
+      case p: MsgPair => e(field)
+      case _ => formatter.print(e.timestamp)
+    }
+  }
+}
+
+object TimeExpr {
+  def unapply(expr: String): Option[TimeExpr] = {
+    TimeFormatter.unapply(expr).map(f => TimeExpr(expr, f))
+  }
 }

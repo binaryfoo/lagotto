@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto
 
 import org.joda.time.DateTime
+import io.github.binaryfoo.lagotto.output.Xsv.SeqToXsv
 
 class JposEntryTest extends LagoTest {
 
@@ -114,7 +115,7 @@ class JposEntryTest extends LagoTest {
 
   "A single entry" should "be convertible to a .csv row" in {
     val entry = JposEntry.fromLines(lines)
-    entry.toCsv("time", "48.2.13", "11", "7") shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"
+    entry.exprToSeq("time", "48.2.13", "11", "7").toCsv shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"
   }
 
   it should "accept expressions when converting to a .csv row" in {

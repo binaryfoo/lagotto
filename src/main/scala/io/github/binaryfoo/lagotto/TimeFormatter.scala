@@ -78,14 +78,6 @@ object TimeFormatter {
   def formatterFor(expr: String) = unapply(expr).get
 }
 
-case class TimeExpression(expr: String, formatter: TimeFormatter)
-
-object TimeExpression {
-  def unapply(expr: String): Option[TimeExpression] = {
-    TimeFormatter.unapply(expr).map(f => TimeExpression(expr, f))
-  }
-}
-
 object PeriodFormatTranslator {
   def translate(pattern: String): PeriodFormatter = {
     val b = new PeriodFormatterBuilder()
