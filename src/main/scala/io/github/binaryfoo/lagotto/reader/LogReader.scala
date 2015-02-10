@@ -219,7 +219,7 @@ class EntryIterator[T <: LogEntry](val source: InputStream, val sourceName: Stri
 /**
  * Adds a line number, name and a single line push back over Source.getLines().
  */
-class LineIterator(in: InputStream, val sourceName: String, val strict: Boolean, val keepFullText: Boolean) extends AbstractIterator[String] with BufferedIterator[String] {
+class LineIterator(in: InputStream, val sourceName: String = "", val strict: Boolean = false, val keepFullText: Boolean = true) extends AbstractIterator[String] with BufferedIterator[String] {
 
   private val lines = new BufferedReader(new InputStreamReader(in))
   private var linesRead = 0

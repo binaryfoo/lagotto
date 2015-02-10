@@ -792,6 +792,30 @@ class MainTest extends LagoTest {
     } should have message "file_1.log (No such file or directory)"
   }
 
+  "auto detection" should "ignore unrecognised lines" in {
+    val output = run("--grep!", "Exclude", testFile("mixed-bag.txt"))
+    output shouldBe """[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful
+                      |[08 Nov 2014 00:00:00,002] INFO  [a.ClassName]: And again
+                      |This time over two lines
+                      |
+                      |<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
+                      |  <receive>
+                      |    <isomsg direction="incoming">
+                      |      <!-- org.jpos.iso.packager.XMLPackager -->
+                      |      <field id="0" value="0800"/>
+                      |      <field id="7" value="1124000003"/>
+                      |      <field id="11" value="28928"/>
+                      |      <field id="24" value="831"/>
+                      |    </isomsg>
+                      |  </receive>
+                      |</log>
+                      |<log realm="rotate-log-listener" at="Mon Nov 24 13:10:55 EST 2014">
+                      |   maxSize (50000000) threshold reached
+                      |</log>
+                      |[08 Nov 2014 00:00:00,003] INFO  [a.ClassName]: One more for good measure
+                      |""".stripMargin
+  }
+
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   def standardOutFrom(thunk: => Unit): String = {

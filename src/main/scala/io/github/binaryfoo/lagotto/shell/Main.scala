@@ -53,12 +53,8 @@ case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Se
 class Pipeline(val opts: CmdLineOptions, val config: Config) {
 
   def inputFormat = {
-    import io.github.binaryfoo.lagotto.reader.LogTypes.RichLogTypes
     val logTypes = LogTypes.load(config)
-    opts.inputFormat.map(logTypes(_)).getOrElse {
-      val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
-      new AutoDetectLog(logTypes.list(autoTypes))
-    }
+    opts.inputFormat.map(logTypes(_)).getOrElse(LogTypes.auto(config, logTypes))
   }
 
   def apply(): (Iterator[LogEntry], OutputFormat) = {

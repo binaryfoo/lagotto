@@ -43,4 +43,16 @@ class AutoDetectLogTest extends LagoTest {
       log(sourceLines)
     } should have message """Can't parse theFile:2 'fail'"""
   }
+
+  "with reference types" should "ignore rubbish before log4j" in {
+    val config = ConfigFactory.load()
+    val logTypes = LogTypes.load(config)
+    val log = LogTypes.auto(config, logTypes)
+
+    val lineIterator = new LineIterator(inputStreamFrom("rubbish", "[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful"), "", true, true)
+    the [IAmSorryDave] thrownBy {
+      log(lineIterator)
+    } should have message "Can't parse :1 'rubbish'"
+    log(lineIterator).lines shouldBe "[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful"
+  }
 }

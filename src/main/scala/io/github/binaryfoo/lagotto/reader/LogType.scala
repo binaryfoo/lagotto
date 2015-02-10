@@ -47,11 +47,18 @@ case class LineSet(lines: Seq[String], fullText: String, source: SourceRef) exte
  */
 object LogTypes {
 
-  def load(config: Config): Map[String, LogType[LogEntry]] = {
+  type LogTypeMap = Map[String, LogType[LogEntry]]
+  
+  def auto(config: Config, logTypes: LogTypeMap) = {
+    val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
+    new AutoDetectLog(logTypes.list(autoTypes))
+  }
+  
+  def load(config: Config): LogTypeMap = {
     load(config.getObject("logTypes"))
   }
 
-  def load(types: ConfigObject): Map[String, LogType[LogEntry]] = {
+  def load(types: ConfigObject): LogTypeMap = {
     types.entrySet().map { e =>
       val name = e.getKey
       val v = e.getValue

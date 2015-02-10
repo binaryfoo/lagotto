@@ -23,7 +23,7 @@ class AutoDetectLog(val types: Seq[LogType[LogEntry]] = Seq()) extends LogType[L
 
   private def findType(lines: LineIterator): LogType[LogEntry] = {
     val first = lines.head
-    types.collectFirst { case t if t.canParse(first) => t }.getOrElse(throw new IAmSorryDave(s"Can't parse ${lines.headRef} '$first'"))
+    types.collectFirst { case t if t.canParse(first) => t }.getOrElse(throw new IAmSorryDave(s"Can't parse ${lines.headRef} '${lines.next()}'"))
   }
 
 }

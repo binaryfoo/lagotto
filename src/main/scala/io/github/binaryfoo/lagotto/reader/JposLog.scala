@@ -11,6 +11,8 @@ object JposLog extends LogType[JposEntry] {
 
   type P = LineSet
 
+  override def canParse(firstLine: String): Boolean = firstLine.contains("<log")
+
   override def readLinesForNextRecord(lines: LineIterator): LineSet = {
     var record: ListBuffer[String] = null
     var startLineNumber = lines.lineNumber
