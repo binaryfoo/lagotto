@@ -10,7 +10,10 @@ class AutoDetectLog(val types: Seq[LogType[LogEntry]] = Seq()) extends LogType[L
     if (lines.hasNext) {
       val logType = findType(lines)
       val record = logType.readLinesForNextRecord(lines)
-      UnParsedEntry(record, logType)
+      if (record != null)
+        UnParsedEntry(record, logType)
+      else
+        null
     } else {
       null
     }

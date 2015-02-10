@@ -141,7 +141,8 @@ class WorkMeter {
   def summary(): String = {
     val min = if (minRate == Long.MinValue) 0 else minRate
     val max = maxRate
-    val avg = totalWork / (tick - firstTick)
+    val elapsed = tick - firstTick
+    val avg = if (elapsed == 0) 0 else totalWork / elapsed
     Seq(min, avg, max).map(SIUnitsFormatter.format).mkString(":")
   }
 }
