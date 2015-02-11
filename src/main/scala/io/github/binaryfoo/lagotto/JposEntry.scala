@@ -167,13 +167,20 @@ object JposEntry {
       Start
     }
 
-    for (i <- startIndex to line.length - 1) {
+    (findTag(line, startIndex, startIndex + 1), tagType)
+  }
+
+  @tailrec
+  private def findTag(line: String, from: Int, i: Int): String = {
+    if (i < line.length) {
       val c = line.charAt(i)
       if (c == ' ' || c == '>' || c == '/')
-        return (line.substring(startIndex, i), tagType)
+        line.substring(from, i)
+      else
+        findTag(line, from, i + 1)
+    } else {
+      line.substring(from)
     }
-
-    (line.substring(startIndex), tagType)
   }
 
   // slightly faster than a regex
