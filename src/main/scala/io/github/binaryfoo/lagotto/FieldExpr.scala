@@ -435,6 +435,7 @@ object ConvertExpr {
       case (_, "us", "ms") => (microToMillis, DefaultDateTimeFormat, DefaultDateFormat)
       case (_, "millis", "seconds") => (millisToSeconds, DefaultDateTimeFormat, DefaultDateFormat)
       case (_, "ms", "s") => (millisToSeconds, DefaultDateTimeFormat, DefaultDateFormat)
+      case (_, null, "int") => (stripZeroes, DefaultDateTimeFormat, DefaultDateTimeFormat)
       case _ => throw new IAmSorryDave(s"Unknown conversion $field")
     }
     expr match {
@@ -451,6 +452,7 @@ object ConvertExpr {
   val microToSeconds    = (v: String, input: TimeFormatter, output: TimeFormatter) => oneDpFormat.format(v.toDouble / 1000000)
   val microToMillis     = (v: String, input: TimeFormatter, output: TimeFormatter) => (v.toLong / 1000).toString
   val millisToSeconds   = (v: String, input: TimeFormatter, output: TimeFormatter) => oneDpFormat.format(v.toDouble / 1000)
+  val stripZeroes       = (v: String, input: TimeFormatter, output: TimeFormatter) => v.toInt.toString
 }
 
 case class ConvertAggregateExpr(field: String, expr: AggregateExpr, op: ConvertExpr.TimeConversionOp, input: TimeFormatter, output: TimeFormatter)

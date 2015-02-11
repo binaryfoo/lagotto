@@ -150,6 +150,12 @@ class FieldExprTest extends LagoTest {
     } should have message "Unknown conversion (time(HH:mm) as peanuts)"
   }
 
+  "(11 as int)" should "drop leading zeroes" in {
+    val expr = expressionFor("(11 as int)")
+    expr(JposEntry("11" -> "000001")) shouldBe "1"
+    expr(JposEntry("11" -> "100000")) shouldBe "100000"
+  }
+
   "xpath(expr)" should "evaluate the xpath expression over log text" in {
     val expr = expressionFor("xpath(//jobs[text()])")
     val entry = JposEntry.fromLines(linesFrom("pool-exhaustion.xml"))
