@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.io.{BufferedSource, Source}
+import scala.util.Try
 
 trait SkeletonLogReader[T <: LogEntry] {
 
@@ -48,7 +49,11 @@ trait SkeletonLogReader[T <: LogEntry] {
     }
   }
 
-  def read(in: InputStream, sourceName: String = ""): Iterator[T]
+  final def read(in: InputStream, sourceName: String = ""): Iterator[T] = {
+    readWithProgress(new ProgressInputStream(in, progressMeter, sourceName))
+  }
+
+  def readWithProgress(in: ProgressInputStream): Iterator[T]
 
   private def open(f: File): InputStream = {
     val in = new BufferedInputStream(new FileInputStream(f))
@@ -63,25 +68,22 @@ trait SkeletonLogReader[T <: LogEntry] {
  *
  * @param strict Whinge with an exception on unexpected input
  * @param keepFullText If false keep only the parsed fields. If true keep the full text of every record. Maybe this should be removed.
- * @param progressMeter
  * @param logType
  * @tparam T
  */
 case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
 
-  override def read(source: InputStream, sourceName: String = ""): Iterator[T] = new LogEntryIterator(source, sourceName, progressMeter)
+  override def readWithProgress(source: ProgressInputStream): Iterator[T] = new LogEntryIterator(source)
 
   private val processors = Runtime.getRuntime.availableProcessors()
 
-  class LogEntryIterator(source: InputStream, sourceName: String = "", progressMeter: ProgressMeter) extends AbstractIterator[T] {
+  class LogEntryIterator(source: ProgressInputStream) extends AbstractIterator[T] {
 
-    private var recordCount = 0
     private val queue = new ArrayBlockingQueue[Future[T]](processors * processors * 2)
     private var current: T = null.asInstanceOf[T]
     private var started = false
-    private val progressIn = new ProgressInputStream(source)
     private val reader = new Thread(new Runnable {
-      private val lines = new LineIterator(progressIn, sourceName, strict, keepFullText)
+      private val lines = new LineIterator(source, strict, keepFullText)
 
       override def run(): Unit = {
         var more = true
@@ -101,11 +103,8 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
           queue.put(f)
         } while (more)
       }
-    }, s"$sourceName-reader")
+    }, s"${source.sourceName}-reader")
     reader.setDaemon(true)
-
-    if (sourceName != "")
-      progressMeter.startFile(sourceName)
 
     override def hasNext: Boolean = {
       ensureStarted()
@@ -122,23 +121,11 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     private def readNext(): T = {
       val entry = readNextWithRetry()
       val done = entry == null
-      publishProgress(done)
+      source.publishProgress(done)
       if (done) {
         source.close()
       }
       entry
-    }
-
-    private def publishProgress(done: Boolean): Unit = {
-      if (done) {
-        progressMeter.finishFile(recordCount, progressIn.offset)
-      } else {
-        recordCount += 1
-        if (recordCount % 100000 == 0) {
-          progressMeter.progressInFile(recordCount, progressIn.offset)
-          recordCount = 0
-        }
-      }
     }
 
     @tailrec
@@ -194,15 +181,15 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
 }
 
 case class SingleThreadLogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boolean = true, progressMeter: ProgressMeter = NullProgressMeter, logType: LogType[T] = JposLog) extends SkeletonLogReader[T] {
-  override def read(source: InputStream, sourceName: String): Iterator[T] = new EntryIterator[T](source, sourceName, strict, keepFullText, logType)
+  override def readWithProgress(source: ProgressInputStream): Iterator[T] = new EntryIterator[T](source, strict, keepFullText, logType)
 }
 
 /**
  * Each entry may consume more than one line.
  */
-class EntryIterator[T <: LogEntry](val source: InputStream, val sourceName: String, val strict: Boolean = false, val keepFullText: Boolean = true, logType: LogType[T] = JposLog) extends AbstractIterator[T] {
+class EntryIterator[T <: LogEntry](val source: ProgressInputStream, val strict: Boolean = false, val keepFullText: Boolean = true, logType: LogType[T] = JposLog) extends AbstractIterator[T] {
 
-  private val lines = new LineIterator(source, sourceName, strict, keepFullText)
+  private val lines = new LineIterator(source, strict, keepFullText)
   private var current = readNext()
 
   override def next(): T = {
@@ -213,13 +200,30 @@ class EntryIterator[T <: LogEntry](val source: InputStream, val sourceName: Stri
 
   override def hasNext: Boolean = current != null
 
-  private def readNext(): T = logType.apply(lines)
+  private def readNext(): T = {
+    val next = readNextWithRetry()
+    val done = next == null
+    source.publishProgress(done)
+    if (done)
+      source.close()
+    next
+  }
+
+  @tailrec
+  private def readNextWithRetry(): T = {
+    val maybe = Try(logType.apply(lines))
+    if (strict && maybe.isFailure || maybe.isSuccess) {
+      maybe.get
+    } else {
+      readNextWithRetry()
+    }
+  }
 }
 
 /**
  * Adds a line number, name and a single line push back over Source.getLines().
  */
-class LineIterator(in: InputStream, val sourceName: String = "", val strict: Boolean = false, val keepFullText: Boolean = true) extends AbstractIterator[String] with BufferedIterator[String] {
+class LineIterator(in: ProgressInputStream, val strict: Boolean = false, val keepFullText: Boolean = true) extends AbstractIterator[String] with BufferedIterator[String] {
 
   private val lines = new BufferedReader(new InputStreamReader(in))
   private var linesRead = 0
@@ -234,15 +238,17 @@ class LineIterator(in: InputStream, val sourceName: String = "", val strict: Boo
    */
   def lineNumber: Int = currentLineNo
 
+  def sourceName: String = in.sourceName
+
   /**
    * @return Line number and file name for most recently returned value of next().
    */
-  def sourceRef: SourceRef = SourceRef(sourceName, currentLineNo)
+  def sourceRef: SourceRef = SourceRef(in.sourceName, currentLineNo)
 
   /**
    * @return Line number and file name for most recently returned value of head.
    */
-  def headRef: SourceRef = SourceRef(sourceName, linesRead)
+  def headRef: SourceRef = SourceRef(in.sourceName, linesRead)
 
   def hasNext = current != null || readNext()
 

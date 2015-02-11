@@ -6,6 +6,7 @@ import java.util.{GregorianCalendar, TimeZone}
 
 import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
+import io.github.binaryfoo.lagotto.reader.ProgressInputStream
 import org.joda.time.DateTimeZone
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -32,7 +33,9 @@ class LagoTest
 
   def iteratorOver[T](e: T*): Iterator[T] = List(e :_*).iterator
 
-  def inputStreamFrom(s: String*) = new ByteArrayInputStream(s.mkString("\n").getBytes)
+  def namedInputStreamFrom(s: String*)(sourceName: String = "") = new ProgressInputStream(new ByteArrayInputStream(s.mkString("\n").getBytes), NullProgressMeter, sourceName)
+
+  def inputStreamFrom(s: String*) = namedInputStreamFrom(s :_*)("")
 
   def configWithTestDictionary = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources/"))
 

@@ -27,7 +27,7 @@ class AutoDetectLogTest extends LagoTest {
   private val types = LogTypes.load(ConfigFactory.parseString(logTypes).getObject("logTypes"))
 
   it should "produce a log type that sniffs lines" in {
-    val sourceLines = new LineIterator(inputStreamFrom("01/02/1970: Month after Epoch", "SILLY 01-JAN-1971 *** Year after"), "", true, true)
+    val sourceLines = new LineIterator(inputStreamFrom("01/02/1970: Month after Epoch", "SILLY 01-JAN-1971 *** Year after"), true, true)
     val log = new AutoDetectLog(types.list(Seq("a", "b")))
 
     log(sourceLines).toCsv("time(yyyy-MM-dd)", "message") shouldBe "1970-02-01,Month after Epoch"
@@ -35,7 +35,7 @@ class AutoDetectLogTest extends LagoTest {
   }
 
   it should "complain if unable to parse a line" in {
-    val sourceLines = new LineIterator(inputStreamFrom("01/02/1970: Month after Epoch", "fail"), "theFile", true, true)
+    val sourceLines = new LineIterator(namedInputStreamFrom("01/02/1970: Month after Epoch", "fail")("theFile"), true, true)
     val log = new AutoDetectLog(types.list(Seq("a", "b")))
 
     log(sourceLines)
@@ -49,7 +49,7 @@ class AutoDetectLogTest extends LagoTest {
     val logTypes = LogTypes.load(config)
     val log = LogTypes.auto(config, logTypes)
 
-    val lineIterator = new LineIterator(inputStreamFrom("rubbish", "[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful"), "", true, true)
+    val lineIterator = new LineIterator(inputStreamFrom("rubbish", "[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful"), true, true)
     the [IAmSorryDave] thrownBy {
       log(lineIterator)
     } should have message "Can't parse :1 'rubbish'"
