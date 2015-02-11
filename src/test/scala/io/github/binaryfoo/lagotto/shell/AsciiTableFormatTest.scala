@@ -38,6 +38,11 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
                                  |""".stripMargin
   }
 
+  it should "handle emptiness" in {
+    val format = new AsciiTableFormat()
+    format.footer() shouldBe None
+  }
+
   "Incremental ascii table" should "spit out rows as they're added" in {
     val format = new IncrementalAsciiTableFormat()
     val fields = Seq("one", "two")
@@ -54,4 +59,10 @@ class AsciiTableFormatTest extends FlatSpec with Matchers {
     row2 shouldBe   "| fatter | v2     |"
     foot shouldBe   "==================="
   }
+
+  it should "handle emptiness" in {
+    val format = new IncrementalAsciiTableFormat()
+    format.footer() shouldBe None
+  }
+
 }

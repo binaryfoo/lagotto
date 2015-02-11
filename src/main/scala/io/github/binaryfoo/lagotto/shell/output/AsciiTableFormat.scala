@@ -24,11 +24,15 @@ class AsciiTableFormat extends TableFormatter {
   }
 
   override def footer(): Option[String] = {
-    Some(new AsciiTable(maximumWidths(), rows.size)
-      .addHeader(fields)
-      .addRows(rows)
-      .addFooter()
-      .toString())
+    if (fields == null) {
+      None
+    } else {
+      Some(new AsciiTable(maximumWidths(), rows.size)
+        .addHeader(fields)
+        .addRows(rows)
+        .addFooter()
+        .toString())
+    }
   }
 
   private def maximumWidths(): Seq[Int] = AsciiTable.maximumWidths(fields :: rows.toList)

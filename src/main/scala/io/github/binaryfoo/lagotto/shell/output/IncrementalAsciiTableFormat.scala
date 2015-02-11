@@ -23,7 +23,11 @@ class IncrementalAsciiTableFormat extends TableFormatter {
   }
 
   override def footer(): Option[String] = {
-    Some(new AsciiTable(columnWidths).addFooter().toIncrementalString)
+    if (columnWidths == null) {
+      None
+    } else {
+      Some(new AsciiTable(columnWidths).addFooter().toIncrementalString)
+    }
   }
 
 }
