@@ -31,7 +31,9 @@
 * Support "receiver -> sender" display. Name system where logs are gathered from.
  - web sequence diagram output...
 * Full SQL like query: and, or - parser combinator
-
+* Handle log4j in --digest (just spit it out)
+* Handle jpos errors in --digest (again, spit it out)
+* Add --name to spit out jpos style with extra name="" attribute?
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
