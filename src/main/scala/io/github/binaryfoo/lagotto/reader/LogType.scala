@@ -48,7 +48,12 @@ case class LineSet(lines: Seq[String], fullText: String, source: SourceRef) exte
 object LogTypes {
 
   type LogTypeMap = Map[String, LogType[LogEntry]]
-  
+
+  def lookup(config: Config, name: Option[String]) = {
+    val logTypes = LogTypes.load(config)
+    name.map(logTypes(_)).getOrElse(LogTypes.auto(config, logTypes))
+  }
+
   def auto(config: Config, logTypes: LogTypeMap) = {
     val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
     new AutoDetectLog(logTypes.list(autoTypes))

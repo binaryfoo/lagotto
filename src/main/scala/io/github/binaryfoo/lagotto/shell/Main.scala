@@ -51,17 +51,13 @@ case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Se
 
 class Pipeline(val opts: CmdLineOptions, val config: Config) {
 
-  def inputFormat = {
-    val logTypes = LogTypes.load(config)
-    opts.inputFormat.map(logTypes(_)).getOrElse(LogTypes.auto(config, logTypes))
-  }
-
   def apply(): (Iterator[LogEntry], OutputFormat) = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
+    val inputFormat = LogTypes.lookup(config, opts.inputFormat)
 
     val paired = if (opts.pair) read(JposLog).pair() else read(inputFormat)
-    val joined = join(paired, opts.joinOn)
+    val joined = join(paired, opts.joinOn, inputFormat)
     val firstFilter = filter(joined, filters.paired)
     val sorted = sort(firstFilter, preAggregationSortKey, opts.sortDescending)
     val withDelays = addDelays(sorted)
@@ -99,9 +95,13 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber))
   }
 
-  private def join(v: Iterator[LogEntry], join: Option[FieldExpr]): Iterator[LogEntry] = {
+  private def join(v: Iterator[LogEntry], join: Option[FieldExpr], logType: LogType[LogEntry]): Iterator[LogEntry] = {
+    val delimiter = logType match {
+      case xsv: XsvLog => xsv.delimiter
+      case _ => '\n'
+    }
     if (join.isDefined)
-      new Joiner(join.get).join(v)
+      new Joiner(join.get, delimiter).join(v)
     else
     v
   }

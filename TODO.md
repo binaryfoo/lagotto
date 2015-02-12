@@ -7,7 +7,6 @@
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
 * Add --splitBy field to Main? Use case would be ip address or transaction id or link
- - using scalaz streams?
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
 * Output as
@@ -35,8 +34,6 @@
 * Remove fields vs subfields distinction from dictionaries
 * Dump dictionary as a table for sane MTI-NMIC combinations
 * Add alias like SQL expr as 'sane name'
-* Remote -persist from gnuplot
- for i in {1..4}; do echo "switch $i"; lago se$i*.gz --in-format gc -t datetime,delay,pause --gnuplot $i-gc ; done
 * Make xpath() a FieldExpr. Avoids need to cache expressions
 * Pair on ip,mti,nmic,time threshold?
 * Can --progress estimate end time with one large file?

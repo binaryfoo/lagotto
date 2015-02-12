@@ -2,14 +2,14 @@ package io.github.binaryfoo.lagotto.reader
 
 import java.util.concurrent.atomic.AtomicReference
 
-import io.github.binaryfoo.lagotto.{XsvLogEntry, SimpleLogEntry, TimeExpr}
+import io.github.binaryfoo.lagotto.{SimpleLogEntry, TimeExpr}
 
 import scala.collection.mutable
 
 /**
  * Stateful. Not thread safe. Stores header when it sees line 1.
  */
-class XsvLog(val delimiter: Char = ',', val hasHeader: Boolean = true) extends LogType[XsvLogEntry] {
+class XsvLog(val delimiter: Char = ',', val hasHeader: Boolean = true) extends LogType[SimpleLogEntry] {
 
   override type P = TextAndSource
 
@@ -40,11 +40,11 @@ class XsvLog(val delimiter: Char = ',', val hasHeader: Boolean = true) extends L
     }
   }
 
-  override def parse(s: TextAndSource): XsvLogEntry = {
+  override def parse(s: TextAndSource): SimpleLogEntry = {
     val Header(headerFields, timeFormat) = header.get()
     val fields = new mutable.LinkedHashMap[String, String]()
     fields ++= headerFields.zip(split(s.text))
-    XsvLogEntry(SimpleLogEntry(fields, timeFormat, s.text, s.source), delimiter)
+    SimpleLogEntry(fields, timeFormat, s.text, s.source)
   }
 
   @inline

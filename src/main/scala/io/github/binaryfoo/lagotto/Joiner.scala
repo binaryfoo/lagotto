@@ -4,13 +4,16 @@ import org.joda.time.DateTime
 
 import scala.collection.{AbstractIterator, mutable}
 
-class Joiner(val field: FieldExpr) extends (LogEntry => Option[JoinedEntry]) {
+/**
+ * Performs a full outer join of log entries on ``field``. Output lines will be joined using ``delimiter``.
+ */
+class Joiner(val field: FieldExpr, val delimiter: Char) extends (LogEntry => Option[JoinedEntry]) {
 
   private val pending = mutable.LinkedHashMap[String, LogEntry]()
 
   override def apply(e: LogEntry): Option[JoinedEntry] = {
     val key = field(e)
-    pending.remove(key).map(JoinedEntry(_, e, field)).orElse {
+    pending.remove(key).map(JoinedEntry(_, e, field, delimiter)).orElse {
       pending.put(key, e)
       None
     }
@@ -20,7 +23,7 @@ class Joiner(val field: FieldExpr) extends (LogEntry => Option[JoinedEntry]) {
     val joined = it.flatMap(this.apply)
     new AbstractIterator[JoinedEntry] {
 
-      private lazy val leftovers = pending.values.map(JoinedEntry(_, LogEntry.empty, field)).iterator
+      private lazy val leftovers = pending.values.map(JoinedEntry(_, LogEntry.empty, field, delimiter)).iterator
       private def current = if (joined.hasNext) joined else leftovers
 
       override def next(): JoinedEntry = current.next()
@@ -30,7 +33,7 @@ class Joiner(val field: FieldExpr) extends (LogEntry => Option[JoinedEntry]) {
   }
 }
 
-case class JoinedEntry(left: LogEntry, right: LogEntry, join: FieldExpr) extends LogEntry {
+case class JoinedEntry(left: LogEntry, right: LogEntry, join: FieldExpr, delimiter: Char) extends LogEntry {
 
   def apply(field: String): String = {
     field match {
@@ -48,13 +51,10 @@ case class JoinedEntry(left: LogEntry, right: LogEntry, join: FieldExpr) extends
   def timestamp: DateTime = left.timestamp
 
   override def lines: String = {
-    (left, right) match {
-      case (XsvLogEntry(l, d), XsvLogEntry(r, _)) => l.lines + d + excludeJoinField(d, r).mkString(d.toString)
-      case (XsvLogEntry(l, d), LogEntry.empty) => l.lines + d
-    }
+    left.lines + delimiter + excludeJoinField(delimiter, right).mkString(delimiter.toString)
   }
 
-  private def excludeJoinField(d: Char, r: SimpleLogEntry) = {
+  private def excludeJoinField(d: Char, r: LogEntry) = {
     r.exportAsSeq.collect { case (field, value) if field != join.field => value}
   }
 
