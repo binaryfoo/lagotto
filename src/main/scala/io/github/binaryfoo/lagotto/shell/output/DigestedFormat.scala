@@ -15,7 +15,7 @@ case class DigestedFormat(dictionary: DataDictionary, nameType: Option[NameType]
   override def apply(e: LogEntry): Option[String] = {
     Some(e match {
       case l: JposEntry => format(l)
-      case _ => e.exportAsSeq.mkString("\n")
+      case _ => e.lines
     })
   }
 
