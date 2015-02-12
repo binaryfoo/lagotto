@@ -776,6 +776,15 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "csv" should "without a header row should be readable with --in-format=icsv" in {
+    val output = run("--sort-desc", "1", "--in-format", "icsv", testFile("one.icsv"))
+    output shouldBe
+      """mouse,3
+        |fox,2
+        |rabbit,1
+        |""".stripMargin
+  }
+
   "tsv" should "be readable with --in-format=csv" in {
     val output = run("--csv", "type,count", "--in-format", "tsv", testFile("some.tsv"))
     output shouldBe
@@ -814,6 +823,26 @@ class MainTest extends LagoTest {
                       |</log>
                       |[08 Nov 2014 00:00:00,003] INFO  [a.ClassName]: One more for good measure
                       |""".stripMargin
+  }
+
+  "--join" should "pair up rows on the numbered field" in {
+    val output = run("--in-format", "icsv", "--join", "0", testFile("one.icsv"), testFile("two.icsv"))
+    output shouldBe
+      """rabbit,1,green
+        |fox,2,yellow
+        |mouse,3,
+        |elephant,red,
+        |""".stripMargin
+  }
+
+  "--join" should "pair up rows on a named header field" in {
+    val output = run("--in-format", "csv", "--join", "animal", testFile("one.csv"), testFile("two.csv"))
+    output shouldBe
+      """rabbit,1,green
+        |fox,2,yellow
+        |mouse,3,
+        |elephant,red,
+        |""".stripMargin
   }
 
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }

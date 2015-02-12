@@ -118,6 +118,10 @@ class OptionsParser(val dictionary: DataDictionary) {
         c.copy(sortBy = FieldExpr.unapply(field), sortDescending = true)
       } text "Sort output descending by field. Prevents incremental output"
 
+      opt[String]("join") action {(field,c) =>
+        c.copy(joinOn = FieldExpr.unapply(field))
+      } text "Full outer join on the named field"
+
       opt[String]("gnuplot") action {(fileName,c) =>
         c.copy(gnuplotFileName = Some(fileName))
       } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --tsv."

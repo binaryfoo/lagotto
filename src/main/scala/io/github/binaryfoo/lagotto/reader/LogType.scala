@@ -65,7 +65,7 @@ object LogTypes {
       val map = v.unwrapped().asInstanceOf[util.Map[String, ConfigValue]]
       val logType = if (map.containsKey("class")) {
         val clazz = map.get("class").asInstanceOf[String]
-        val args = asScalaBuffer(map.get("args").asInstanceOf[util.List[String]])
+        val args = asScalaBuffer(map.get("args").asInstanceOf[util.List[Object]])
         newInstance(clazz, args)
       } else {
         val clazz = map.get("object").asInstanceOf[String]
@@ -75,12 +75,13 @@ object LogTypes {
     }.toMap
   }
 
-  def newInstance(name: String, args: mutable.Buffer[String]): LogType[LogEntry] = {
+  def newInstance(name: String, args: mutable.Buffer[Object]): LogType[LogEntry] = {
     val constructor = Class.forName(name).getConstructors()(0)
     val preparedArgs = constructor.getParameterTypes.zip(args).map {
-      case (t, v) if t == classOf[String] => v
-      case (t, v) if t == classOf[Char] => Character.valueOf(v.charAt(0))
-      case (t, v) if t == classOf[LineRecogniser] => newObject[LineRecogniser](v)
+      case (t, v) if t == classOf[Boolean] =>  java.lang.Boolean.valueOf(v.toString)
+      case (t, v) if t == classOf[String] => v.toString
+      case (t, v) if t == classOf[Char] => Character.valueOf(v.toString.charAt(0))
+      case (t, v) if t == classOf[LineRecogniser] => newObject[LineRecogniser](v.toString)
     }
     constructor.newInstance(preparedArgs :_*).asInstanceOf[LogType[LogEntry]]
   }

@@ -59,6 +59,18 @@ trait LogEntry {
 
 object LogEntry {
 
+  val empty = new LogEntry {
+
+    override def exportAsSeq: Seq[(String, String)] = Seq.empty
+
+    override def lines: String = ""
+
+    override def timestamp: DateTime = null
+
+    override def apply(id: String): String = null
+
+  }
+
   implicit class IterableOfLogEntry(val v: Iterator[LogEntry]) extends AnyVal {
 
     def toCsv(ids: String*): String = toCsv(ids.toIterable)

@@ -62,7 +62,8 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     val filters = partitionFilters()
 
     val paired = if (opts.pair) read(JposLog).pair() else read(inputFormat)
-    val firstFilter = filter(paired, filters.paired)
+    val joined = join(paired, opts.joinOn)
+    val firstFilter = filter(joined, filters.paired)
     val sorted = sort(firstFilter, preAggregationSortKey, opts.sortDescending)
     val withDelays = addDelays(sorted)
     val secondFilter = filter(withDelays, filters.delay)
@@ -97,6 +98,13 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
   private def read[T <: LogEntry](logType: LogType[T]): Iterator[T] = {
     val reader = LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
     reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber))
+  }
+
+  private def join(v: Iterator[LogEntry], join: Option[FieldExpr]): Iterator[LogEntry] = {
+    if (join.isDefined)
+      new Joiner(join.get).join(v)
+    else
+    v
   }
 
   private def filter(v: Iterator[LogEntry], filters: Seq[LogFilter]): Iterator[LogEntry] = {

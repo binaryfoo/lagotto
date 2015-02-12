@@ -30,5 +30,15 @@ class XsvLogTest extends LagoTest {
     csvLog.apply(iterator).timestamp shouldBe new DateTime(2015, 1, 17, 16, 12, 18, 483)
   }
 
+  "header-less csv log" should "use indices as field names" in {
+    val iterator = iteratorOver("""val1.1,val1.2
+                                  |val2.1,val2.2
+                                  |""".stripMargin)
+    val log = new XsvLog(hasHeader = false)
+    log.apply(iterator).toSeq("0", "1") shouldBe Seq("val1.1", "val1.2")
+    log.apply(iterator).toSeq("0", "1") shouldBe Seq("val2.1", "val2.2")
+    log.apply(iterator) shouldBe null
+  }
+
   private def iteratorOver(text: String) = new LineIterator(namedInputStreamFrom(text)("testSource"), true, true)
 }

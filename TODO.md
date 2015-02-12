@@ -40,6 +40,9 @@
 * Make xpath() a FieldExpr. Avoids need to cache expressions
 * Pair on ip,mti,nmic,time threshold?
 * Can --progress estimate end time with one large file?
+* URL schemes for file names. More interesting with -F
+ - ssh://user@host/path
+ - http(s)://
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
