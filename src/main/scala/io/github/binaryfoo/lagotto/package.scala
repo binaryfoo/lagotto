@@ -15,4 +15,10 @@ package object lagotto {
       }
     }
   }
+
+  def deNull(s: String, default: String = ""): String = if (s == null) default else s
+
+  implicit class DeNullableString(val s: String) extends AnyVal {
+    def deNull(default: String = "") = lagotto.deNull(s, default)
+  }
 }

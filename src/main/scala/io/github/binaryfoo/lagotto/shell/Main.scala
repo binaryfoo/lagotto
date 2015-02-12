@@ -1,12 +1,11 @@
 package io.github.binaryfoo.lagotto.shell
 
-import com.typesafe.config.{ConfigFactory, Config}
+import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import io.github.binaryfoo.lagotto.reader._
 
-import scala.collection.JavaConversions
 import scala.util.Try
 
 object Main extends App {
@@ -141,7 +140,7 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
       // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
       // Options: could try to guess from they name of the key or write an Ordering[Any]?
       val memoryHog = v.toSeq
-      val sorted = Try(memoryHog.sortBy(key(_).toInt)).getOrElse(memoryHog.sortBy(key(_)))
+      val sorted = Try(memoryHog.sortBy(key(_).deNull("0").toInt)).getOrElse(memoryHog.sortBy(key(_).deNull()))
       (if (descending) sorted.reverse else sorted).toIterator
     }
   }

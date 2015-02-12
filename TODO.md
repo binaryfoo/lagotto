@@ -88,6 +88,7 @@ charting options:
 * http://code.shutterstock.com/rickshaw/
 * http://beakernotebook.com/
 * https://github.com/andypetrella/spark-notebook
+* https://github.com/trifacta/vega/wiki/Tutorial
 
 * use parbolied https://github.com/sirthias/parboiled or built in parser combinators for parsing expressions?
 * integrated with beaker ? https://github.com/twosigma/beaker-notebook/wiki/Create-an-OutputDisplay

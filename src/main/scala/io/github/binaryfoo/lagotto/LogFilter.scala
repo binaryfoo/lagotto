@@ -81,8 +81,6 @@ object LogFilters {
   val greaterThanAsIntWithStringFallback = (left: String, right: String) => compareAsIntWithStringFallback(left, right) >= 0
   val lessThanAsIntWithStringFallback = (left: String, right: String) => compareAsIntWithStringFallback(left, right) <= 0
 
-  private def deNull(s: String): String = if (s == null) "" else s
-
   private def compareAsIntWithStringFallback(left: String, right: String): Int = {
     val l = deNull(left)
     val r = deNull(right)
