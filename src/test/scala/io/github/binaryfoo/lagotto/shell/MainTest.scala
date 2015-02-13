@@ -835,7 +835,7 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
-  "--join" should "pair up rows on a named header field" in {
+  it should "pair up rows on a named header field" in {
     val output = run("--in-format", "csv", "--join", "animal", testFile("one.csv"), testFile("two.csv"))
     output shouldBe
       """rabbit,1,green
@@ -843,6 +843,14 @@ class MainTest extends LagoTest {
         |mouse,3,
         |elephant,red,
         |""".stripMargin
+  }
+
+  it should "pair jpos entries on realm and stan" in {
+    val output = run("--csv", "realm,11,48.1,44.1", "--join", "link,11", testFile("a-bunch.xml"))
+    output shouldBe """realm,11,48.1,44.1
+                      |some.channel/10.0.0.1:4322,2,a-bunch.xml #2,response to 2
+                      |some.channel/10.0.0.1:4321,1,a-bunch.xml #1,response to 1
+                      |""".stripMargin
   }
 
   "--inner-join" should "show only paired up rows" in {

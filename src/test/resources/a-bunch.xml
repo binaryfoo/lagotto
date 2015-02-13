@@ -30,6 +30,9 @@
                 <field id="0" value="0210"/>
                 <field id="39" value="01"/>
                 <field id="11" value="2"/>
+                <isomsg id="44">
+                    <field id="1" value="response to 2"/>
+                </isomsg>
                 <isomsg id="48">
                     <field id="1" value="a-bunch.xml #3"/>
                 </isomsg>
@@ -42,6 +45,9 @@
                 <field id="0" value="0210"/>
                 <field id="39" value="00"/>
                 <field id="11" value="1"/>
+                <isomsg id="44">
+                    <field id="1" value="response to 1"/>
+                </isomsg>
                 <isomsg id="48">
                     <field id="1" value="a-bunch.xml #4"/>
                 </isomsg>

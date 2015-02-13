@@ -64,7 +64,7 @@ class LogReaderTest extends LagoTest {
     csv shouldEqual """a-bunch.xml #1,:3
                       |a-bunch.xml #2,:15
                       |a-bunch.xml #3,:27
-                      |a-bunch.xml #4,:39""".stripMargin
+                      |a-bunch.xml #4,:42""".stripMargin
   }
 
   "Reading 2 files" should "read records in order" in {
@@ -91,7 +91,7 @@ class LogReaderTest extends LagoTest {
     csv shouldEqual """a-bunch.xml #1,a-bunch.xml:3
                       |a-bunch.xml #2,a-bunch.xml:15
                       |a-bunch.xml #3,a-bunch.xml:27
-                      |a-bunch.xml #4,a-bunch.xml:39""".stripMargin
+                      |a-bunch.xml #4,a-bunch.xml:42""".stripMargin
   }
 
   private def readEntries(s: String): Iterator[JposEntry] = {

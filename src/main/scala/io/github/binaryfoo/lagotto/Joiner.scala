@@ -1,6 +1,5 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import org.joda.time.DateTime
 
 import scala.collection.{AbstractIterator, mutable}

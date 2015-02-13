@@ -51,6 +51,8 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
 
     def expressionsFor(exprList: String): Seq[FieldExpr] = expressionsFor(exprList.split(","))
 
+    def allOf(exprList: String): AllOfExpr = AllOfExpr(exprList, expressionsFor(exprList))
+
     def expressionsFor(exprList: Seq[String]): Seq[FieldExpr] = {
       exprList.map { case FieldExpr(e) => e }
     }
@@ -580,4 +582,8 @@ object TimeExpr {
   def unapply(expr: String): Option[TimeExpr] = {
     TimeFormatter.unapply(expr).map(f => TimeExpr(expr, f))
   }
+}
+
+case class AllOfExpr(field: String, expressions: Seq[FieldExpr]) extends FieldExpr {
+  override def apply(e: LogEntry): String = expressions.map(_(e)).mkString(",")
 }
