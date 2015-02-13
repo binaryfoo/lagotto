@@ -75,6 +75,23 @@ class FieldExprTest extends LagoTest {
     expr(AggregateLogEntry(Map("calc(timestamp-lifespan)" -> "already computed"), Seq())) shouldBe "already computed"
   }
 
+  "calc(lifespan-rtt)" should "show integer difference" in {
+    val expr = expressionFor("calc(lifespan-rtt)")
+    expr(JposEntry("lifespan" -> "1000", "rtt" -> "300")) shouldBe "700"
+  }
+
+  it should "return null if one side is missing" in {
+    val expr = expressionFor("calc(lifespan-rtt)")
+    expr(JposEntry("lifespan" -> "1000")) shouldBe null
+    expr(JposEntry("rtt" -> "300")) shouldBe null
+    expr.get(JposEntry("rtt" -> "300")) shouldBe None
+  }
+
+  "calc(max(lifespan)-max(rtt))" should "show integer difference" in {
+    val expr = expressionFor("calc(max(lifespan)-max(rtt))")
+    expr(AggregateLogEntry(Map.empty, Seq("max(lifespan)" -> "1000", "max(rtt)" -> "330"))) shouldBe "670"
+  }
+
   "Format expression (lifespan millis as period)" should "convert millis to a time period" in {
     val expr = expressionFor("(lifespan millis as period)")
     expr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00:00.000"

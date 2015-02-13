@@ -18,6 +18,8 @@ trait LogEntry {
    */
   def apply(id: String): String
 
+  def get(id: String): Option[String] = Option(apply(id))
+
   /**
    * The record as text (XML)
    * @return XML

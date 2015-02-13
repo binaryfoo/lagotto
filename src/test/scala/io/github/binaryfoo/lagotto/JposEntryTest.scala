@@ -60,6 +60,7 @@ class JposEntryTest extends LagoTest {
     entry("date") shouldEqual "2014-11-24"
     entry("42") shouldEqual null
     entry("rubbish") shouldEqual null
+    entry.get("rubbish") shouldEqual None
   }
 
   it should "extract logical link name from realm" in {

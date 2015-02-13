@@ -106,6 +106,7 @@ trait FieldExpr extends FieldAccessor[LogEntry] {
    */
   def field: String
   def contains(other: FieldExpr): Boolean = this == other
+  def get(e: LogEntry): Option[String] = Option(apply(e))
   override def toString(): String = field
 }
 
@@ -280,22 +281,20 @@ object SubtractExpr {
   def apply(expr: String, l: FieldExpr, r: FieldExpr): FieldExpr = {
     (l, r) match {
       case (left: AggregateExpr, right: AggregateExpr) =>
-        val leftFormat = left.field match {
-          case AggregateOps.OverExpression(TimeFormatter(format)) => format
-          case _ => throw new IAmSorryDave(s"In calc(left-right) left must be time expression. ${left.field} is not a time expression.")
-        }
-        right.field match {
-          case AggregateOps.OverExpression(TimeFormatter(rightFormat)) => SubtractTwoAggregateTimesExpr(expr, left, right, leftFormat, rightFormat)
-          case _ => SubtractAggregateMillisFromTimeExpr(expr, left, right, leftFormat)
+        left.field match {
+          case AggregateOps.OverExpression(TimeFormatter(leftFormat)) => right.field match {
+            case AggregateOps.OverExpression(TimeFormatter(rightFormat)) => SubtractTwoAggregateTimesExpr(expr, left, right, leftFormat, rightFormat)
+            case _ => SubtractAggregateMillisFromTimeExpr(expr, left, right, leftFormat)
+          }
+          case _ => SubtractAggregatesExpr(expr, left, right)
         }
       case (left: DirectExpr, right: DirectExpr) =>
-        val leftFormat = left.field match {
-          case TimeFormatter(format) => format
-          case _ => throw new IAmSorryDave(s"In calc(left-right) left must be time expression. ${left.field} is not a time expression.")
-        }
-        right.field match {
-          case TimeFormatter(rightFormat) => SubtractTwoDirectTimesExpr(expr, left, right, leftFormat, rightFormat)
-          case _ => SubtractDirectMillisFromTimeExpr(expr, left, right, leftFormat)
+        left.field match {
+          case TimeFormatter(leftFormat) => right.field match {
+            case TimeFormatter(rightFormat) => SubtractTwoDirectTimesExpr(expr, left, right, leftFormat, rightFormat)
+            case _ => SubtractDirectMillisFromTimeExpr(expr, left, right, leftFormat)
+          }
+          case _ => SubtractDirectExpr(expr, left, right)
         }
       case (left, right) =>
         throw new IAmSorryDave(s"In calc(left-right) both sides must be aggregate or direct operations. Left: $left and Right: $right are not compatible.")
@@ -328,6 +327,31 @@ case class SubtractTwoAggregateTimesExpr(field: String, left: AggregateExpr, rig
 
 case class SubtractTwoDirectTimesExpr(field: String, left: DirectExpr, right: DirectExpr, leftFormat: TimeFormatter, rightFormat: TimeFormatter)
   extends SubtractTimestampsExpr with DirectCalculationExpr {
+}
+
+/**
+ * Subtract two values convertible to Longs.
+ */
+trait SubtractExpr {
+
+  def left: FieldExpr
+  def right: FieldExpr
+
+  def calculate(e: LogEntry): String = {
+    (left.get(e), right.get(e)) match {
+      case (Some(l), Some(r)) => (l.toLong - r.toLong).toString
+      case _ => null
+    }
+  }
+}
+
+case class SubtractAggregatesExpr(field: String, left: AggregateExpr, right: AggregateExpr)
+  extends SubtractExpr with CalculationOverAggregates {
+  override def dependencies(): Seq[AggregateExpr] = Seq(left, right)
+}
+
+case class SubtractDirectExpr(field: String, left: DirectExpr, right: DirectExpr)
+  extends SubtractExpr with DirectCalculationExpr {
 }
 
 /**
