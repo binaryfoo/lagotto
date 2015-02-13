@@ -41,13 +41,16 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
 
   /**
    * Format like Joda with same extras like HH:mm:s0 for 10 second buckets.
-   * @param pattern
+   * @param pattern Joda DateTimeFormat
    * @return Timestamp as string
    */
   def timestampAs(pattern: String): String = timestampAs(new HumanTimeFormatter(pattern))
 
   def timestampAs(format: TimeFormatter): String = format.print(timestamp)
 
+  /**
+   * Best compile an XPathExpr if you're calling this in a loop.
+   */
   def xpath(path: String): String = XPathEval(lines, path)
 
   /**

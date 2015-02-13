@@ -6,19 +6,9 @@ import javax.xml.xpath.{XPathExpression, XPathFactory}
 
 import org.w3c.dom.Document
 
-import scala.collection.mutable
-
 object XPathEval {
 
-//  System.setProperty("org.apache.xml.dtm.DTMManager", "org.apache.xml.dtm.ref.DTMManagerDefault")
-
-  // should bound in size or be weak
-  private val cache = mutable.Map[String, HintedXPathExpression]()
-
-  def apply(xml: String, expr: String): String = {
-    val expression = cache.getOrElseUpdate(expr, compile(expr))
-    expression(xml)
-  }
+  def apply(xml: String, expr: String): String = compile(expr)(xml)
 
   def compile(path: String): HintedXPathExpression = {
     val xPathFactory = XPathFactory.newInstance()

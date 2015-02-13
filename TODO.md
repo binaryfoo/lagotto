@@ -34,7 +34,6 @@
 * Remove fields vs subfields distinction from dictionaries
 * Dump dictionary as a table for sane MTI-NMIC combinations
 * Add alias like SQL expr as 'sane name'
-* Make xpath() a FieldExpr. Avoids need to cache expressions
 * Pair on ip,mti,nmic,time threshold?
 * Can --progress estimate end time with one large file?
 * URL schemes for file names. More interesting with -F
