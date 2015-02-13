@@ -25,9 +25,11 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
     val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
     val PivotOp = """pivot\((.+)\)""".r
     val XPathAccess = """xpath\((.+)\)""".r
+    val Alias = """(.*) as "([^"]*)"""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
+        case Alias(FieldExpr(target), alias) => AliasExpr(expr, target, alias)
         case SubtractOp(FieldExpr(left), FieldExpr(right)) => SubtractExpr(expr, left, right)
         case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
         case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
@@ -228,6 +230,7 @@ object HasAggregateExpressions {
     expr match {
       case e: AggregateExpr => Some(Seq(e))
       case e: CalculationOverAggregates => Some(e.dependencies())
+      case AliasExpr(_, t: AggregateExpr, _) => Some(Seq(t))
       case _ => None
     }
   }
@@ -610,4 +613,9 @@ object TimeExpr {
 
 case class AllOfExpr(field: String, expressions: Seq[FieldExpr]) extends FieldExpr {
   override def apply(e: LogEntry): String = expressions.map(_(e)).mkString(",")
+}
+
+case class AliasExpr(field: String, target: FieldExpr, name: String) extends FieldExpr {
+  override def apply(e: LogEntry): String = target(e)
+  override def toString(): String = name
 }

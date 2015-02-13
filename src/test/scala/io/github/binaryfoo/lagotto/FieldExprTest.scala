@@ -90,6 +90,13 @@ class FieldExprTest extends LagoTest {
   "calc(max(lifespan)-max(rtt))" should "show integer difference" in {
     val expr = expressionFor("calc(max(lifespan)-max(rtt))")
     expr(AggregateLogEntry(Map.empty, Seq("max(lifespan)" -> "1000", "max(rtt)" -> "330"))) shouldBe "670"
+    expr.toString() shouldBe "calc(max(lifespan)-max(rtt))"
+  }
+
+  "alias" should "wrap target expression and rename it" in {
+    val expr = expressionFor("calc(max(lifespan)-max(rtt)) as \"delta\"")
+    expr(AggregateLogEntry(Map.empty, Seq("max(lifespan)" -> "1000", "max(rtt)" -> "330"))) shouldBe "670"
+    expr.toString() shouldBe "delta"
   }
 
   "Format expression (lifespan millis as period)" should "convert millis to a time period" in {

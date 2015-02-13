@@ -175,6 +175,14 @@ class MainTest extends LagoTest {
                           |""".stripMargin
   }
 
+  it should "group rows when max(lifespan) is aliased" in {
+    val output = run("--csv", "ipAddress,max(lifespan) as \"slowest\"", testFile("a-pair.xml"))
+    output shouldEqual """ipAddress,slowest
+                          |10.0.0.1,10005
+                          |,
+                          |""".stripMargin
+  }
+
   it should "group rows when min(calc(timestamp-lifespan)) field included in --csv option" in {
     val output = run("--csv", "min(calc(timestamp-lifespan))", testFile("a-pair.xml"))
     output shouldEqual """min(calc(timestamp-lifespan))
