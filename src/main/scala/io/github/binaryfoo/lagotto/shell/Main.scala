@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
 import com.typesafe.config.{Config, ConfigFactory}
+import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
@@ -95,15 +96,15 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber))
   }
 
-  private def join(v: Iterator[LogEntry], join: Option[FieldExpr], logType: LogType[LogEntry]): Iterator[LogEntry] = {
+  private def join(v: Iterator[LogEntry], join: Option[(FieldExpr, JoinMode)], logType: LogType[LogEntry]): Iterator[LogEntry] = {
     val delimiter = logType match {
       case xsv: XsvLog => xsv.delimiter
       case _ => '\n'
     }
-    if (join.isDefined)
-      new Joiner(join.get, delimiter).join(v)
-    else
-    v
+    join.map {
+      case (expr, JoinMode.Outer) => new Joiner(expr, delimiter).outerJoin(v)
+      case (expr, JoinMode.Inner) => new Joiner(expr, delimiter).innerJoin(v)
+    }.getOrElse(v)
   }
 
   private def filter(v: Iterator[LogEntry], filters: Seq[LogFilter]): Iterator[LogEntry] = {

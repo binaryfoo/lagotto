@@ -119,8 +119,12 @@ class OptionsParser(val dictionary: DataDictionary) {
       } text "Sort output descending by field. Prevents incremental output"
 
       opt[String]("join") action {(field,c) =>
-        c.copy(joinOn = FieldExpr.unapply(field))
+        c.copy(joinOn = Some(FieldExpr.expressionFor(field), JoinMode.Outer))
       } text "Full outer join on the named field"
+
+      opt[String]("inner-join") action {(field,c) =>
+        c.copy(joinOn = Some(FieldExpr.expressionFor(field), JoinMode.Inner))
+      } text "Show only paired rows (like SQL's default join)"
 
       opt[String]("gnuplot") action {(fileName,c) =>
         c.copy(gnuplotFileName = Some(fileName))

@@ -845,6 +845,14 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "--inner-join" should "show only paired up rows" in {
+    val output = run("--in-format", "csv", "--inner-join", "animal", testFile("one.csv"), testFile("two.csv"))
+    output shouldBe
+      """rabbit,1,green
+        |fox,2,yellow
+        |""".stripMargin
+  }
+
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   def standardOutFrom(thunk: => Unit): String = {

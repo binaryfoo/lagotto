@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto
 
+import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import org.joda.time.DateTime
 
 import scala.collection.{AbstractIterator, mutable}
@@ -19,7 +20,7 @@ class Joiner(val field: FieldExpr, val delimiter: Char) extends (LogEntry => Opt
     }
   }
 
-  def join(it: Iterator[LogEntry]): Iterator[JoinedEntry] = {
+  def outerJoin(it: Iterator[LogEntry]): Iterator[JoinedEntry] = {
     val joined = it.flatMap(this.apply)
     new AbstractIterator[JoinedEntry] {
 
@@ -31,6 +32,8 @@ class Joiner(val field: FieldExpr, val delimiter: Char) extends (LogEntry => Opt
 
     }
   }
+
+  def innerJoin(it: Iterator[LogEntry]): Iterator[JoinedEntry] = it.flatMap(this.apply)
 }
 
 case class JoinedEntry(left: LogEntry, right: LogEntry, join: FieldExpr, delimiter: Char) extends LogEntry {
@@ -72,5 +75,10 @@ object JoinedEntryFieldAccess {
     case Right(p, f) => Some((p, f))
     case _ => None
   }
+}
+
+object JoinMode extends Enumeration {
+  type JoinMode = Value
+  val Outer, Inner = Value
 }
 

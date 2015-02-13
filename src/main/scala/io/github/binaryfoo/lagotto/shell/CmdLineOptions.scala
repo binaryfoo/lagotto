@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
+import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto._
 
 /**
@@ -14,7 +15,7 @@ case class CmdLineOptions (filters: Seq[LogFilter] = Seq(),
                    beforeContext: Int = 0,
                    afterContext: Int = 0,
                    sortBy: Option[FieldExpr] = None,
-                   joinOn: Option[FieldExpr] = None,
+                   joinOn: Option[(FieldExpr, JoinMode)] = None,
                    sortDescending: Boolean = false,
                    strict: Boolean = false,
                    progressMeter: ProgressMeter = NullProgressMeter,
