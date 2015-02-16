@@ -67,6 +67,11 @@ case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true
   }
 }
 
+case class InSetFilter(expr: FieldExpr, values: Set[String]) extends FieldFilter {
+  override def apply(entry: LogEntry): Boolean = values.contains(expr(entry))
+  override def toString(): String = s"$expr in (${values.mkString(",")})"
+}
+
 object LogFilters {
   type MatchOp = (String, String) => Boolean
 
@@ -109,6 +114,7 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
     private val GrepNotPattern = """grep!\(([^)]+?)\)""".r
     private val IGrepPattern = """igrep\(([^)]+?)\)""".r
     private val IGrepNotPattern = """igrep!\(([^)]+?)\)""".r
+    private val InPattern = """(.+) in \(([^)]+)\)""".r
 
     def unapply(s: String): Option[LogFilter] = s match {
       case MatchAsRegexPattern(FieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
@@ -128,6 +134,7 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
       case GrepNotPattern(text) => Some(NegativeGrepFilter(text))
       case IGrepPattern(text) => Some(InsensitiveGrepFilter(text))
       case IGrepNotPattern(text) => Some(NegativeInsensitiveGrepFilter(text))
+      case InPattern(FieldExpr(expr), list) => Some(InSetFilter(expr, list.split(',').toSet))
       case _ =>
         None
     }

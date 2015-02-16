@@ -26,6 +26,16 @@ class LogFilterTest extends LagoTest {
     filter(JposEntry("0" -> "023")) shouldBe true
   }
 
+  "in operator" should "match value in set" in {
+    val filter = filterFor("socket in (10.0.0.1:8000,10.0.0.2:8001)")
+    filter.field shouldBe "socket"
+    filter(JposEntry("realm" -> "channel/10.0.0.1:8000")) shouldBe true
+    filter(JposEntry("realm" -> "channel/10.0.0.1:8001")) shouldBe false
+    filter(JposEntry("realm" -> "channel/10.0.0.2:8001")) shouldBe true
+    filter(JposEntry("realm" -> "channel/10.0.0.2:8000")) shouldBe false
+    filter(JposEntry("realm" -> "channel/10.0.0.3:8000")) shouldBe false
+  }
+
   "Equals operator" should "allow comparison with empty string" in {
     val filter = filterFor("exception!=")
     filter.field shouldBe "exception"

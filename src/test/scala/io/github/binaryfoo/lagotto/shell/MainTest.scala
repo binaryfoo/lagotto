@@ -869,6 +869,14 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "in operator" should "work in count()" in {
+    val output = run("--csv", "count(ipAddress in (10.0.0.1)) as \"localIp\",count(port in (4322)) as \"p1\"", testFile("a-bunch.xml"))
+    output shouldBe
+      """localIp,p1
+        |4,2
+        |""".stripMargin
+  }
+
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   def standardOutFrom(thunk: => Unit): String = {
