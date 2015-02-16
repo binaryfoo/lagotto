@@ -1,15 +1,17 @@
 package io.github.binaryfoo.lagotto.shell
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.Config
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
-import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, NameType}
-import io.github.binaryfoo.lagotto.reader.LogTypes
+import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
+import io.github.binaryfoo.lagotto.reader.{LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
 import scopt.Read
 
-class OptionsParser(val dictionary: DataDictionary) {
+class OptionsParser(val config: Config) {
 
+  val dictionary = RootDataDictionary(config)
+  val logTypes = LogTypes.load(config)
   val fieldParser = new FieldExprParser(Some(dictionary))
   val filterParser = new LogFilterParser(fieldParser)
   import fieldParser.FieldExpr
@@ -26,9 +28,9 @@ class OptionsParser(val dictionary: DataDictionary) {
         c.copy(input = c.input :+ f)
       } text "Optional list of log files. Otherwise read stdin."
 
-      opt[String]('i', "in-format") action { (fmt, c) =>
-        c.copy(inputFormat = Some(fmt))
-      } text s"Optional input log file format. Supported: ${LogTypes.load(ConfigFactory.load()).keys.mkString(",")}"
+      opt[LogType[LogEntry]]('i', "in-format") action { (fmt, c) =>
+        c.copy(inputFormat = fmt)
+      } text s"Optional input log file format. Supported: ${logTypes.keys.mkString(",")}"
 
       opt[String]('g', "grep") unbounded() action { (expr, c) =>
         c.copy(filters = c.filters :+ GrepFilter(expr))
@@ -143,7 +145,7 @@ class OptionsParser(val dictionary: DataDictionary) {
       } text "Only output n entries"
     }
 
-    parser.parse(args, CmdLineOptions())
+    parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))
   }
 
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
@@ -167,6 +169,13 @@ class OptionsParser(val dictionary: DataDictionary) {
       catch {
         case e: NoSuchElementException => throw new IllegalArgumentException(s"Unknown name type '$s'. Known types are ${NameType.values.mkString(", ")}")
       }
+    }
+  }
+
+  implicit def logTypeRead: Read[LogType[LogEntry]] = new Read[LogType[LogEntry]] {
+    override def arity: Int = 1
+    override def reads = { (s: String) =>
+      logTypes.getOrElse(s, throw new IllegalArgumentException(s"Unknown input format '$s'. Known formats are ${logTypes.keys.mkString(", ")}"))
     }
   }
 }

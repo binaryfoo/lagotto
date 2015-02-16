@@ -4,7 +4,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import io.github.binaryfoo.lagotto.reader._
 
 import scala.util.Try
@@ -14,9 +13,7 @@ object Main extends App {
   runWith(args, ConfigFactory.load())
 
   def runWith(args: Array[String], config: Config) = {
-    val dictionary = RootDataDictionary(config)
-
-    new OptionsParser(dictionary).parse(args).map { opts =>
+    new OptionsParser(config).parse(args).map { opts =>
       val (pipeline, format) = (new Pipeline(opts, config))()
       val sink = sinkFor(opts, format)
 
@@ -55,10 +52,9 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
   def apply(): (Iterator[LogEntry], OutputFormat) = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
-    val inputFormat = LogTypes.lookup(config, opts.inputFormat)
 
-    val paired = if (opts.pair) read(JposLog).pair() else read(inputFormat)
-    val joined = join(paired, opts.joinOn, inputFormat)
+    val paired = if (opts.pair) read(JposLog).pair() else read(opts.inputFormat)
+    val joined = join(paired, opts.joinOn, opts.inputFormat)
     val firstFilter = filter(joined, filters.paired)
     val sorted = sort(firstFilter, preAggregationSortKey, opts.sortDescending)
     val withDelays = addDelays(sorted)

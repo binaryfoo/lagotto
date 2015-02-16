@@ -9,14 +9,14 @@ class CmdLineOptionsTest extends LagoTest {
   import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.LogFilter.filterFor
 
   "Aggregation config" should "split key and aggregate fields" in {
-    val config = CmdLineOptions(format = Tabular(fields = expressionsFor("mti,count")))
+    val config = CmdLineOptions(null, format = Tabular(fields = expressionsFor("mti,count")))
     val aggregationConfig = config.aggregationConfig()
     aggregationConfig.keys shouldBe Seq(expressionFor("mti"))
     aggregationConfig.aggregates.toSeq shouldBe Seq(expressionFor("count"))
   }
 
   it should "include aggregates used in filters" in {
-    val config = CmdLineOptions(format = Tabular(fields = expressionsFor("mti")), filters = Seq(filterFor("count>1")))
+    val config = CmdLineOptions(null, format = Tabular(fields = expressionsFor("mti")), filters = Seq(filterFor("count>1")))
     val aggregationConfig = config.aggregationConfig()
     aggregationConfig.keys shouldBe Seq(expressionFor("mti"))
     aggregationConfig.aggregates.toSeq shouldBe Seq(expressionFor("count"))
@@ -34,7 +34,7 @@ class CmdLineOptionsTest extends LagoTest {
   }
 
   def shouldNotDuplicate(aggregate: String): Unit = {
-    val config = CmdLineOptions(format = Tabular(fields = expressionsFor(s"mti,$aggregate")), filters = Seq(filterFor(s"$aggregate>1")))
+    val config = CmdLineOptions(null, format = Tabular(fields = expressionsFor(s"mti,$aggregate")), filters = Seq(filterFor(s"$aggregate>1")))
     val aggregationConfig = config.aggregationConfig()
     aggregationConfig.keys shouldBe Seq(expressionFor("mti"))
     aggregationConfig.aggregates.toSeq shouldBe Seq(expressionFor(aggregate))

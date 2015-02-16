@@ -9,7 +9,7 @@ class PipelineTest extends LagoTest {
 
   "Filter partitioning" should "apply count(exception!=)>3 after aggregation" in {
     val moreThanOneException = filterFor("count(exception!=)>1)")
-    val opts = CmdLineOptions(filters = Seq(moreThanOneException))
+    val opts = CmdLineOptions(null, filters = Seq(moreThanOneException))
     val Filters(aggregate, Nil, Nil) = new Pipeline(opts, ConfigFactory.load()).partitionFilters()
 
     aggregate shouldBe Seq(moreThanOneException)
@@ -17,7 +17,7 @@ class PipelineTest extends LagoTest {
 
   it should "apply delay>1 after delay but before aggregation" in {
     val slow = filterFor("delay>1")
-    val opts = CmdLineOptions(filters = Seq(slow))
+    val opts = CmdLineOptions(null, filters = Seq(slow))
     val Filters(Nil, delay, Nil) = new Pipeline(opts, ConfigFactory.load()).partitionFilters()
 
     delay shouldBe Seq(slow)

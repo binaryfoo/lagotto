@@ -2,13 +2,14 @@ package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.reader.LogType
 
 /**
  * What should main do? See Options for what each wonderful flag does.
  */
-case class CmdLineOptions (filters: Seq[LogFilter] = Seq(),
+case class CmdLineOptions (inputFormat: LogType[LogEntry],
+                   filters: Seq[LogFilter] = Seq(),
                    input: Seq[String] = Seq(), 
-                   inputFormat: Option[String] = None,
                    format: OutputFormat = FullText,
                    pair: Boolean = false,
                    header: Boolean = true,

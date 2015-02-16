@@ -95,7 +95,7 @@ object LogTypes {
     Class.forName(name + "$").getField("MODULE$").get(null).asInstanceOf[T]
   }
 
-  implicit class RichLogTypes(val m: Map[String, LogType[LogEntry]]) extends AnyVal {
+  implicit class RichLogTypes(val m: LogTypeMap) extends AnyVal {
 
     def list(names: Seq[String]): Seq[LogType[LogEntry]] = {
       names.map(m(_))
