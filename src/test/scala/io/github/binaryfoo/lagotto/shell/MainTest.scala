@@ -60,7 +60,7 @@ class MainTest extends LagoTest {
   }
 
   it should "allow sort on delay between messages" in {
-    val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "--sort-desc", "delay", testFile("a-bunch.xml"))
+    val output = run("-f", "socket=10.0.0.1:4321", "--csv", "time,mti,11,delay", "--sort", "delay desc", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,delay
                          |00:00:04.992,0210,1,1700
                          |00:00:03.292,0200,1,0
@@ -160,7 +160,7 @@ class MainTest extends LagoTest {
   }
 
   it should "allow sort on count field included in --csv option" in {
-    val output = run("--csv", "time(mm:ss),count", "--sort-desc", "count", testFile("a-bunch.xml"))
+    val output = run("--csv", "time(mm:ss),count", "--sort", "count desc", testFile("a-bunch.xml"))
     output shouldEqual """time(mm:ss),count
                          |00:04,3
                          |00:03,1
@@ -351,6 +351,17 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
+  it should "sort by multiple fields" in {
+    val output = run("--sort", "11 desc,time", "--csv", "time,11", testFile("a-bunch.xml"))
+    output shouldEqual
+      """time,11
+        |00:00:04.292,2
+        |00:00:04.892,2
+        |00:00:03.292,1
+        |00:00:04.992,1
+        |""".stripMargin
+  }
+
   it should "allow calc(a-b)>N as a sort" in {
     val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--sort", "calc(max(time(millis))-min(time(millis)))", testFile("a-bunch.xml"))
     output shouldEqual """mti,calc(max(time(millis))-min(time(millis)))
@@ -369,8 +380,8 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
-  "--sort-desc" should "reverse sort order" in {
-    val output = run("--sort-desc", "11", "--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
+  "--sort X desc" should "reverse sort order" in {
+    val output = run("--sort", "11 desc", "--pair", "--csv", "time,mti,11,rtt", testFile("a-bunch.xml"))
     output shouldEqual """time,mti,11,rtt
                          |00:00:04.292,0200,2,600
                          |00:00:03.292,0200,1,1700
@@ -378,7 +389,7 @@ class MainTest extends LagoTest {
   }
 
   it should "allow calc(a-b)>N as a reversed sort" in {
-    val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--sort-desc", "calc(max(time(millis))-min(time(millis)))", testFile("a-bunch.xml"))
+    val output = run("--csv", "mti,calc(max(time(millis))-min(time(millis)))", "--sort", "calc(max(time(millis))-min(time(millis))) desc", testFile("a-bunch.xml"))
     output shouldEqual """mti,calc(max(time(millis))-min(time(millis)))
                          |0200,1000
                          |0210,100
@@ -785,7 +796,7 @@ class MainTest extends LagoTest {
   }
 
   "csv" should "without a header row should be readable with --in-format=icsv" in {
-    val output = run("--sort-desc", "1", "--in-format", "icsv", testFile("one.icsv"))
+    val output = run("--sort", "1 desc", "--in-format", "icsv", testFile("one.icsv"))
     output shouldBe
       """mouse,3
         |fox,2

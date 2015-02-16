@@ -113,12 +113,8 @@ class OptionsParser(val config: Config) {
       } text "Like -C in grep"
 
       opt[String]("sort") action {(field,c) =>
-        c.copy(sortBy = FieldExpr.unapply(field))
-      } text "Sort output by field. Prevents incremental output"
-
-      opt[String]("sort-desc") action {(field,c) =>
-        c.copy(sortBy = FieldExpr.unapply(field), sortDescending = true)
-      } text "Sort output descending by field. Prevents incremental output"
+        c.copy(sortBy = parseSortKey(field))
+      } text "Sort output by field(s). Eg time,11 desc."
 
       opt[String]("join") action {(field,c) =>
         c.copy(joinOn = Some(FieldExpr.allOf(field), JoinMode.Outer))
@@ -146,6 +142,13 @@ class OptionsParser(val config: Config) {
     }
 
     parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))
+  }
+
+  private def parseSortKey(key: String): Seq[SortKey] = {
+    val ExprAndOrder = """([^ ]+)(?: (asc|desc))?""".r
+    key.split(',').map {
+      case ExprAndOrder(FieldExpr(expr), asc) => SortKey(expr, asc == "asc" || asc == null)
+    }
   }
 
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {

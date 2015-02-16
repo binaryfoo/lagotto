@@ -4,6 +4,8 @@ import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.reader.LogType
 
+import scala.annotation.tailrec
+
 /**
  * What should main do? See Options for what each wonderful flag does.
  */
@@ -15,9 +17,8 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    header: Boolean = true,
                    beforeContext: Int = 0,
                    afterContext: Int = 0,
-                   sortBy: Option[FieldExpr] = None,
+                   sortBy: Seq[SortKey] = Seq.empty,
                    joinOn: Option[(FieldExpr, JoinMode)] = None,
-                   sortDescending: Boolean = false,
                    strict: Boolean = false,
                    progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[FieldExpr] = Seq(),
@@ -57,4 +58,32 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
     }
   }
 
+}
+
+case class SortKey(expr: FieldExpr, ascending: Boolean, asNumber: Boolean = true) {
+
+  def compare(x: LogEntry, y: LogEntry): Int = {
+    val r = if (asNumber) {
+      expr(x).deNull("0").toInt compare expr(y).deNull("0").toInt
+    } else {
+      expr(x).deNull() compare expr(y).deNull()
+    }
+    if (ascending) r else -r
+  }
+
+}
+
+class SortKeyOrdering(val keys: List[SortKey]) extends Ordering[LogEntry] {
+  override def compare(x: LogEntry, y: LogEntry): Int = compare(x, y, keys, 0)
+
+  @tailrec
+  private def compare(x: LogEntry, y: LogEntry, keys: List[SortKey], previous: Int): Int = {
+    keys match {
+      case Nil => previous
+      case k :: tail =>
+        val current = k.compare(x, y)
+        if (current != 0) current
+        else compare(x, y, tail, current)
+    }
+  }
 }

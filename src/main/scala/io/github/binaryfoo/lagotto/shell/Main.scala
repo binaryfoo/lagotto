@@ -6,7 +6,7 @@ import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.reader._
 
-import scala.util.Try
+import scala.annotation.tailrec
 
 object Main extends App {
 
@@ -43,7 +43,7 @@ object Main extends App {
   }
 }
 
-case class SortOrder(afterGrouping: Option[FieldExpr] = None, beforeGrouping: Option[FieldExpr] = None)
+case class SortOrder(afterGrouping: Seq[SortKey] = Seq.empty, beforeGrouping: Seq[SortKey] = Seq.empty)
 
 case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Seq(), paired: Seq[LogFilter] = Seq())
 
@@ -56,12 +56,12 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     val paired = if (opts.pair) read(JposLog).pair() else read(opts.inputFormat)
     val joined = join(paired, opts.joinOn, opts.inputFormat)
     val firstFilter = filter(joined, filters.paired)
-    val sorted = sort(firstFilter, preAggregationSortKey, opts.sortDescending)
+    val sorted = sort(firstFilter, preAggregationSortKey)
     val withDelays = addDelays(sorted)
     val secondFilter = filter(withDelays, filters.delay)
     val aggregated = applyAggregation(secondFilter)
     val thirdFilter = filter(aggregated, filters.aggregate)
-    val secondSort = sort(thirdFilter, postAggregationSortKey, opts.sortDescending)
+    val secondSort = sort(thirdFilter, postAggregationSortKey)
     val pivot = applyPivot(secondSort)
     val format = outputFormat(pivot)
     val limited = if (opts.limit.isDefined) pivot.take(opts.limit.get) else pivot
@@ -69,11 +69,12 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
   }
 
   def partitionSortKey(): SortOrder = {
-    opts.sortBy.map {
-      case key@HasAggregateExpressions(_) => SortOrder(afterGrouping = Some(key))
-      case DelayExpr => SortOrder(afterGrouping = Some(DelayExpr))
-      case k => SortOrder(beforeGrouping = Some(k))
-    }.getOrElse(SortOrder())
+    val (afterGrouping, beforeGrouping) = opts.sortBy.partition {
+      case SortKey(key@HasAggregateExpressions(_),_,_) => true
+      case SortKey(DelayExpr,_,_) => true
+      case k => false
+    }
+    SortOrder(afterGrouping, beforeGrouping)
   }
   
   def partitionFilters(): Filters = {
@@ -129,16 +130,31 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     }
   }
 
-  private def sort(v: Iterator[LogEntry], sortBy: Option[FieldExpr], descending: Boolean): Iterator[LogEntry] = {
+  private def sort(v: Iterator[LogEntry], sortBy: Seq[SortKey]): Iterator[LogEntry] = {
     if (sortBy.isEmpty) {
       v
     } else {
-      val key = sortBy.get
-      // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
-      // Options: could try to guess from they name of the key or write an Ordering[Any]?
-      val memoryHog = v.toSeq
-      val sorted = Try(memoryHog.sortBy(key(_).deNull("0").toInt)).getOrElse(memoryHog.sortBy(key(_).deNull()))
-      (if (descending) sorted.reverse else sorted).toIterator
+      trySort(v.toSeq, new SortKeyOrdering(sortBy.toList))
+    }
+  }
+
+  // Screaming insanity to attempt a sort by integer comparison first then yet fall back to string ...
+  // Options: could try to guess from they name of the key or write an Ordering[Any]?
+  @tailrec
+  private def trySort(memoryHog: Seq[LogEntry], key: SortKeyOrdering): Iterator[LogEntry] = {
+    try {
+      memoryHog.sorted(key).toIterator
+    }
+    catch {
+      case e: Exception =>
+        val indexToFallback = key.keys.indexWhere(_.asNumber)
+        if (indexToFallback == -1) {
+          throw new IAmSorryDave(s"Sort failed: $e")
+        } else {
+          val keyToFallback = key.keys(indexToFallback)
+          val newKey = key.keys.updated(indexToFallback, keyToFallback.copy(asNumber = false))
+          trySort(memoryHog, new SortKeyOrdering(newKey))
+        }
     }
   }
 
