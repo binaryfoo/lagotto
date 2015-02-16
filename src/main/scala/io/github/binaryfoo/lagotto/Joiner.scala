@@ -53,7 +53,10 @@ case class JoinedEntry(left: LogEntry, right: LogEntry, join: FieldExpr, delimit
   def timestamp: DateTime = left.timestamp
 
   override def lines: String = {
-    left.lines + delimiter + excludeJoinField(delimiter, right).mkString(delimiter.toString)
+    right match {
+      case r: JposEntry => left.lines + delimiter + right.lines
+      case _ => left.lines + delimiter + excludeJoinField(delimiter, right).mkString(delimiter.toString)
+    }
   }
 
   private def excludeJoinField(d: Char, r: LogEntry) = {

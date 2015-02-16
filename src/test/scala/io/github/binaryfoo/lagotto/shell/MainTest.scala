@@ -503,7 +503,6 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
-
   "Main" should "print full text by default" in {
     val output = run(testFile("a-pair.xml"))
     output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
@@ -870,6 +869,14 @@ class MainTest extends LagoTest {
                       |some.channel/10.0.0.1:4322,2,a-bunch.xml #2,response to 2
                       |some.channel/10.0.0.1:4321,1,a-bunch.xml #1,response to 1
                       |""".stripMargin
+  }
+
+  it should "pick first receive after session-start" in {
+    val output = run("--csv", "right.time,socket,rtt", "--join", "socket", "-f", "left.msgType=session-start", "-f", "right.msgType=receive", testFile("channel-birth.xml"))
+    output shouldBe
+      """right.time,socket,rtt
+        |00:00:05.292,10.0.0.2:4321,1000
+        |""".stripMargin
   }
 
   "--inner-join" should "show only paired up rows" in {

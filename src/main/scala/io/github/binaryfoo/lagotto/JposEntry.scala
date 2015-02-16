@@ -283,6 +283,10 @@ object JposEntry {
     JposEntry(mutable.LinkedHashMap(fields :_*))
   }
 
+  def apply(lines: String, fields: (String, String)*): JposEntry = {
+    JposEntry(mutable.LinkedHashMap(fields :_*), lines)
+  }
+
   def coalesce(seq: Iterator[JposEntry], selector: JposEntry => String): Iterator[Coalesced] = Collapser.coalesce(seq, selector)
 }
 

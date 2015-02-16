@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<logger class="org.jpos.util.DailyLogListener">
+    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292">
+        <receive>
+            <isomsg direction="outgoing">
+                <field id="0" value="0200"/>
+            </isomsg>
+        </receive>
+    </log>
+    <log realm="some.channel/10.0.0.2:4321" at="Mon Nov 24 00:00:04 EST 2014.292">
+        <session-start/>
+    </log>
+    <log realm="some.channel/10.0.0.2:4321" at="Mon Nov 24 00:00:05 EST 2014.292">
+        <receive>
+            <isomsg direction="outgoing">
+                <field id="0" value="0200"/>
+            </isomsg>
+        </receive>
+    </log>
+    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:06 EST 2014.292">
+        <send>
+            <isomsg direction="outgoing">
+                <field id="0" value="0210"/>
+            </isomsg>
+        </send>
+    </log>
+    <log realm="some.channel/10.0.0.2:4321" at="Mon Nov 24 00:00:07 EST 2014.292">
+        <receive>
+            <isomsg direction="outgoing">
+                <field id="0" value="0200"/>
+            </isomsg>
+        </receive>
+    </log>
+    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:08 EST 2014.292">
+        <receive>
+            <isomsg direction="outgoing">
+                <field id="0" value="0200"/>
+            </isomsg>
+        </receive>
+    </log>
+</logger>
