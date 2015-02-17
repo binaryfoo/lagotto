@@ -189,6 +189,11 @@ class JposEntryTest extends LagoTest {
     entry("exception") shouldEqual "Remote host closed connection during handshake"
   }
 
+  "An <iso-exception> element" should "be extracted" in {
+    val entry = JposEntry.fromLines(linesFrom("iso-exception.xml"))
+    entry("exception") shouldEqual "unconnected ISOChannel"
+  }
+
   "Bad XML" should "be extracted" in {
     val entry = JposEntry.fromLines(linesFrom("exception-with-bad-xml.xml"))
     entry("exception") shouldBe "Sourced file: inline evaluation of: ``DATE=new Date();      MTI="

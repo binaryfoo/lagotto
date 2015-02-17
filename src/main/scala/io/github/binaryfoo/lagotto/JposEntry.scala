@@ -73,6 +73,12 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
   def icon: String = msgType match {
     case "send" => "\u2192"
     case "receive" => "\u2190"
+    case "session-start" => "\u21a6"
+    case "session-end" => "\u2717"
+    case "session-error" => "\u2620"
+    case "peer-disconnect" => "\u2604"
+    case "io-timeout" => "\u23f0"
+    case _ if fields.contains("exception") => "\u2620"
     case _ => msgType
   }
 
@@ -137,6 +143,8 @@ object JposEntry {
           extractAttributes(line)
             .collectFirst { case ("name", value) => value }
             .foreach(v => fields += (("exception", v)))
+        case ("iso-exception", Start) if it.hasNext =>
+          fields += (("exception", it.next().trim))
         case (name, Start) if !msgTypeBlackList.contains(name) && msgType == null =>
           msgType = name
         case (name, Start) if msgTypeWhiteList.contains(name) =>

@@ -1,0 +1,11 @@
+<log realm="the.channel/192.168.0.1:4321" at="Wed Dec 01 11:00:00 EST 1984.101" lifespan="1ms">
+    <session-error>
+        <iso-exception>
+            unconnected ISOChannel
+            org.jpos.iso.ISOException: unconnected ISOChannel
+            at org.jpos.iso.BaseChannel.receive(BaseChannel.java:662)
+            at org.jpos.iso.ISOServer$Session.run(ISOServer.java:155)
+            at org.jpos.util.ThreadPool$PooledThread.run(ThreadPool.java:72)
+        </iso-exception>
+    </session-error>
+</log>
