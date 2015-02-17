@@ -93,7 +93,7 @@ object JposEntry {
 
   import io.github.binaryfoo.lagotto.TagType._
 
-  def extractFields(lines: Seq[String]): mutable.LinkedHashMap[String, String] = {
+  final def extractFields(lines: Seq[String]): mutable.LinkedHashMap[String, String] = {
     var fields = new ArrayBuffer[(String, String)](lines.size + 2)
     var path = ""
     var msgType: String = null
@@ -138,10 +138,20 @@ object JposEntry {
             .collectFirst { case ("name", value) => value }
             .foreach(v => fields += (("exception", v)))
         case (name, Start) if !msgTypeBlackList.contains(name) && msgType == null =>
-          fields += (("msgType", name))
           msgType = name
+        case (name, Start) if msgTypeWhiteList.contains(name) =>
+          msgType = name
+        case (name, Start) =>
+          val value = extractValue(name, line)
+          if (value != null) {
+            fields += ((name, value))
+          }
         case _ =>
       }
+    }
+
+    if (msgType != null) {
+      fields += (("msgType", msgType))
     }
 
     mutable.LinkedHashMap(fields :_*)
@@ -155,9 +165,10 @@ object JposEntry {
     JposEntry(extractFields(s.split('\n')), s, source)
   }
 
-  val msgTypeBlackList = Set("log", "!--")
+  private val msgTypeBlackList = Set("log", "!--")
+  private val msgTypeWhiteList = Set("io-timeout", "peer-disconnect")
 
-  def tagNameAndType(line: String): (String, TagType) = {
+  final def tagNameAndType(line: String): (String, TagType) = {
     var startIndex = line.indexOf('<')
     if (startIndex == -1)
       return (null, null)
@@ -187,7 +198,7 @@ object JposEntry {
   }
 
   // slightly faster than a regex
-  def extractAttributes(line: String): List[(String, String)] = {
+  final def extractAttributes(line: String): List[(String, String)] = {
     var state = -1
     var nameStart = 0
     var nameEnd = 0
@@ -229,7 +240,7 @@ object JposEntry {
 
   private val CDataTag = "![CDATA["
 
-  def extractIdAndValue(line: String, more: Iterator[String]): (String, String) = {
+  final def extractIdAndValue(line: String, more: Iterator[String]): (String, String) = {
     val (idEnd: Int, id: String) = extractId(line)
     if (id == null)
       throw new IllegalArgumentException(s"Missing id in $line")
@@ -267,7 +278,7 @@ object JposEntry {
     }
   }
 
-  def extractId(line: String): (Int, String) = {
+  final def extractId(line: String): (Int, String) = {
     val idIndex = line.indexOf("id=\"")
     if (idIndex == -1) {
       (-1, null)
@@ -277,6 +288,18 @@ object JposEntry {
       val id = line.substring(idStart, idEnd)
       (idEnd, id)
     }
+  }
+
+  final def extractValue(tag: String, line: String): String = {
+    val startTag = tag + ">"
+    val startOfStartTag = line.indexOf(startTag)
+    if (startOfStartTag != -1) {
+      val payloadStart = startOfStartTag + startTag.length
+      val payloadEnd = line.indexOf("</" + tag, payloadStart)
+      if (payloadEnd != -1)
+        return line.substring(payloadStart, payloadEnd)
+    }
+    null
   }
 
   def apply(fields: (String, String)*): JposEntry = {

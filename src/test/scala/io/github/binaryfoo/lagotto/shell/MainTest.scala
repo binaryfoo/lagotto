@@ -690,8 +690,8 @@ class MainTest extends LagoTest {
 
   "With --json" should "dump each record as a line of JSON" in {
     val output = run("--json", testFile("a-pair-uyst.xml"))
-    output shouldBe """{"at":"2014-11-24T00:00:03.292-0200","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","msgType":"send","mti":"0800","transmission_date_and_time":"1124000003","stan":28928,"function_code":"831"}
-                      |{"at":"2014-11-24T00:00:04.100-0200","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","msgType":"receive","mti":"0810","transmission_date_and_time":"1124000003","stan":28928,"function_code":"831","f_48_1":"subfield 48.1"}
+    output shouldBe """{"at":"2014-11-24T00:00:03.292-0200","lifespan":10005,"realm":"some.channel/10.0.0.1:4321","mti":"0800","transmission_date_and_time":"1124000003","stan":28928,"function_code":"831","msgType":"send"}
+                      |{"at":"2014-11-24T00:00:04.100-0200","lifespan":1000,"realm":"some.channel/10.0.0.1:4321","mti":"0810","transmission_date_and_time":"1124000003","stan":28928,"function_code":"831","f_48_1":"subfield 48.1","msgType":"receive"}
                       |{"at":"2014-11-24T13:10:55.000-0200","realm":"rotate-log-listener"}
                       |""".stripMargin
   }

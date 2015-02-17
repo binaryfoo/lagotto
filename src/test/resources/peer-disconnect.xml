@@ -1,0 +1,5 @@
+<log realm="some.channel/172.0.1.1:49481" at="Wed Dec 10 13:56:26 EST 2014.13" lifespan="900099ms">
+    <receive>
+        <peer-disconnect/>
+    </receive>
+</log>

@@ -14,14 +14,11 @@
   - colour rows by a field like socket
   - colour rows by match condition like lifespan>1000
 * More icons: session start and end, error
-* Add row number field
-* Value in multiple threads? actually CPU bound
 * Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
 * Ascii bar chart
 * Validate only one of delay or count is passed
 * Build an index and/or process data into more compact/faster to re-read format
  - might ease path to Spark
-* Can --pair idea by expanded to a SQL like join. One case for keeping memoized streams...
 * Graceful error reporting...
 * Split some pieces like ascii table and gnuplot out. Could run independently.
  - Eg csv -> ascii, csv -> gnuplot per column, csv -> jira table, csv -> html
@@ -33,12 +30,12 @@
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
 * Remove fields vs subfields distinction from dictionaries
 * Dump dictionary as a table for sane MTI-NMIC combinations
-* Add alias like SQL expr as 'sane name'
-* Pair on ip,mti,nmic,time threshold?
 * Can --progress estimate end time with one large file?
 * URL schemes for file names. More interesting with -F
  - ssh://user@host/path
  - http(s)://
+* Filter before and after --join. At least work out when a filter must be after --join
+* Handle FSD log messages?
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC

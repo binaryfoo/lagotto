@@ -114,6 +114,32 @@ class JposEntryTest extends LagoTest {
     entry("msgType") shouldEqual "warn"
   }
 
+  "io-timeout" should "have msgType io-timeout" in {
+    JposEntry.fromLines(linesFrom("io-timeout.xml"))("msgType") shouldBe "io-timeout"
+  }
+
+  "peer-disconnect" should "have msgType io-timeout" in {
+    JposEntry.fromLines(linesFrom("peer-disconnect.xml"))("msgType") shouldBe "peer-disconnect"
+  }
+
+  "connection reset" should "have msgType peer-disconnect" in {
+    JposEntry.fromLines(linesFrom("connection-reset.xml"))("msgType") shouldBe "peer-disconnect"
+  }
+
+  "stale connection" should "have attribute for extra xml element" in {
+    val entry = JposEntry.fromLines(linesFrom("stale-connection.xml"))
+    entry("msgType") shouldBe "receive"
+    entry("stale-connection") shouldBe "Disconnecting 10.0.0.1:4242"
+    entry("0") shouldBe "0800"
+  }
+
+  "header element" should "be read" in {
+    val entry = JposEntry.fromLines(linesFrom("with-header.xml"))
+    entry("msgType") shouldBe "receive"
+    entry("header") shouldBe "00420042"
+    entry("0") shouldBe "0800"
+  }
+
   "A single entry" should "be convertible to a .csv row" in {
     val entry = JposEntry.fromLines(lines)
     entry.exprToSeq("time", "48.2.13", "11", "7").toCsv shouldEqual "16:59:03.292,subfield 48.2.13,28928,1124000003"

@@ -1,0 +1,9 @@
+<log realm="some.channel/172.0.1.1:49481" at="Wed Dec 10 13:56:26 EST 2014.13" lifespan="99ms">
+    <receive>
+        <header>00420042</header>
+        <isomsg direction="incoming">
+            <field id="0" value="0800"/>
+            <field id="70" value="301"/>
+        </isomsg>
+    </receive>
+</log>
