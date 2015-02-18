@@ -24,7 +24,7 @@ case class MsgPair(request: JposEntry, response: JposEntry) extends Coalesced wi
   def rtt: Long = response.timestamp.getMillis - request.timestamp.getMillis
 
   def timestamp: DateTime = request.timestamp
-
+  def source: SourceRef = request.source
   def mti: String = this("mti")
 
   override def toString: String = s"Pair(req=${request.fields.mkString("{", ",", "}")},resp=${response.fields.mkString("{", ",", "}")})"

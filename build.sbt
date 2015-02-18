@@ -16,6 +16,8 @@ libraryDependencies += "org.hdrhistogram" % "HdrHistogram" % "2.1.2"
 
 libraryDependencies += "com.typesafe" % "config" % "1.2.1"
 
+libraryDependencies += "org.eclipse.jetty" % "jetty-server" % "9.3.0.M1"
+
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 
 libraryDependencies += "org.asciidoctor" % "asciidoctorj" % "1.5.2" % "test"

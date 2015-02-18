@@ -1,8 +1,8 @@
 package io.github.binaryfoo.lagotto
 
-import io.github.binaryfoo.lagotto.reader.{LogReader, Log4jLog}
+import java.io.File
 
-import scala.io.Source
+import io.github.binaryfoo.lagotto.reader.{Log4jLog, LogReader}
 
 class Log4jReaderTest extends LagoTest {
 
@@ -17,9 +17,10 @@ class Log4jReaderTest extends LagoTest {
   }
 
   it should "record the sourceName and line number" in {
-    val entries = LogReader(logType = Log4jLog).read(inputStreamFrom(twoLines), "name.log")
-    entries.next().source shouldBe new SourceRef("name.log", 1)
-    entries.next().source shouldBe new SourceRef("name.log", 2)
+    val file = new File("name.log")
+    val entries = LogReader(logType = Log4jLog).read(inputStreamFrom(twoLines), FileRef(file))
+    entries.next().source shouldBe FileRef(file, 1)
+    entries.next().source shouldBe FileRef(file, 2)
   }
 
   it should "read a multiline message" in {

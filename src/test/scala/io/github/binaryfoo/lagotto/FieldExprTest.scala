@@ -1,7 +1,11 @@
 package io.github.binaryfoo.lagotto
 
+import java.io.File
+
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
 import org.joda.time.{DateTime, LocalTime}
+
+import scala.collection.mutable
 
 class FieldExprTest extends LagoTest {
 
@@ -295,4 +299,14 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("48.1" -> "one", "48.1.1" -> "one.one", "48.2" -> "two")) shouldBe "one,one.one,two"
   }
 
+  "href" should "create html anchor for source file:// URL" in {
+    val expr = expressionFor("href")
+    val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = FileRef(new File("/dummy/path.log"), 455))
+    expr(entry) shouldBe """<a href="file:/dummy/path.log">path.log:455</a>"""
+  }
+
+  it should "not create a link for records from stdin"
+  val expr = expressionFor("href")
+  val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = StdInRef(356))
+  expr(entry) shouldBe "stdin:356"
 }

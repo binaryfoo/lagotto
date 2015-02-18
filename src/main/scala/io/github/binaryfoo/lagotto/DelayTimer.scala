@@ -8,13 +8,13 @@ import org.joda.time.DateTime
 case class DelayTimer(current: LogEntry, previous: Option[LogEntry]) extends LogEntry {
 
   override def timestamp: DateTime = current.timestamp
+  override def source: SourceRef = current.source
+  override def lines: String = current.lines
 
   override def apply(id: String): String = id match {
     case "delay" => delay.getOrElse(0).toString
     case _ => current(id)
   }
-
-  override def lines: String = current.lines
 
   def delay: Option[Long] = previous.map { p =>
     current.timestamp.getMillis - p.timestamp.getMillis

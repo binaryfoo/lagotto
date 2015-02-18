@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
+import java.awt.Desktop
+
 import com.typesafe.config.Config
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
@@ -67,6 +69,13 @@ class OptionsParser(val config: Config) {
       opt[String]("html") action { (fields, c) =>
         c.copy(format = Tabular(FieldExpr.expressionsFor(fields), HtmlTableFormat))
       } text "Output an HTML table"
+
+      opt[String]("live-html") action { (fields, c) =>
+        if (!Desktop.isDesktopSupported)
+          throw new IllegalArgumentException("--live-html only valid if a web browser can be opened")
+
+        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), HtmlTableFormat), liveHtml = true)
+      } text "Show an HTML table from an embedded web server"
 
       opt[String]("ascii") action { (fields, c) =>
         c.copy(format = Tabular(FieldExpr.expressionsFor(fields), new AsciiTableFormat()))

@@ -9,6 +9,8 @@ trait LogEntry {
 
   def timestamp: DateTime
 
+  def source: SourceRef
+
   /**
    * Provides access to fields, attributes and extra derived values.
    *
@@ -64,11 +66,9 @@ object LogEntry {
   val empty = new LogEntry {
 
     override def exportAsSeq: Seq[(String, String)] = Seq.empty
-
     override def lines: String = ""
-
+    override def source: SourceRef = null
     override def timestamp: DateTime = null
-
     override def apply(id: String): String = null
 
   }

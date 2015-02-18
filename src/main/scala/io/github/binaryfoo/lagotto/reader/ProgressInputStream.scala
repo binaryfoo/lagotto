@@ -1,10 +1,10 @@
 package io.github.binaryfoo.lagotto.reader
 
-import java.io.{InputStream, FilterInputStream}
+import java.io.{FilterInputStream, InputStream}
 
-import io.github.binaryfoo.lagotto.{NullProgressMeter, ProgressMeter}
+import io.github.binaryfoo.lagotto.{NullProgressMeter, ProgressMeter, SourceRef, StdInRef}
 
-class ProgressInputStream(in: InputStream, progressMeter: ProgressMeter = NullProgressMeter, val sourceName: String = "") extends FilterInputStream(in) {
+class ProgressInputStream(in: InputStream, progressMeter: ProgressMeter = NullProgressMeter, val sourceRef: SourceRef = StdInRef()) extends FilterInputStream(in) {
 
   private var bytesRead = 0L
   private var recordCount = 0
@@ -12,8 +12,7 @@ class ProgressInputStream(in: InputStream, progressMeter: ProgressMeter = NullPr
   def offset: Long = bytesRead
 
   // somewhat assuming that we're gonna start reading right now
-  if (sourceName != "")
-    progressMeter.startFile(sourceName)
+  progressMeter.startFile(sourceRef.name)
 
   override def read(): Int = {
     val b = super.read()

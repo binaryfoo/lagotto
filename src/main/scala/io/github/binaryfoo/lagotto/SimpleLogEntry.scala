@@ -20,7 +20,7 @@ case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, Str
   val fields = _fields.withDefault {
     case TimeFormatter(format) => format.print(timestamp)
     case "src" if source != null => source.toString
-    case "file" if source != null => source.file
+    case "file" if source != null => source.name
     case "line" if source != null => source.line.toString
     case _ => null
   }

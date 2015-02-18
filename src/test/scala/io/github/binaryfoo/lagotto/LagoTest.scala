@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto
 
-import java.io.ByteArrayInputStream
+import java.io.{File, ByteArrayInputStream}
 import java.text.SimpleDateFormat
 import java.util.{GregorianCalendar, TimeZone}
 
@@ -33,7 +33,7 @@ class LagoTest
 
   def iteratorOver[T](e: T*): Iterator[T] = List(e :_*).iterator
 
-  def namedInputStreamFrom(s: String*)(sourceName: String = "") = new ProgressInputStream(new ByteArrayInputStream(s.mkString("\n").getBytes), NullProgressMeter, sourceName)
+  def namedInputStreamFrom(s: String*)(sourceName: String = "") = new ProgressInputStream(new ByteArrayInputStream(s.mkString("\n").getBytes), NullProgressMeter, FileRef(new File(sourceName)))
 
   def inputStreamFrom(s: String*) = namedInputStreamFrom(s :_*)("")
 

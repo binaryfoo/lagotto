@@ -1,5 +1,6 @@
 package io.github.binaryfoo.lagotto
 
+import java.io.File
 import java.text.DecimalFormat
 import java.util.regex.Pattern
 
@@ -40,6 +41,7 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
+        case "href" => FileHrefExpr
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -618,4 +620,32 @@ case class AllOfExpr(field: String, expressions: Seq[FieldExpr]) extends FieldEx
 case class AliasExpr(field: String, target: FieldExpr, name: String) extends FieldExpr {
   override def apply(e: LogEntry): String = target(e)
   override def toString(): String = name
+}
+
+trait SourceHrefExpr extends DirectExpr {
+  override def field: String = "href"
+
+  override def apply(e: LogEntry): String = {
+    e.source match {
+      case r@FileRef(file, line) => s"""<a href="${urlFor(file, line, e)}">$r</a>"""
+      case r => r.toString
+    }
+  }
+
+  def urlFor(file: File, line: Int, e: LogEntry): String
+}
+
+object FileHrefExpr extends SourceHrefExpr {
+  override def urlFor(file: File, line: Int, e: LogEntry) = file.toURI.toURL.toString
+}
+
+case class HttpHrefExpr(base: String) extends SourceHrefExpr {
+  override def urlFor(file: File, line: Int, e: LogEntry) = {
+    val to = (e match {
+      case MsgPair(req, resp) => resp.source.line + resp.lines.split('\n').size
+      case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').size
+      case _ => line + e.lines.split('\n').size
+    }) - 1
+    file.toURI.toURL.toString.replace("file:/", base) + s"?from=${line-1}&to=$to"
+  }
 }

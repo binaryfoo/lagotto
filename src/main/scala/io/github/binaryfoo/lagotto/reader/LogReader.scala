@@ -20,7 +20,7 @@ trait SkeletonLogReader[T <: LogEntry] {
 
   def readFilesOrStdIn(args: Iterable[String]): Iterator[T] = {
     if (args.isEmpty)
-      read(System.in)
+      read(System.in, StdInRef())
     else
       read(args.map(new File(_)))
   }
@@ -29,7 +29,7 @@ trait SkeletonLogReader[T <: LogEntry] {
 
   def read(files: Iterable[File]): Iterator[T] = {
     progressMeter.startRun(files.size)
-    files.toIterator.flatMap(f => read(open(f), f.getName))
+    files.toIterator.flatMap(f => read(open(f), FileRef(f)))
   }
 
   /**
@@ -45,11 +45,11 @@ trait SkeletonLogReader[T <: LogEntry] {
       case s: BufferedSource =>
         val field = classOf[BufferedSource].getDeclaredField("inputStream")
         field.setAccessible(true)
-        read(field.get(s).asInstanceOf[InputStream], sourceName)
+        read(field.get(s).asInstanceOf[InputStream], FileRef(new File(sourceName)))
     }
   }
 
-  final def read(in: InputStream, sourceName: String = ""): Iterator[T] = {
+  final def read(in: InputStream, sourceName: SourceRef = StdInRef()): Iterator[T] = {
     readWithProgress(new ProgressInputStream(in, progressMeter, sourceName))
   }
 
@@ -103,7 +103,7 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
           queue.put(f)
         } while (more)
       }
-    }, s"${source.sourceName}-reader")
+    }, s"${source.sourceRef.name}-reader")
     reader.setDaemon(true)
 
     override def hasNext: Boolean = {
@@ -238,17 +238,15 @@ class LineIterator(in: ProgressInputStream, val strict: Boolean = false, val kee
    */
   def lineNumber: Int = currentLineNo
 
-  def sourceName: String = in.sourceName
-
   /**
    * @return Line number and file name for most recently returned value of next().
    */
-  def sourceRef: SourceRef = SourceRef(in.sourceName, currentLineNo)
+  def sourceRef: SourceRef = in.sourceRef.at(currentLineNo)
 
   /**
    * @return Line number and file name for most recently returned value of head.
    */
-  def headRef: SourceRef = SourceRef(in.sourceName, linesRead)
+  def headRef: SourceRef = in.sourceRef.at(linesRead)
 
   def hasNext = current != null || readNext()
 

@@ -16,8 +16,8 @@ import scala.collection.mutable
 case class AggregateLogEntry(key: Map[String, String], aggregates: Seq[(String, String)]) extends LogEntry {
 
   override def timestamp: DateTime = null
-
-  override def lines: String =  ""
+  override def source: SourceRef = null
+  override def lines: String = ""
 
   override def apply(id: String): String = key.getOrElse(id, {
     aggregates.collectFirst { case (k, v) if k == id => v}.orNull

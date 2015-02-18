@@ -33,7 +33,7 @@ object JposLog extends LogType[JposEntry] {
         if (record != null) {
           try {
             val fullText = if (lines.keepFullText) record.mkString("\n") else ""
-            return LineSet(record, fullText, SourceRef(lines.sourceName, startLineNumber))
+            return LineSet(record, fullText, lines.sourceRef.at(startLineNumber))
           }
           catch {
             case e: IllegalArgumentException =>

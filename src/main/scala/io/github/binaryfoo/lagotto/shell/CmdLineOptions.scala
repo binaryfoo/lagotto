@@ -23,6 +23,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[FieldExpr] = Seq(),
                    gnuplotFileName: Option[String] = None,
+                   liveHtml: Boolean = false,
                    limit: Option[Int] = None) {
   
   def requiresDelayCalculation(): Boolean = includesDelayInFieldList() || includesDelayInFilters()

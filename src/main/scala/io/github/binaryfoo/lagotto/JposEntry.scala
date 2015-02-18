@@ -33,7 +33,7 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
     case "ipAddress" => realm.ipAddress
     case "port" => realm.port
     case "src" if source != null => source.toString
-    case "file" if source != null => source.file
+    case "file" if source != null => source.name
     case "line" if source != null => source.line.toString
     case TimeFormatter(format) => format.print(timestamp)
     case _ => null

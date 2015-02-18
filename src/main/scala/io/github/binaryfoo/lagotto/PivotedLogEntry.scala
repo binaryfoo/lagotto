@@ -7,11 +7,9 @@ import scala.collection.AbstractIterator
 case class PivotedLogEntry(row: Map[String, String]) extends LogEntry {
 
   override def timestamp: DateTime = null
-
+  override def source: SourceRef = null
   override def exportAsSeq: Seq[(String, String)] = row.toSeq
-
   override def lines: String = ""
-
   override def apply(id: String): String = row(id)
 
 }

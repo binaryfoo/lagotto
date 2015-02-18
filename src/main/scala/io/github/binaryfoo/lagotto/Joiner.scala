@@ -51,6 +51,7 @@ case class JoinedEntry(left: LogEntry, right: LogEntry, join: FieldExpr, delimit
   def rtt: Long = if (right.timestamp != null) right.timestamp.getMillis - left.timestamp.getMillis else 0
 
   def timestamp: DateTime = left.timestamp
+  def source: SourceRef = left.source
 
   override def lines: String = {
     right match {

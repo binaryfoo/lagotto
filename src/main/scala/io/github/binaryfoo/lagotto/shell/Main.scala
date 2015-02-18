@@ -37,6 +37,8 @@ object Main extends App {
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
       new CompositeSink(Seq(dataFile, gnuplotScript))
+    } else if (opts.liveHtml) {
+      new WebServerSink(format)
     } else {
       new IncrementalSink(format, opts.header)
     }
