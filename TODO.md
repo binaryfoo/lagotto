@@ -1,8 +1,4 @@
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
-* Type dictionary/schema?
- - mti, timestamp (with format), number
- - 11,lifespan,rtt,delay = number, timestamp,7 = datetime
- - Having the datatype propagated into Spark would max it easier to do things like max(lifespan) there
 * Tail mode (-F)
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
@@ -13,10 +9,7 @@
  - HTML table
   - colour rows by a field like socket
   - colour rows by match condition like lifespan>1000
-* More icons: session start and end, error
 * Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
-* Ascii bar chart
-* Validate only one of delay or count is passed
 * Build an index and/or process data into more compact/faster to re-read format
  - might ease path to Spark
 * Graceful error reporting...
@@ -36,6 +29,19 @@
  - http(s)://
 * Filter before and after --join. At least work out when a filter must be after --join
 * Handle FSD log messages?
+* Implement google datasource for charting API https://developers.google.com/chart/interactive/docs/dev/dsl_get_started
+* Why does spark sql not see export json as having date type for timestamps?
+* Support "receiver -> sender" display. Name system where logs are gathered from.
+ - Or just link ->, link <-
+* Render options for icons: unicode, ascii, html entity refs?
+* Pure ascii symbols:
+    start [~
+    end ~]
+    send ->
+    receive <-
+    exception !
+    timeout T
+
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
