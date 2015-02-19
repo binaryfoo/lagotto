@@ -14,7 +14,6 @@ import org.eclipse.jetty.util.IO
 class WebServerSink(format: OutputFormat) extends Sink {
 
   private val port = 1984
-  private val baseUrl = s"http://localhost:$port"
   private val in = new PipedInputStream(64 * 1024)
   private val out = new PrintStream(new PipedOutputStream(in))
   private val delegate = new IncrementalSink(format, true, out)
@@ -24,7 +23,7 @@ class WebServerSink(format: OutputFormat) extends Sink {
   override def entry(e: LogEntry) = {
     delegate.entry(e)
     if (!launched) {
-      Desktop.getDesktop.browse(new URI(baseUrl))
+      Desktop.getDesktop.browse(new URI(s"http://localhost:$port"))
       launched = true
     }
   }
@@ -41,7 +40,7 @@ class WebServerSink(format: OutputFormat) extends Sink {
 class SillyServer(index: InputStream, port: Int) {
   private val server = new Server(port)
 
-  private val OpenFileReq = "/log(/.*)".r
+  private val OpenFileReq = "(/.+)".r
 
   server.setHandler(new AbstractHandler {
     override def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse): Unit = {

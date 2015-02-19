@@ -41,7 +41,7 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
-        case "href" => FileHrefExpr
+        case "href" => SourceHrefExpr
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -622,7 +622,7 @@ case class AliasExpr(field: String, target: FieldExpr, name: String) extends Fie
   override def toString(): String = name
 }
 
-trait SourceHrefExpr extends DirectExpr {
+object SourceHrefExpr extends DirectExpr {
   override def field: String = "href"
 
   override def apply(e: LogEntry): String = {
@@ -632,20 +632,12 @@ trait SourceHrefExpr extends DirectExpr {
     }
   }
 
-  def urlFor(file: File, line: Int, e: LogEntry): String
-}
-
-object FileHrefExpr extends SourceHrefExpr {
-  override def urlFor(file: File, line: Int, e: LogEntry) = file.toURI.toURL.toString
-}
-
-object HttpHrefExpr extends SourceHrefExpr {
-  override def urlFor(file: File, line: Int, e: LogEntry) = {
+  def urlFor(file: File, line: Int, e: LogEntry) = {
     val to = (e match {
       case MsgPair(req, resp) => resp.source.line + resp.lines.split('\n').size
       case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').size
       case _ => line + e.lines.split('\n').size
     }) - 1
-    file.toURI.toURL.toString.replace("file:/", "/log/") + s"?from=${line-1}&to=$to"
+    file.toURI.toURL.toString.substring(5) + s"?from=${line-1}&to=$to"
   }
 }

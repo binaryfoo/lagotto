@@ -302,7 +302,7 @@ class FieldExprTest extends LagoTest {
   "href" should "create html anchor for source file:// URL" in {
     val expr = expressionFor("href")
     val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = FileRef(new File("/dummy/path.log"), 455))
-    expr(entry) shouldBe """<a href="file:/dummy/path.log">path.log:455</a>"""
+    expr(entry) shouldBe """<a href="/dummy/path.log?from=454&to=455">path.log:455</a>"""
   }
 
   it should "not create a link for records from stdin"
