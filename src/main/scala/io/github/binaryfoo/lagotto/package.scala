@@ -20,5 +20,7 @@ package object lagotto {
 
   implicit class DeNullableString(val s: String) extends AnyVal {
     def deNull(default: String = "") = lagotto.deNull(s, default)
+    def toIntOr(default: Int) = if (s == null) default else Integer.parseInt(s)
+    def maybeToInt(): Option[Int] = if (s == null) None else Some(Integer.parseInt(s))
   }
 }

@@ -29,7 +29,7 @@ trait SkeletonLogReader[T <: LogEntry] {
 
   def read(files: Iterable[File]): Iterator[T] = {
     progressMeter.startRun(files.size)
-    files.toIterator.flatMap(f => read(open(f), FileRef(f)))
+    files.toIterator.flatMap(f => read(FileIO.open(f), FileRef(f)))
   }
 
   /**
@@ -54,12 +54,6 @@ trait SkeletonLogReader[T <: LogEntry] {
   }
 
   def readWithProgress(in: ProgressInputStream): Iterator[T]
-
-  private def open(f: File): InputStream = {
-    val in = new BufferedInputStream(new FileInputStream(f))
-    if (f.getName.endsWith(".gz")) new GZIPInputStream(in)
-    else in
-  }
 
 }
 

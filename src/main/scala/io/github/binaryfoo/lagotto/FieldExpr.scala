@@ -639,13 +639,13 @@ object FileHrefExpr extends SourceHrefExpr {
   override def urlFor(file: File, line: Int, e: LogEntry) = file.toURI.toURL.toString
 }
 
-case class HttpHrefExpr(base: String) extends SourceHrefExpr {
+object HttpHrefExpr extends SourceHrefExpr {
   override def urlFor(file: File, line: Int, e: LogEntry) = {
     val to = (e match {
       case MsgPair(req, resp) => resp.source.line + resp.lines.split('\n').size
       case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').size
       case _ => line + e.lines.split('\n').size
     }) - 1
-    file.toURI.toURL.toString.replace("file:/", base) + s"?from=${line-1}&to=$to"
+    file.toURI.toURL.toString.replace("file:/", "/log/") + s"?from=${line-1}&to=$to"
   }
 }

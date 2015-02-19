@@ -151,6 +151,24 @@ class OptionsParser(val config: Config) {
     }
 
     parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))
+    .map { opts =>
+      if (opts.liveHtml) {
+        opts.copy(format = prepareHrefs(opts.format))
+      } else {
+        opts
+      }
+    }
+  }
+
+  private def prepareHrefs(format: OutputFormat) = {
+    format match {
+      case t@Tabular(fields, _) => t.copy(fields = fields.map {
+        case FileHrefExpr => HttpHrefExpr
+        case e@AggregateExpr(_, GroupSampleBuilder(FileHrefExpr, n)) => e.copy(op = GroupSampleBuilder(HttpHrefExpr, n))
+        case f => f
+      })
+      case f => f
+    }
   }
 
   private def parseSortKey(key: String): Seq[SortKey] = {
