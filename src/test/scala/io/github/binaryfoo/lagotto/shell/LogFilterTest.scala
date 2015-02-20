@@ -36,6 +36,14 @@ class LogFilterTest extends LagoTest {
     filter(JposEntry("realm" -> "channel/10.0.0.3:8000")) shouldBe false
   }
 
+  "not operator" should "match value not in set" in {
+    val filter = filterFor("msgType not in (send,receive)")
+    filter.field shouldBe "msgType"
+    filter(JposEntry("msgType" -> "bollox")) shouldBe true
+    filter(JposEntry("msgType" -> "send")) shouldBe false
+    filter(JposEntry("msgType" -> "receive")) shouldBe false
+  }
+
   "Equals operator" should "allow comparison with empty string" in {
     val filter = filterFor("exception!=")
     filter.field shouldBe "exception"
