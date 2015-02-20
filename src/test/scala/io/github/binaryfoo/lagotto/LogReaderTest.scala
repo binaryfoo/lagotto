@@ -59,8 +59,12 @@ class LogReaderTest extends LagoTest {
   }
 
   it should "tag each record with a line starting line number" in {
+    val parser = new FieldExprParser()
+    import parser.stringAsFieldAccessor
+    import io.github.binaryfoo.lagotto.output.Xsv.IteratorSeqToXsv
+
     val entries = readEntries("a-bunch.xml")
-    val csv = entries.toCsv("48.1", "src")
+    val csv = entries.map(_.exprToSeq("48.1", "src")).toCsv
     csv shouldEqual """a-bunch.xml #1,:3
                       |a-bunch.xml #2,:15
                       |a-bunch.xml #3,:27
@@ -86,8 +90,12 @@ class LogReaderTest extends LagoTest {
   }
 
   it should "tag each record with a line starting line number" in {
+    val parser = new FieldExprParser()
+    import parser.stringAsFieldAccessor
+    import io.github.binaryfoo.lagotto.output.Xsv.IteratorSeqToXsv
+
     val entries = SingleThreadLogReader().read(new File(testFile("a-bunch.xml")))
-    val csv = entries.toCsv("48.1", "src")
+    val csv = entries.map(_.exprToSeq("48.1", "src")).toCsv
     csv shouldEqual """a-bunch.xml #1,a-bunch.xml:3
                       |a-bunch.xml #2,a-bunch.xml:15
                       |a-bunch.xml #3,a-bunch.xml:27

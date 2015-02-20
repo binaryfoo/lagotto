@@ -5,10 +5,10 @@
 * Add --splitBy field to Main? Use case would be ip address or transaction id or link
 * Output to websocket and/or server sent events subscribers?
 * Apache Spark module
-* Output as
- - HTML table
+* HTML table
   - colour rows by a field like socket
   - colour rows by match condition like lifespan>1000
+  - click socket to filter by socket
 * Output as something readable by PCP (http://www.pcp.io/docs/pcpintro.html)?
 * Build an index and/or process data into more compact/faster to re-read format
  - might ease path to Spark
@@ -32,15 +32,7 @@
 * Implement google datasource for charting API https://developers.google.com/chart/interactive/docs/dev/dsl_get_started
 * Why does spark sql not see export json as having date type for timestamps?
 * Support "receiver -> sender" display. Name system where logs are gathered from.
- - Or just link ->, link <-
-* Render options for icons: unicode, ascii, html entity refs?
-* Pure ascii symbols:
-    start [~
-    end ~]
-    send ->
-    receive <-
-    exception !
-    timeout T
+ - web sequence diagram output...
 
 
 Politeness:

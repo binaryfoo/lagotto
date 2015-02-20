@@ -895,6 +895,16 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "src" should "render as an href for --html" in {
+    val output = run("--html", "src", testFile("basic.xml"))
+    output should include regex """<a href="[^"]*/src/test/resources/basic.xml\?from=2&to=13">basic.xml:3</a>"""
+  }
+
+  it should "render hrefs for aggregate results" in {
+    val output = run("--html", "group_concat(src)", testFile("a-pair.xml"))
+    output should include regex """<a href="[^"]*/src/test/resources/a-pair.xml\?from=2&to=13">a-pair.xml:3</a>,<a href="[^"]*/src/test/resources/a-pair.xml\?from=13&to=27">a-pair.xml:14</a>"""
+  }
+
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   def standardOutFrom(thunk: => Unit): String = {

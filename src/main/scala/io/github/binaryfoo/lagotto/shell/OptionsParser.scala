@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto.shell
 import java.awt.Desktop
 
 import com.typesafe.config.Config
+import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
@@ -55,33 +56,31 @@ class OptionsParser(val config: Config) {
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"
 
       opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), DelimitedTableFormat("\t")))
+        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat("\t")))
       } text "Output tab separated values"
 
       opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), DelimitedTableFormat(",")))
+        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat(",")))
       } text "Output comma separated values"
 
       opt[String]('j', "jira-table") action { (fields, c) =>
-        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), JiraTableFormat))
+        c.copy(format = Tabular(parseFields(fields), JiraTableFormat))
       } text "Output a table that can be pasted into Jira"
 
       opt[String]("html") action { (fields, c) =>
-        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), HtmlTableFormat))
+        c.copy(format = Tabular(parseFields(fields, Set(RenderHint.Html)), HtmlTableFormat))
       } text "Output an HTML table"
 
-      opt[Unit]("ui") action { (_, c) =>
-        if (!Desktop.isDesktopSupported)
-          throw new IllegalArgumentException("--ui only valid if a web browser can be opened")
-        c.copy(liveUi = true)
-      } text "Show output from an embedded web server"
-
       opt[String]("ascii") action { (fields, c) =>
-        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), new AsciiTableFormat()))
+        c.copy(format = Tabular(parseFields(fields), new AsciiTableFormat()))
       } text "Output an ASCII table"
 
+      opt[String]("utf") action { (fields, c) =>
+        c.copy(format = Tabular(parseFields(fields, Set(RenderHint.RichText)), new AsciiTableFormat()))
+      } text "Same as --ascii but uses symbol characters that might not render"
+
       opt[String]("live-ascii") action { (fields, c) =>
-        c.copy(format = Tabular(FieldExpr.expressionsFor(fields), new IncrementalAsciiTableFormat()))
+        c.copy(format = Tabular(parseFields(fields), new IncrementalAsciiTableFormat()))
       } text "Output an ASCII table incrementally. Can be messy."
 
       opt[Unit]("json") action { (_, c) =>
@@ -97,7 +96,7 @@ class OptionsParser(val config: Config) {
       } text "Output full message in a compact format with name type: English, Short or Export."
 
       opt[String]("histogram") action { (fields, c) =>
-        c.copy(histogramFields = FieldExpr.expressionsFor(fields))
+        c.copy(histogramFields = parseFields(fields))
       } text "Output a histogram"
 
       opt[Unit]("pair") action {(_, c) =>
@@ -144,12 +143,22 @@ class OptionsParser(val config: Config) {
         c.copy(progressMeter = new ConsoleProgressMeter())
       } text "Print progress to standard error. Only really sane if standard out is redirected."
 
+      opt[Unit]("ui") action { (_, c) =>
+        if (!Desktop.isDesktopSupported)
+          throw new IllegalArgumentException("--ui only valid if a web browser can be opened")
+        c.copy(liveUi = true)
+      } text "Show output from an embedded web server"
+
       opt[Int]('n', "limit") action {(limit,c) =>
         c.copy(limit = Some(limit))
       } text "Only output n entries"
     }
 
     parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))
+  }
+
+  private def parseFields(fields: String, renderHints: Set[RenderHint] = Set.empty): Seq[FieldExpr] = {
+    fieldParser.copy(renderHints = renderHints).FieldExpr.expressionsFor(fields)
   }
 
   private def parseSortKey(key: String): Seq[SortKey] = {

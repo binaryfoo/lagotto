@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
+import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto.output.Xsv.SeqToXsv
 import org.joda.time.DateTime
 

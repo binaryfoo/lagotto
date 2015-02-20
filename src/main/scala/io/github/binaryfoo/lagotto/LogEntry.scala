@@ -37,6 +37,9 @@ trait LogEntry {
     }.toSeq
   }
 
+  /**
+   * The implicit in io.github.binaryfoo.lagotto.FieldExprParser#stringAsFieldAccessor(java.lang.String) might be useful.
+   */
   def exprToSeq(ids: FieldAccessor[this.type]*): Seq[String] = exprToSeq(ids.toIterable)
 
   def exprToSeq(ids: Iterable[FieldAccessor[this.type]]): Seq[String] = {

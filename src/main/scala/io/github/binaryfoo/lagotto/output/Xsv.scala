@@ -13,4 +13,9 @@ object Xsv {
     def toTsv: String = Xsv.toTsv(m)
   }
 
+  implicit class IteratorSeqToXsv(val m: Iterator[Seq[String]]) extends AnyVal {
+    def toCsv: String = m.map(Xsv.toCsv).mkString("\n")
+    def toTsv: String = m.map(Xsv.toTsv).mkString("\n")
+  }
+
 }

@@ -300,13 +300,48 @@ class FieldExprTest extends LagoTest {
   }
 
   "href" should "create html anchor for source file:// URL" in {
-    val expr = expressionFor("href")
+    val expr = parser.copy(renderHints = Set(RenderHint.Html)).FieldExpr.expressionFor("src")
     val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = FileRef(new File("/dummy/path.log"), 455))
     expr(entry) shouldBe """<a href="/dummy/path.log?from=454&to=455">path.log:455</a>"""
   }
 
-  it should "not create a link for records from stdin"
-  val expr = expressionFor("href")
-  val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = StdInRef(356))
-  expr(entry) shouldBe "stdin:356"
+  it should "not create a link for records from stdin" in {
+    val expr = expressionFor("src")
+    val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = StdInRef(356))
+    expr(entry) shouldBe "stdin:356"
+  }
+
+  "icon" should "use msgType for rich html" in {
+    val htmlize = (x: String) => "&#" + x(0).toInt + ";"
+    val expr = parser.copy(renderHints = Set(RenderHint.Html)).FieldExpr.expressionFor("icon")
+    expr(JposEntry("msgType" -> "send")) shouldBe htmlize("→")
+    expr(JposEntry("msgType" -> "receive")) shouldBe htmlize("←")
+    expr(JposEntry("msgType" -> "session-start")) shouldBe htmlize("↦")
+    expr(JposEntry("msgType" -> "session-end")) shouldBe htmlize("✗")
+    expr(JposEntry("msgType" -> "session-error")) shouldBe htmlize("☠")
+    expr(JposEntry("msgType" -> "peer-disconnect")) shouldBe htmlize("☄")
+    expr(JposEntry("msgType" -> "io-timeout")) shouldBe htmlize("⏰")
+  }
+
+  "icon" should "use msgType for rich text" in {
+    val expr = parser.copy(renderHints = Set(RenderHint.RichText)).FieldExpr.expressionFor("icon")
+    expr(JposEntry("msgType" -> "send")) shouldBe "→"
+    expr(JposEntry("msgType" -> "receive")) shouldBe "←"
+    expr(JposEntry("msgType" -> "session-start")) shouldBe "↦"
+    expr(JposEntry("msgType" -> "session-end")) shouldBe "✗"
+    expr(JposEntry("msgType" -> "session-error")) shouldBe "☠"
+    expr(JposEntry("msgType" -> "peer-disconnect")) shouldBe "☄"
+    expr(JposEntry("msgType" -> "io-timeout")) shouldBe "⏰"
+  }
+
+  it should "use msgType for text" in {
+    val expr = expressionFor("icon")
+    expr(JposEntry("msgType" -> "send")) shouldBe "->"
+    expr(JposEntry("msgType" -> "receive")) shouldBe "<-"
+    expr(JposEntry("msgType" -> "session-start")) shouldBe "[~"
+    expr(JposEntry("msgType" -> "session-end")) shouldBe "~]"
+    expr(JposEntry("msgType" -> "session-error")) shouldBe "!!"
+    expr(JposEntry("msgType" -> "peer-disconnect")) shouldBe "X"
+    expr(JposEntry("msgType" -> "io-timeout")) shouldBe "T"
+  }
 }

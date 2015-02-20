@@ -4,6 +4,7 @@ import java.io.File
 import java.text.DecimalFormat
 import java.util.regex.Pattern
 
+import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import org.joda.time.Period
 
@@ -13,7 +14,7 @@ import scala.language.implicitConversions
 /**
  * Needed to be able to parse expressions using the dictionary for translations.
  */
-class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
+case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHints: Set[RenderHint] = Set.empty) {
 
   private val logFilterParser = new LogFilterParser(this)
 
@@ -41,7 +42,13 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
-        case "href" => SourceHrefExpr
+        case "src" if renderHints.contains(RenderHint.Html) => SourceHrefExpr
+        case "src" => SourceExpr
+        case "file" => FileExpr
+        case "line" => LineExpr
+        case "icon" if renderHints.contains(RenderHint.Html) => HtmlIconExpr
+        case "icon" if renderHints.contains(RenderHint.RichText) => UnicodeIconExpr
+        case "icon" => AsciiIconExpr
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -99,6 +106,11 @@ class FieldExprParser(val dictionary: Option[DataDictionary] = None) {
   }
 
   implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
+}
+
+object RenderHint extends Enumeration {
+  type RenderHint = Value
+  val Html, RichText = Value
 }
 
 /**
@@ -622,6 +634,9 @@ case class AliasExpr(field: String, target: FieldExpr, name: String) extends Fie
   override def toString(): String = name
 }
 
+/**
+ * Where the log entry was loaded from as a hyperlink.
+ */
 object SourceHrefExpr extends DirectExpr {
   override def field: String = "href"
 
@@ -639,5 +654,77 @@ object SourceHrefExpr extends DirectExpr {
       case _ => line + e.lines.split('\n').size
     }) - 1
     file.toURI.toURL.toString.substring(5) + s"?from=${line-1}&to=$to"
+  }
+}
+
+object SourceExpr extends DirectExpr {
+  override def field: String = "src"
+  override def apply(e: LogEntry): String = e.source.toString
+}
+
+object FileExpr extends DirectExpr {
+  override def field: String = "file"
+  override def apply(e: LogEntry): String = e.source.name
+}
+
+object LineExpr extends DirectExpr {
+  override def field: String = "line"
+  override def apply(e: LogEntry): String = e.source.line.toString
+}
+
+abstract class IconExpr extends DirectExpr {
+  val send: String
+  val receive: String
+  val sessionStart: String
+  val sessionEnd: String
+  val sessionError: String
+  val peerDisconnect: String
+  val ioTimeout: String
+
+  final override def field: String = "icon"
+  final override def apply(e: LogEntry): String = e match {
+    case j: JposEntry => j.msgType match {
+      case "send" => send
+      case "receive" => receive
+      case "session-start" => sessionStart
+      case "session-end" => sessionEnd
+      case "session-error" => sessionError
+      case "peer-disconnect" => peerDisconnect
+      case "io-timeout" => ioTimeout
+      case _ if j.fields.contains("exception") => sessionError
+      case t => t
+    }
+    case _ => e("icon")
+  }
+}
+
+object UnicodeIconExpr extends IconExpr {
+  override val send = "\u2192"
+  override val receive = "\u2190"
+  override val sessionStart = "\u21a6"
+  override val sessionEnd = "\u2717"
+  override val sessionError = "\u2620"
+  override val peerDisconnect = "\u2604"
+  override val ioTimeout = "\u23f0"
+}
+
+object AsciiIconExpr extends IconExpr {
+  override val send = "->"
+  override val receive = "<-"
+  override val sessionStart = "[~"
+  override val sessionEnd = "~]"
+  override val sessionError = "!!"
+  override val peerDisconnect = "X"
+  override val ioTimeout = "T"
+}
+
+object HtmlIconExpr extends DirectExpr {
+  override def field: String = "icon"
+  override def apply(e: LogEntry): String = e match {
+    case j: JposEntry =>
+      val icon = UnicodeIconExpr(e)
+      if (icon != null) "&#" + icon.codePointAt(0) + ";"
+      else icon
+    case _ => e("icon")
   }
 }
