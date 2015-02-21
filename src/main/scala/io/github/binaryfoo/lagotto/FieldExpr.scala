@@ -638,11 +638,11 @@ case class AliasExpr(field: String, target: FieldExpr, name: String) extends Fie
  * Where the log entry was loaded from as a hyperlink.
  */
 object SourceHrefExpr extends DirectExpr {
-  override def field: String = "href"
+  override def field: String = "src"
 
   override def apply(e: LogEntry): String = {
     e.source match {
-      case r@FileRef(file, line) => s"""<a href="${urlFor(file, line, e)}">$r</a>"""
+      case r@FileRef(file, line) => s"""<a href="${urlFor(file, line, e)}" title="$r">&#9906;</a>"""
       case r => r.toString
     }
   }

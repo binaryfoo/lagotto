@@ -46,8 +46,18 @@ object JiraTableFormat extends TableFormatter {
 }
 
 object HtmlTableFormat extends TableFormatter {
-  override def header(fields: Seq[String]): Option[String] = Some(fields.mkString("<table>\n<thead><tr><th>", "</th><th>", "</th></tr></thead>\n<tbody>"))
+  private val pre =
+    """<html>
+      |<head>
+      |<style>
+      |a {
+      |  text-decoration: none
+      |}
+      |</style>
+      |</head>""".stripMargin
+  private val post = "</body></html>"
+  override def header(fields: Seq[String]): Option[String] = Some(fields.mkString(s"$pre\n<table>\n<thead><tr><th>", "</th><th>", "</th></tr></thead>\n<tbody>"))
   override def row(row: Seq[String]): Option[String] = Some(row.mkString("<tr><td>", "</td><td>", "</td></tr>"))
-  override def footer(): Option[String] = Some("</tbody>\n</table>")
+  override def footer(): Option[String] = Some(s"</tbody>\n</table>$post")
 }
 
