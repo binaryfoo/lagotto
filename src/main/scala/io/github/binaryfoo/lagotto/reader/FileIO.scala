@@ -3,6 +3,8 @@ package io.github.binaryfoo.lagotto.reader
 import java.io._
 import java.util.zip.GZIPInputStream
 
+import org.eclipse.jetty.util.IO
+
 import scala.io.Source
 
 object FileIO {
@@ -13,6 +15,15 @@ object FileIO {
     val in = new BufferedInputStream(new FileInputStream(f))
     if (f.getName.endsWith(".gz")) new GZIPInputStream(in)
     else in
+  }
+
+  def copy(src: InputStream, dest: OutputStream) = {
+    try {
+      IO.copy(src, dest)
+    }
+    finally {
+      src.close()
+    }
   }
 
   def copyLines(file: String, from: Int, to: Option[Int], out: PrintWriter) = {

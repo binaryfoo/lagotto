@@ -5,19 +5,25 @@ import java.io._
 import java.net.URI
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
+import _root_.io.github.binaryfoo.lagotto.reader.FileIO
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.reader.FileIO
+import io.github.binaryfoo.lagotto.output.FileInProgress
+import io.github.binaryfoo.lagotto.output.FileInProgress
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server}
-import org.eclipse.jetty.util.IO
 
 class WebServerSink(format: OutputFormat) extends Sink {
 
   private val port = 1984
-  private val in = new PipedInputStream(64 * 1024)
-  private val out = new PrintStream(new PipedOutputStream(in))
+  private val file = {
+    val f = File.createTempFile("lago", ".out", new File("."))
+    f.deleteOnExit()
+    f
+  }
+  private val out = new PrintStream(new FileOutputStream(file))
   private val delegate = new IncrementalSink(format, true, out)
-  private val server = new SillyServer(in, port)
+  private val result = new FileInProgress(file)
+  private val server = new SillyServer(result, port)
   private var launched = false
 
   override def entry(e: LogEntry) = {
@@ -31,13 +37,14 @@ class WebServerSink(format: OutputFormat) extends Sink {
   override def finish() = {
     delegate.finish()
     out.close()
+    result.done = true
   }
 
   server.start()
 
 }
 
-class SillyServer(index: InputStream, port: Int) {
+class SillyServer(index: FileInProgress, port: Int) {
   private val server = new Server(port)
 
   private val OpenFileReq = "(/.+)".r
@@ -45,6 +52,7 @@ class SillyServer(index: InputStream, port: Int) {
   server.setHandler(new AbstractHandler {
     override def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse): Unit = {
       request.getPathInfo match {
+        case "/favicon.ico" =>
         case OpenFileReq(file) =>
           val from = request.getParameter("from").toInt
           val to = request.getParameter("to").maybeToInt()
@@ -52,7 +60,7 @@ class SillyServer(index: InputStream, port: Int) {
           FileIO.copyLines(file, from, to, new PrintWriter(response.getOutputStream))
         case _ =>
           response.setContentType("text/html; charset=UTF-8")
-          IO.copy(index, response.getOutputStream)
+          FileIO.copy(index.open(), response.getOutputStream)
       }
       baseRequest.setHandled(true)
     }
