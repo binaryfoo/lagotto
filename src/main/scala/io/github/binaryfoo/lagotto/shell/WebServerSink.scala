@@ -50,7 +50,9 @@ class SillyServer(index: InputStream, port: Int) {
           val to = request.getParameter("to").maybeToInt()
           response.setContentType("text/plain")
           FileIO.copyLines(file, from, to, new PrintWriter(response.getOutputStream))
-        case _ => IO.copy(index, response.getOutputStream)
+        case _ =>
+          response.setContentType("text/html; charset=UTF-8")
+          IO.copy(index, response.getOutputStream)
       }
       baseRequest.setHandled(true)
     }
