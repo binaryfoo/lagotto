@@ -2,6 +2,7 @@ package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.LogFilters.MatchOp
 
+import scala.collection.mutable
 import scala.util.matching.Regex
 
 trait LogFilter extends Function[LogEntry, Boolean] {
@@ -77,6 +78,30 @@ case class NotInSetFilter(expr: FieldExpr, values: Set[String]) extends FieldFil
   override def toString(): String = s"$expr not in (${values.mkString(",")})"
 }
 
+/**
+ * Match messages matching ``filter`` and any messages other messages from the same channel (realm).
+ * Until the channel is closed.
+ */
+class ChannelWith(filter: LogFilter) extends LogFilter {
+  private val channels = mutable.HashSet[String]()
+
+  override def apply(entry: LogEntry): Boolean = {
+    val realm = entry("realm")
+    if (filter(entry)) {
+      if (realm != null)
+        channels += realm
+      true
+    } else {
+      val hit = channels.contains(realm)
+      if (hit) {
+        if (entry("msgType") == "session-end")
+          channels -= realm
+      }
+      hit
+    }
+  }
+}
+
 object LogFilters {
   type MatchOp = (String, String) => Boolean
 
@@ -121,9 +146,11 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
     private val IGrepNotPattern = """igrep!\(([^)]+?)\)""".r
     private val NotInPattern = """(.+) not in \(([^)]+)\)""".r
     private val InPattern = """(.+) in \(([^)]+)\)""".r
+    private val ChannelWith = """channelWith\((.+)\)""".r
 
     def unapply(s: String): Option[LogFilter] = s match {
       case MatchAsRegexPattern(FieldExpr(expr), negation, pattern) => Some(RegexFilter(expr, pattern.r, negation == ""))
+      case ChannelWith(LogFilter(filter)) => Some(new ChannelWith(filter))
       case LogFilterPattern(FieldExpr(expr), negation, operator, value) =>
         val op: MatchOp = operator match {
           case "=" => equalsOp

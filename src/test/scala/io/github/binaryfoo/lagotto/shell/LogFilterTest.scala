@@ -4,6 +4,7 @@ import io.github.binaryfoo.lagotto.{AggregateLogEntry, JposEntry, LagoTest}
 
 class LogFilterTest extends LagoTest {
 
+  import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.LogFilter
   import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.LogFilter.filterFor
   import io.github.binaryfoo.lagotto.LogFilters.NaiveParser.parseAndExpr
 
@@ -101,5 +102,24 @@ class LogFilterTest extends LagoTest {
     val filter = parseAndExpr("0=0210").get
     filter(JposEntry("0" -> "0200")) shouldBe false
     filter(JposEntry("0" -> "0210")) shouldBe true
+  }
+
+  "ChannelWith" should "match immediate condition" in {
+    val filter = LogFilter.unapply("channelWith(48=magic)").get
+    filter(JposEntry("48" -> "magic")) shouldBe true
+  }
+
+  it should "match message with the same realm as a previously matched message" in {
+    val filter = LogFilter.unapply("channelWith(48=magic)").get
+    filter(JposEntry("48" -> "magic", "realm" -> "some/0.0.0.0:1234")) // stateful filter
+    filter(JposEntry("realm" -> "some/0.0.0.0:1234")) shouldBe true
+    filter(JposEntry("realm" -> "some/0.0.0.0:1235")) shouldBe false
+  }
+
+  it should "not match message with the same realm as a previously matched message once that channel is closed" in {
+    val filter = LogFilter.unapply("channelWith(48=magic)").get
+    filter(JposEntry("48" -> "magic", "realm" -> "some/0.0.0.0:1234")) // stateful filter
+    filter(JposEntry("realm" -> "some/0.0.0.0:1234", "msgType" -> "session-end")) shouldBe true
+    filter(JposEntry("realm" -> "some/0.0.0.0:1234")) shouldBe false
   }
 }

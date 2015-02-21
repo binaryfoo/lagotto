@@ -905,6 +905,15 @@ class MainTest extends LagoTest {
     output should include regex """<a href="[^"]*/src/test/resources/a-pair.xml\?from=2&to=13">a-pair.xml:3</a>,<a href="[^"]*/src/test/resources/a-pair.xml\?from=13&to=27">a-pair.xml:14</a>"""
   }
 
+  "channelWith() operator" should "pick channel where a previous message matched" in {
+    val output = run("--csv", "48.1", "-f", "channelWith(4=10001)", testFile("a-bunch.xml"))
+    output shouldBe
+      """48.1
+        |a-bunch.xml #1
+        |a-bunch.xml #4
+        |""".stripMargin
+  }
+
   def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   def standardOutFrom(thunk: => Unit): String = {
