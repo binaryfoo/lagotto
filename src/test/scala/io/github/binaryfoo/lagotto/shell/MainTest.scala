@@ -1,8 +1,8 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{FileNotFoundException, ByteArrayOutputStream}
+import java.io.{ByteArrayOutputStream, FileNotFoundException}
 
-import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
+import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.LagoTest
 
 import scala.collection.mutable.ArrayBuffer
@@ -914,9 +914,9 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
-  def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
+  private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
-  def standardOutFrom(thunk: => Unit): String = {
+  private def standardOutFrom(thunk: => Unit): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out)(thunk)
     out.toString

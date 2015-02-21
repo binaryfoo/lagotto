@@ -11,7 +11,8 @@ import scala.annotation.tailrec
  */
 case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    filters: Seq[LogFilter] = Seq(),
-                   input: Seq[String] = Seq(), 
+                   input: Seq[String] = Seq(),
+                   follow: Boolean = false,
                    format: OutputFormat = FullText,
                    pair: Boolean = false,
                    header: Boolean = true,

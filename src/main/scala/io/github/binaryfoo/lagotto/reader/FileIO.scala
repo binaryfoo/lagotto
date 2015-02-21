@@ -3,11 +3,11 @@ package io.github.binaryfoo.lagotto.reader
 import java.io._
 import java.util.zip.GZIPInputStream
 
-import org.eclipse.jetty.util.IO
-
 import scala.io.Source
 
 object FileIO {
+
+  private val bufferSize = 64 * 1024
 
   def open(f: String): InputStream = open(new File(f))
 
@@ -19,7 +19,15 @@ object FileIO {
 
   def copy(src: InputStream, dest: OutputStream) = {
     try {
-      IO.copy(src, dest)
+      val buffer = new Array[Byte](bufferSize)
+      var len = 0
+      do {
+        len = src.read(buffer, 0, bufferSize)
+        if (len > 0) {
+          dest.write(buffer, 0, len)
+          dest.flush()
+        }
+      } while (len >= 0)
     }
     finally {
       src.close()

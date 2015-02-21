@@ -1,10 +1,14 @@
 package io.github.binaryfoo.lagotto
 
+import java.io.File
+
 import scala.io.Source
 
 trait TestInput {
 
   def testFile(f: String): String = s"src/test/resources/$f"
+
+  def testFiles(names: String*): Iterable[File] = names.map(f => new File(testFile(f)))
 
   def sourceFrom(f: String): Source = Source.fromFile(testFile(f))
 
@@ -18,5 +22,11 @@ trait TestInput {
     finally {
       source.close()
     }
+  }
+
+  def tempFile() = {
+    val file = File.createTempFile("tail-test", ".txt", new File("."))
+    file.deleteOnExit()
+    file
   }
 }

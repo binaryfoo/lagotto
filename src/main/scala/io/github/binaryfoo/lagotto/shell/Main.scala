@@ -92,7 +92,7 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
 
   private def read[T <: LogEntry](logType: LogType[T]): Iterator[T] = {
     val reader = LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
-    reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber))
+    reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber), opts.follow)
   }
 
   private def join(v: Iterator[LogEntry], join: Option[(FieldExpr, JoinMode)], logType: LogType[LogEntry]): Iterator[LogEntry] = {

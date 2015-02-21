@@ -1,22 +1,22 @@
-package io.github.binaryfoo.lagotto.output
+package io.github.binaryfoo.lagotto.reader
 
 import java.io._
 
 class TailInputStream(val file: FileInProgress) extends InputStream {
 
-  private val raf = new RandomAccessFile(file.file, "r")
+  private var raf = open
   private var bytesRead = 0L
 
-  override def read(): Int = readOrWait(raf.read())
+  override def read(): Int = readOrWait { raf.read() }
 
-  override def read(b: Array[Byte], off: Int, len: Int): Int = readOrWait(raf.read(b, off, len))
+  override def read(b: Array[Byte], off: Int, len: Int): Int = readOrWait { raf.read(b, off, len) }
 
   private def readOrWait(fn: => Int): Int = {
     var b = 0
     do {
       b = fn
       if (b != -1) {
-        bytesRead += 1
+        bytesRead += b
       } else {
         waitForMore()
       }
@@ -25,11 +25,15 @@ class TailInputStream(val file: FileInProgress) extends InputStream {
   }
 
   private def waitForMore() = {
-    while (file.file.length() == bytesRead && !file.done) {
+    while (file.file.length() <= bytesRead && !file.done) {
       Thread.sleep(300)
     }
+    if (fileHasBeenReplaced)
+      raf = open
   }
 
+  private def fileHasBeenReplaced = file.file.length() > raf.length()
+  private def open = new RandomAccessFile(file.file, "r")
 }
 
 object TailInputStream {

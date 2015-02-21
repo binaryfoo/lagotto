@@ -10,6 +10,8 @@ import io.github.binaryfoo.lagotto.reader.ProgressInputStream
 import org.joda.time.DateTimeZone
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.concurrent.Future
+
 class LagoTest
 
   extends FlatSpec with Matchers with TestInput {
@@ -38,6 +40,14 @@ class LagoTest
   def inputStreamFrom(s: String*) = namedInputStreamFrom(s :_*)("")
 
   def configWithTestDictionary = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources/"))
+
+  def afterDelay(millis: Int, thunk: => Unit): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    Future {
+      Thread.sleep(millis)
+      thunk
+    }
+  }
 
   val parserWithRootDictionary = new FieldExprParser(Some(RootDataDictionary()))
   val fieldParser = new FieldExprParser()

@@ -152,6 +152,10 @@ class OptionsParser(val config: Config) {
       opt[Int]('n', "limit") action {(limit,c) =>
         c.copy(limit = Some(limit))
       } text "Only output n entries"
+
+      opt[Unit]('F', "follow") action {(_,c) =>
+        c.copy(follow = true)
+      } text "Like tail -F. Read input as it's written to the file."
     }
 
     parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))

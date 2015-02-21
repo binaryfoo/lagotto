@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto
 
-import java.io.File
+import java.io.{FileOutputStream, File}
+import java.nio.file.Files
 
 import io.github.binaryfoo.lagotto.LogEntry.IterableOfLogEntry
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
@@ -72,7 +73,7 @@ class LogReaderTest extends LagoTest {
   }
 
   "Reading 2 files" should "read records in order" in {
-    val entries = LogReader().read(List("a-bunch.xml", "a-second-bunch.xml").map(f => new File(testFile(f))))
+    val entries = LogReader().read(testFiles("a-bunch.xml", "a-second-bunch.xml"), follow = false)
     val csv = entries.toCsv("time", "48.1")
     csv shouldEqual """00:00:03.292,a-bunch.xml #1
                       |00:00:04.292,a-bunch.xml #2
@@ -100,6 +101,21 @@ class LogReaderTest extends LagoTest {
                       |a-bunch.xml #2,a-bunch.xml:15
                       |a-bunch.xml #3,a-bunch.xml:27
                       |a-bunch.xml #4,a-bunch.xml:42""".stripMargin
+  }
+
+  "Follow mode" should "return first entry before blocking" in {
+    val file = tempFile()
+    copyTestFileTo("one.xml", file)
+    val entries: Iterator[JposEntry] = LogReader().read(List(file), follow = true)
+    entries.next().lines shouldBe contentsOf("one.xml").trim
+    afterDelay(50, copyTestFileTo("two.xml", file))
+    entries.next().lines shouldBe contentsOf("two.xml").trim
+  }
+
+  private def copyTestFileTo(src: String, dest: File) = {
+    val out = new FileOutputStream(dest, true)
+    Files.copy(new File(testFile(src)).toPath, out)
+    out.close()
   }
 
   private def readEntries(s: String): Iterator[JposEntry] = {

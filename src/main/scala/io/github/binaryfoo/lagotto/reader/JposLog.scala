@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.reader
 
-import io.github.binaryfoo.lagotto.{JposEntry, SourceRef}
+import io.github.binaryfoo.lagotto.JposEntry
 
 import scala.collection.mutable.ListBuffer
 
@@ -11,7 +11,7 @@ object JposLog extends LogType[JposEntry] {
 
   type P = LineSet
 
-  override def canParse(firstLine: String): Boolean = firstLine.contains("<log")
+  override def canParse(firstLine: String): Boolean = firstLine.contains("<log") || firstLine.startsWith("<?xml") || firstLine.startsWith("</log")
 
   override def readLinesForNextRecord(lines: LineIterator): LineSet = {
     var record: ListBuffer[String] = null

@@ -5,10 +5,8 @@ import java.io._
 import java.net.URI
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import _root_.io.github.binaryfoo.lagotto.reader.FileIO
+import io.github.binaryfoo.lagotto.reader.{FileInProgress, FileIO}
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.output.FileInProgress
-import io.github.binaryfoo.lagotto.output.FileInProgress
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server}
 

@@ -2,7 +2,6 @@ package io.github.binaryfoo.lagotto.reader
 
 import java.io._
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.zip.GZIPInputStream
 
 import io.github.binaryfoo.lagotto._
 
@@ -18,18 +17,21 @@ trait SkeletonLogReader[T <: LogEntry] {
 
   def progressMeter: ProgressMeter
 
-  def readFilesOrStdIn(args: Iterable[String]): Iterator[T] = {
+  def readFilesOrStdIn(args: Iterable[String], follow: Boolean = false): Iterator[T] = {
     if (args.isEmpty)
       read(System.in, StdInRef())
     else
-      read(args.map(new File(_)))
+      read(args.map(new File(_)), follow)
   }
 
-  def read(files: File*): Iterator[T] = read(files.toIterable)
+  def read(files: File*): Iterator[T] = read(files.toIterable, follow = false)
 
-  def read(files: Iterable[File]): Iterator[T] = {
+  def read(files: Iterable[File], follow: Boolean): Iterator[T] = {
     progressMeter.startRun(files.size)
-    files.toIterator.flatMap(f => read(FileIO.open(f), FileRef(f)))
+    files.toIterator.flatMap { f =>
+      val in = if (follow) TailInputStream(f) else FileIO.open(f)
+      read(in, FileRef(f))
+    }
   }
 
   /**
@@ -76,6 +78,7 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     private val queue = new ArrayBlockingQueue[Future[T]](processors * processors * 2)
     private var current: T = null.asInstanceOf[T]
     private var started = false
+    private var done = false
     private val reader = new Thread(new Runnable {
       private val lines = new LineIterator(source, strict, keepFullText)
 
@@ -101,25 +104,30 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     reader.setDaemon(true)
 
     override def hasNext: Boolean = {
-      ensureStarted()
-      current != null
+      ensureStartedAndCurrent()
+      !done
     }
 
     override def next(): T = {
-      ensureStarted()
-      val v = current
-      current = readNext()
-      v
+      ensureStartedAndCurrent()
+      consumeNext
     }
 
-    private def readNext(): T = {
-      val entry = readNextWithRetry()
-      val done = entry == null
-      source.publishProgress(done)
-      if (done) {
-        source.close()
+    private def readNext() = {
+      if (!done) {
+        current = readNextWithRetry()
+        done = current == null
+        source.publishProgress(done)
+        if (done) {
+          source.close()
+        }
       }
-      entry
+    }
+
+    private def consumeNext: T = {
+      val v = current
+      current = null.asInstanceOf[T]
+      v
     }
 
     @tailrec
@@ -135,12 +143,13 @@ case class LogReader[T <: LogEntry](strict: Boolean = false, keepFullText: Boole
     }
 
     @inline
-    private def ensureStarted() = {
+    private def ensureStartedAndCurrent() = {
       if (!started) {
         reader.start()
         started = true
-        current = readNext()
       }
+      if (current == null)
+        readNext()
     }
 
     override def foreach[U](f: (T) => U): Unit = {
@@ -245,9 +254,10 @@ class LineIterator(in: ProgressInputStream, val strict: Boolean = false, val kee
   def hasNext = current != null || readNext()
 
   def next(): String = {
+    if (current == null) readNext()
     val c = current
     currentLineNo = linesRead
-    readNext()
+    current = null
     c
   }
 

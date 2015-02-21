@@ -1,11 +1,8 @@
-package io.github.binaryfoo.lagotto.output
+package io.github.binaryfoo.lagotto.reader
 
-import java.io.{PrintStream, FileOutputStream, File}
-import scala.concurrent.ExecutionContext.Implicits.global
+import java.io.{File, FileOutputStream, PrintStream}
 
 import io.github.binaryfoo.lagotto.LagoTest
-
-import scala.concurrent.Future
 
 class TailInputStreamTest extends LagoTest {
 
@@ -18,10 +15,7 @@ class TailInputStreamTest extends LagoTest {
 
   it should "return contents written after a delay" in {
     val (in, out) = tailOfTempFile()
-    Future {
-      Thread.sleep(100)
-      out.print("from the future")
-    }
+    afterDelay(100, out.print("from the future"))
     val start = System.currentTimeMillis()
     val read = readString(in)
     val elapsed = System.currentTimeMillis() - start
@@ -32,24 +26,35 @@ class TailInputStreamTest extends LagoTest {
   it should "return extra content appended after a delay" in {
     val (in, out) = tailOfTempFile()
     out.println("line one")
-    Future {
-      Thread.sleep(100)
-      out.println("line two")
-    }
+    afterDelay(100, out.print("line two"))
+
     readString(in) shouldBe "line one\n"
     val start = System.currentTimeMillis()
     val read = readString(in)
     val elapsed = System.currentTimeMillis() - start
-    read shouldBe "line two\n"
+    read shouldBe "line two"
     elapsed shouldBe > (100L)
+
+    afterDelay(100, out.print("line three"))
+    readString(in) shouldBe "line three"
+  }
+
+  it should "read from new file with the same path" in {
+    val (in, _) = tailOfTempFile()
+    afterDelay(100, {
+      val file = in.file.file
+      file.delete()
+      val newOut = new FileOutputStream(file, false)
+      newOut.write("a line".getBytes)
+      newOut.close()
+    })
+
+    readString(in) shouldBe "a line"
   }
 
   it should "stop waiting if the file is done" in {
     val (in, _) = tailOfTempFile()
-    Future {
-      Thread.sleep(100)
-      in.file.done = true
-    }
+    afterDelay(100, in.file.done = true)
     val start = System.currentTimeMillis()
     val read = in.read()
     val elapsed = System.currentTimeMillis() - start
@@ -64,7 +69,7 @@ class TailInputStreamTest extends LagoTest {
   }
 
   private def tailOfTempFile(): (TailInputStream, PrintStream) = {
-    val file = File.createTempFile("tail-test", ".txt", new File("."))
+    val file = tempFile()
     val out = new PrintStream(new FileOutputStream(file))
     val in = TailInputStream(file)
     (in, out)
