@@ -1,9 +1,7 @@
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
-* Tail mode (-F)
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
 * Add --splitBy field to Main? Use case would be ip address or transaction id or link
-* Output to websocket and/or server sent events subscribers?
 * Apache Spark module
 * HTML table
   - colour rows by a field like socket
@@ -33,6 +31,7 @@
 * Why does spark sql not see export json as having date type for timestamps?
 * Support "receiver -> sender" display. Name system where logs are gathered from.
  - web sequence diagram output...
+* Full SQL like query: and, or - parser combinator
 
 
 Politeness:

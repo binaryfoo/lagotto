@@ -1,0 +1,11 @@
+<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
+  <receive>
+    <isomsg direction="incoming">
+      <!-- org.jpos.iso.packager.XMLPackager -->
+      <field id="0" value="0800"/>
+      <field id="7" value="1124000003"/>
+      <field id="11" value="28929"/>
+      <field id="24" value="831"/>
+    </isomsg>
+  </receive>
+</log>
