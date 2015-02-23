@@ -32,7 +32,7 @@ case class PivotedLogEntry(row: Map[String, String]) extends LogEntry {
  *   13:59,0400,1
  *   13:59,0410,1
  */
-class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggregates: Seq[AggregateExpr], val entries: Iterator[LogEntry]) extends AbstractIterator[PivotedLogEntry] {
+class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggregates: Seq[FieldExpr], val entries: Iterator[LogEntry]) extends AbstractIterator[PivotedLogEntry] {
 
   val fields: Seq[String] = Seq(rotateOn.field) ++ pivot.distinctValues().flatMap(v => aggregates.map(v + " - " + _.field))
   private var currentKey: String = null

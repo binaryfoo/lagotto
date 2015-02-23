@@ -23,7 +23,7 @@ object Main extends App {
         opts.progressMeter.finish()
       }
       catch {
-        case e: Exception if !Debug.enabled =>
+        case e: Exception if !Debug.enabled && !e.isInstanceOf[NullPointerException] =>
           Console.err.println(ExceptionTrace.messageTrace(e))
       }
     }
@@ -185,9 +185,13 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
   private def applyPivot(entries: Iterator[LogEntry]): Iterator[LogEntry] = {
     if (opts.pivot().isDefined) {
       val fields = opts.outputFields()
-      val rotateOn = fields.collectFirst { case e: DirectExpr => e}
-      val aggregates = opts.aggregationConfig().aggregates
-      new PivotedIterator(rotateOn.get, opts.pivot().get, aggregates.toSeq, entries)
+      val rotateOn = fields.collectFirst { case e: DirectExpr => e }.get
+      val pivotExpr = opts.pivot().get
+      val pivoted = fields.filterNot(f => f == rotateOn || f == pivotExpr)
+      val materialized = entries.toList
+      if (pivotExpr.distinctValues().isEmpty)
+        materialized.foreach(pivotExpr)
+      new PivotedIterator(rotateOn, pivotExpr, pivoted, materialized.iterator)
     } else {
       entries
     }
