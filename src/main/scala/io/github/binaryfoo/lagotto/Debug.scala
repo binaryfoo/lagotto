@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto
 
 object Debug {
 
-  var enabled = false
+  var enabled = System.getProperty("lago.debug", "false").toBoolean
 
   def log(msg: => String): Unit = {
     if (enabled)

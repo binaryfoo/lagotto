@@ -629,9 +629,10 @@ class MainTest extends LagoTest {
   }
 
   "With --strict garbled input" should "be rejected" in {
-    the [IllegalArgumentException] thrownBy {
-      run("--strict", testFile("message-inception-garbage.xml"))
-    } should have message """Unexpected <log> start tag. Line message-inception-garbage.xml:5:             <field id="0" value="2804"/><log realm="remoteLink.channel" at="Mon Dec 08 14:51:55 EST 2014.648">"""
+    val error = standardErrorFrom(Main.main(Array("--strict", testFile("message-inception-garbage.xml"))))
+    error shouldBe
+      """Unexpected <log> start tag. Line message-inception-garbage.xml:5:             <field id="0" value="2804"/><log realm="remoteLink.channel" at="Mon Dec 08 14:51:55 EST 2014.648">
+        |""".stripMargin
   }
 
   "With --digest" should "show full log with fewer characters" in {
@@ -814,9 +815,9 @@ class MainTest extends LagoTest {
 
   "silly number of files" should "be handled" in {
     val tooManyFiles = (1 to 1025)./:(new ArrayBuffer[String])((buf, i) => buf += s"file_$i.log")
-    the [FileNotFoundException] thrownBy {
+    standardErrorFrom {
       run(tooManyFiles :_*)
-    } should have message "file_1.log (No such file or directory)"
+    } shouldBe "file_1.log (No such file or directory)\n"
   }
 
   "auto detection" should "ignore unrecognised lines" in {
@@ -919,6 +920,12 @@ class MainTest extends LagoTest {
   private def standardOutFrom(thunk: => Unit): String = {
     val out = new ByteArrayOutputStream()
     Console.withOut(out)(thunk)
+    out.toString
+  }
+
+  private def standardErrorFrom(thunk: => Unit): String = {
+    val out = new ByteArrayOutputStream()
+    Console.withErr(out)(thunk)
     out.toString
   }
 }

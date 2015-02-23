@@ -7,7 +7,7 @@ import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
-import io.github.binaryfoo.lagotto.reader.{LogType, LogTypes}
+import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
 import scopt.Read
 
@@ -32,7 +32,7 @@ class OptionsParser(val config: Config) {
       } text "Optional list of log files. Otherwise read stdin."
 
       opt[LogType[LogEntry]]('i', "in-format") action { (fmt, c) =>
-        c.copy(inputFormat = fmt)
+        c.copy(inputFormat = fmt, strict = defaultStrictFor(fmt))
       } text s"Optional input log file format. Supported: ${logTypes.keys.mkString(",")}"
 
       opt[String]('g', "grep") unbounded() action { (expr, c) =>
@@ -170,6 +170,11 @@ class OptionsParser(val config: Config) {
     key.split(',').map {
       case ExprAndOrder(FieldExpr(expr), asc) => SortKey(expr, asc == "asc" || asc == null)
     }
+  }
+
+  private def defaultStrictFor(logType: LogType[LogEntry]): Boolean = logType match {
+    case JposLog => false
+    case _ => true
   }
 
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {

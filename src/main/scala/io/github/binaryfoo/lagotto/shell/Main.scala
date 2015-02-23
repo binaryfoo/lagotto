@@ -14,12 +14,18 @@ object Main extends App {
 
   def runWith(args: Array[String], config: Config) = {
     new OptionsParser(config).parse(args).map { opts =>
-      val (pipeline, format) = (new Pipeline(opts, config))()
-      val sink = sinkFor(opts, format)
+      try {
+        val (pipeline, format) = (new Pipeline(opts, config))()
+        val sink = sinkFor(opts, format)
 
-      pipeline.foreach(sink.entry)
-      sink.finish()
-      opts.progressMeter.finish()
+        pipeline.foreach(sink.entry)
+        sink.finish()
+        opts.progressMeter.finish()
+      }
+      catch {
+        case e: Exception if !Debug.enabled =>
+          Console.err.println(ExceptionTrace.messageTrace(e))
+      }
     }
   }
 
