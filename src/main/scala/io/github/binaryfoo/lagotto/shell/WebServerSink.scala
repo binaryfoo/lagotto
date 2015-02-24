@@ -52,10 +52,10 @@ class SillyServer(index: FileInProgress, port: Int) {
       request.getPathInfo match {
         case "/favicon.ico" =>
         case OpenFileReq(file) =>
-          val from = request.getParameter("from").toInt
+          val from = request.getParameter("from").maybeToInt()
           val to = request.getParameter("to").maybeToInt()
           response.setContentType("text/plain")
-          FileIO.copyLines(file, from, to, new PrintWriter(response.getOutputStream))
+          FileIO.copyLines(find(file), from, to, new PrintWriter(response.getOutputStream))
         case _ =>
           response.setContentType("text/html; charset=UTF-8")
           FileIO.copy(index.open(), response.getOutputStream)
@@ -63,6 +63,14 @@ class SillyServer(index: FileInProgress, port: Int) {
       baseRequest.setHandled(true)
     }
   })
+
+  def find(file: String) = {
+    if (new File(file).exists()) {
+      file
+    } else {
+      file.substring(1)
+    }
+  }
 
   def start() = server.start()
 }

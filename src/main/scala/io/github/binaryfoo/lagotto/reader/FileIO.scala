@@ -29,7 +29,7 @@ object FileIO {
 
   def readLines(f: String, from: Int, to: Option[Int] = None): String = {
     val out = new ByteArrayOutputStream()
-    copyLines(f, from, to, new PrintWriter(out))
+    copyLines(f, Some(from), to, new PrintWriter(out))
     out.toString
   }
 
@@ -50,11 +50,17 @@ object FileIO {
     }
   }
 
-  def copyLines(file: String, from: Int, to: Option[Int], out: PrintWriter) = {
+  def copyLines(file: String, from: Option[Int], to: Option[Int], out: PrintWriter) = {
     val source = Source.fromInputStream(FileIO.open(file))
     try {
-      val lines = source.getLines().drop(from)
-      for (line <- to.map(t => lines.take(t - from)).getOrElse(lines)) {
+      val lines = if (from.isDefined) {
+        val f = from.get
+        val head = source.getLines().drop(f)
+        to.map(t => head.take(t - f)).getOrElse(head)
+      } else {
+        source.getLines()
+      }
+      for (line <- lines) {
         out.println(line)
       }
     }
