@@ -184,6 +184,11 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("11" -> "100000")) shouldBe "100000"
   }
 
+  "(thing as href)" should "create an HTML anchor tag" in {
+    val expr = expressionFor("(thing as href)")
+    expr(JposEntry("thing" -> "file.txt")) should fullyMatch regex """<a href="file.txt".*</a>"""
+  }
+
   "xpath(expr)" should "evaluate the xpath expression over log text" in {
     val expr = expressionFor("xpath(//jobs[text()])")
     val entry = JposEntry.fromLines(linesFrom("pool-exhaustion.xml"))

@@ -480,6 +480,7 @@ object ConvertExpr {
       case (_, "millis", "seconds") => millisToSeconds
       case (_, "ms", "s") => millisToSeconds
       case (_, null, "int") => stripZeroes
+      case (_, null, "href") => href
       case _ => throw new IAmSorryDave(s"Unknown conversion $field")
     }
     expr match {
@@ -497,6 +498,7 @@ object ConvertExpr {
   val microToMillis     = (v: String) => (v.toLong / 1000).toString
   val millisToSeconds   = (v: String) => oneDpFormat.format(v.toDouble / 1000)
   val stripZeroes       = (v: String) => v.toInt.toString
+  val href              = (v: String) => SourceHrefExpr.linkTo(v, v)
 }
 
 private case class TimeConversion(op: TimeConversionOp, in: TimeFormatter, out: TimeFormatter) extends ConvertExpr.ConversionOp {
@@ -647,10 +649,12 @@ object SourceHrefExpr extends DirectExpr {
 
   override def apply(e: LogEntry): String = {
     e.source match {
-      case r@FileRef(file, line) => s"""<a href="${urlFor(file, line, e)}" title="$r">&#9906;</a>"""
+      case r@FileRef(file, line) => linkTo(urlFor(file, line, e), r.toString)
       case r => r.toString
     }
   }
+
+  def linkTo(url: String, mouseOver: String): String = s"""<a href="$url" title="$mouseOver">&#9906;</a>"""
 
   def urlFor(file: File, line: Int, e: LogEntry) = {
     val to = (e match {
