@@ -1,6 +1,8 @@
 package io.github.binaryfoo.lagotto
 
+import java.io.{FileWriter, PrintWriter}
 import java.util
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.joda.time.DateTime
 
@@ -47,6 +49,7 @@ object AggregateOps {
   val GroupConcat = """group_concat\((.*)\)""".r
   val GroupConcatDistinct = """group_concat\(distinct\((.*)\)\)""".r
   val GroupSample = """group_sample\((.*) (\d+)\)""".r
+  val GroupTrace = """group_trace\((.+)\)""".r
 
   // these need to be vals for equality to work between two AggregateOp instances
   val minLong = (l: Long, r: Long) => math.min(l, r)
@@ -159,6 +162,38 @@ case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAgg
   override def toString: String = s"group_sample($field,$size){values=$values}"
 
   override def copy() = new GroupSampleBuilder(expr, size)
+}
+
+case class GroupTraceBuilder(filePrefix: String, sequence: AtomicInteger = new AtomicInteger()) extends AggregateOp {
+
+  private var fileName: String = null
+  private var out: PrintWriter = null
+
+  override def copy(): AggregateOp = {
+    new GroupTraceBuilder(filePrefix, sequence)
+  }
+
+  override def result(): String = {
+    if (fileName != null) {
+      out.close()
+      fileName
+    } else {
+      ""
+    }
+  }
+
+  override def +=(elem: LogEntry) = {
+    if (fileName == null) {
+      open()
+    }
+    out.println(elem.lines)
+    this
+  }
+
+  private def open() = {
+    fileName = filePrefix + "." + sequence.incrementAndGet() + ".log"
+    out = new PrintWriter(new FileWriter(fileName))
+  }
 }
 
 case class LongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long) extends FieldBasedAggregateOp {

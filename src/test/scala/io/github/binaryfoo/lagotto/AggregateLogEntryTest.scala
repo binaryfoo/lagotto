@@ -1,8 +1,8 @@
 package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
-import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto.output.Xsv.SeqToXsv
+import io.github.binaryfoo.lagotto.reader.FileIO
 import org.joda.time.DateTime
 
 class AggregateLogEntryTest extends LagoTest {
@@ -24,7 +24,7 @@ class AggregateLogEntryTest extends LagoTest {
     aggregateToCsv(threeStans, "group_concat(distinct(mti))") shouldBe List("0200,0210")
   }
 
-  private def twoLifespans = iteratorOver(JposEntry("lifespan" -> "100"), JposEntry("lifespan" -> "200"))
+  private def twoLifespans = iteratorOver(JposEntry(lines = "<log>1</log>", "lifespan" -> "100"), JposEntry(lines = "<log>2</log>", "lifespan" -> "200"))
 
   it should "support avg(field)" in {
     aggregate("avg(lifespan)") shouldBe List("150")
@@ -54,6 +54,14 @@ class AggregateLogEntryTest extends LagoTest {
   it should "support group_sample(field N)" in {
     aggregate("group_sample(lifespan 1)") should (contain("100") or contain("200"))
     aggregateToCsv(threeStans, "mti", "group_sample(11 1)") should (contain("0210,3") and (contain("0200,1") or contain("0200,2")))
+  }
+
+  "group_trace" should "write a file per group" in {
+    aggregateToCsv(twoLifespans, "lifespan", "group_trace(agg-test)") should (contain("100,agg-test.1.log") and contain("200,agg-test.2.log"))
+    FileIO.readToString("agg-test.1.log") shouldBe "<log>1</log>\n"
+    FileIO.readToString("agg-test.2.log") shouldBe "<log>2</log>\n"
+    delete("agg-test.1.log")
+    delete("agg-test.2.log")
   }
 
   private val now = new DateTime()

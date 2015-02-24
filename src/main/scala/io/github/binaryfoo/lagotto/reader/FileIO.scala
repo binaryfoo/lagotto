@@ -17,6 +17,22 @@ object FileIO {
     else in
   }
 
+  def readToString(f: String): String = {
+    val source = Source.fromFile(f)
+    try {
+      source.mkString
+    }
+    finally {
+      source.close()
+    }
+  }
+
+  def readLines(f: String, from: Int, to: Option[Int] = None): String = {
+    val out = new ByteArrayOutputStream()
+    copyLines(f, from, to, new PrintWriter(out))
+    out.toString
+  }
+
   def copy(src: InputStream, dest: OutputStream) = {
     try {
       val buffer = new Array[Byte](bufferSize)

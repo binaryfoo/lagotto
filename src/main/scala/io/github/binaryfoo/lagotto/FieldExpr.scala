@@ -98,6 +98,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case GroupConcatDistinct(DirectExpr(field)) => new GroupConcatDistinctBuilder(field)
         case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
         case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)
+        case GroupTrace(filePrefix) => new GroupTraceBuilder(filePrefix)
         case _ => null
       }
       Option(op)

@@ -1,9 +1,10 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{ByteArrayOutputStream, FileNotFoundException}
+import java.io.ByteArrayOutputStream
 
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.LagoTest
+import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -157,6 +158,21 @@ class MainTest extends LagoTest {
                          |00:03,1
                          |00:04,2,3,4
                          |""".stripMargin
+  }
+
+  it should "record all members of a group with group_trace()" in {
+    val output = run("--csv", "socket,group_trace(main-test)", testFile("a-bunch.xml"))
+    output shouldBe
+      """socket,group_trace(main-test)
+        |10.0.0.1:4321,main-test.1.log
+        |10.0.0.1:4322,main-test.2.log
+        |""".stripMargin
+    FileIO.readToString("main-test.1.log") should include(FileIO.readLines(testFile("a-bunch.xml"), 3, Some(14)))
+    FileIO.readToString("main-test.1.log") should include(FileIO.readLines(testFile("a-bunch.xml"), 42, Some(56)))
+    FileIO.readToString("main-test.2.log") should include(FileIO.readLines(testFile("a-bunch.xml"), 15, Some(26)))
+    FileIO.readToString("main-test.2.log") should include(FileIO.readLines(testFile("a-bunch.xml"), 27, Some(41)))
+    delete("main-test.1.log")
+    delete("main-test.2.log")
   }
 
   it should "allow sort on count field included in --csv option" in {

@@ -1,3 +1,4 @@
+* href(group_trace(blah)) use (... as href) ?
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?

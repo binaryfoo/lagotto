@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto
 
 import java.io.File
+import java.nio.file.Files
 
 import scala.io.Source
 
@@ -29,4 +30,6 @@ trait TestInput {
     file.deleteOnExit()
     file
   }
+
+  def delete(f: String) = Files.deleteIfExists(new File(f).toPath)
 }
