@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
+import java.io.PrintWriter
+
 import io.github.binaryfoo.lagotto.{FieldExpr, LogEntry}
 
 trait OutputFormat {
@@ -9,10 +11,19 @@ trait OutputFormat {
 }
 
 object OutputFormat {
+
   def fieldsFor(f: OutputFormat): Seq[FieldExpr] = {
     f match {
       case Tabular(fields, _) => fields
       case _ => Seq()
+    }
+  }
+
+  implicit class PipeToOutputFormatIterator(val it: Iterator[LogEntry]) extends AnyVal {
+    def pipeTo(f: OutputFormat, out: PrintWriter) = {
+      f.header().foreach(out.println)
+      it.flatMap(f.apply).foreach(out.println)
+      f.footer().foreach(out.println)
     }
   }
 }

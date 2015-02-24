@@ -53,20 +53,21 @@ object FileIO {
   def copyLines(file: String, from: Option[Int], to: Option[Int], out: PrintWriter) = {
     val source = Source.fromInputStream(FileIO.open(file))
     try {
-      val lines = if (from.isDefined) {
-        val f = from.get
-        val head = source.getLines().drop(f)
-        to.map(t => head.take(t - f)).getOrElse(head)
-      } else {
-        source.getLines()
-      }
-      for (line <- lines) {
+      for (line <- slice(source.getLines(), from, to)) {
         out.println(line)
       }
     }
     finally {
       source.close()
       out.close()
+    }
+  }
+
+  def slice(it: Iterator[String], from: Option[Int], to: Option[Int]): Iterator[String] = {
+    (from, to) match {
+      case (Some(f), Some(t)) => it.slice(f, t)
+      case (Some(f), None) => it.drop(f)
+      case (None, None) => it
     }
   }
 }

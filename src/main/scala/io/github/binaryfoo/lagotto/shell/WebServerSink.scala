@@ -5,10 +5,18 @@ import java.io._
 import java.net.URI
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import io.github.binaryfoo.lagotto.reader.{FileInProgress, FileIO}
+import com.typesafe.config.ConfigFactory
+import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
+import io.github.binaryfoo.lagotto.reader.{SingleThreadLogReader, FileInProgress, FileIO}
+import io.github.binaryfoo.lagotto.shell.OutputFormat.PipeToOutputFormatIterator
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.shell.output.DigestedFormat
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server}
+
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 class WebServerSink(format: OutputFormat) extends Sink {
 
@@ -54,8 +62,15 @@ class SillyServer(index: FileInProgress, port: Int) {
         case OpenFileReq(file) =>
           val from = request.getParameter("from").maybeToInt()
           val to = request.getParameter("to").maybeToInt()
+          val foundFile = find(file)
           response.setContentType("text/plain")
-          FileIO.copyLines(find(file), from, to, new PrintWriter(response.getOutputStream))
+          val responseWriter = new PrintWriter(response.getOutputStream)
+          val writer = if (request.getParameter("digest") != null) {
+            digestTo(responseWriter, foundFile)
+          } else {
+            responseWriter
+          }
+          FileIO.copyLines(foundFile, from, to, writer)
         case _ =>
           response.setContentType("text/html; charset=UTF-8")
           FileIO.copy(index.open(), response.getOutputStream)
@@ -63,6 +78,22 @@ class SillyServer(index: FileInProgress, port: Int) {
       baseRequest.setHandled(true)
     }
   })
+
+  def digestTo(writer: PrintWriter, sourceName: String): PrintWriter = {
+    val out = new PipedOutputStream()
+    val in = new PipedInputStream(out)
+    val pipeJob = Future {
+      val entries = SingleThreadLogReader().read(in, FileRef(new File(sourceName)))
+      entries.pipeTo(DigestedFormat(RootDataDictionary(ConfigFactory.load()), Some(NameType.English)), writer)
+      writer.flush()
+    }
+    new PrintWriter(out) {
+      override def close() = {
+        super.close()
+        Await.ready(pipeJob, 1.minute)
+      }
+    }
+  }
 
   def find(file: String) = {
     if (new File(file).exists()) {
