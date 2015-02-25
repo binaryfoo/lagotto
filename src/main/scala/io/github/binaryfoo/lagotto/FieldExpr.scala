@@ -638,6 +638,7 @@ case class AllOfExpr(field: String, expressions: Seq[FieldExpr]) extends FieldEx
 
 case class AliasExpr(field: String, target: FieldExpr, name: String) extends FieldExpr {
   override def apply(e: LogEntry): String = target(e)
+  override def contains(other: FieldExpr): Boolean = target.contains(other)
   override def toString(): String = name
 }
 

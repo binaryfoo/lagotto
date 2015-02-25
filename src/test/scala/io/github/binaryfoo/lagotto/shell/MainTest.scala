@@ -107,6 +107,20 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
+  it should "calculate delays for aliased delay" in {
+    val output = run("--csv", "delay as \"gap\"", testFile("a-pair.xml"))
+    output shouldEqual """gap
+                         |0
+                         |808
+                         |47450900
+                         |""".stripMargin
+  }
+
+  it should "calculate delays for aliased delay as seconds" in {
+    val output = run("--csv", "(delay ms as s) as \"gap\"", testFile("a-pair.xml"))
+    output should include("47450.9")
+  }
+
   it should "group rows when count field included in --csv option" in {
     val output = run("--csv", "time(mm:ss),count", testFile("a-bunch.xml"))
     output shouldEqual """time(mm:ss),count
