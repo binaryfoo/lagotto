@@ -8,7 +8,7 @@ import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
-import io.github.binaryfoo.lagotto.shell.output.{AsciiTableFormat, DigestedFormat, IncrementalAsciiTableFormat, JSONOutput}
+import io.github.binaryfoo.lagotto.shell.output._
 import scopt.Read
 
 class OptionsParser(val config: Config) {
@@ -90,6 +90,10 @@ class OptionsParser(val config: Config) {
       opt[Unit]("digest") action { (_, c) =>
         c.copy(format = DigestedFormat(dictionary, Some(NameType.English)))
       } text "Output full message in a compact format."
+
+      opt[Unit]("names") action { (_, c) =>
+        c.copy(format = NamedAttributesFormat(dictionary))
+      } text "XML with extra name=\"\" attribute for each <field/>"
 
       opt[Option[NameType]]("digest-as") action { (nameType, c) =>
         c.copy(format = DigestedFormat(dictionary, nameType))

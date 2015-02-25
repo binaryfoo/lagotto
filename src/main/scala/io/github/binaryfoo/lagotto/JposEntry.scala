@@ -96,7 +96,7 @@ object JposEntry {
 
   import io.github.binaryfoo.lagotto.TagType._
 
-  final def extractFields(lines: Seq[String]): mutable.LinkedHashMap[String, String] = {
+  final def extractFields(lines: Seq[String], pathRecorder: (String, String) => Unit = null): mutable.LinkedHashMap[String, String] = {
     var fields = new ArrayBuffer[(String, String)](lines.size + 2)
     var path = ""
     var msgType: String = null
@@ -124,7 +124,10 @@ object JposEntry {
       tagNameAndType(line) match {
         case ("field", Start) =>
           val (id, value) = extractIdAndValue(line, it)
-          fields += ((pathTo(id), value))
+          val p = pathTo(id)
+          fields += ((p, value))
+          if (pathRecorder != null)
+            pathRecorder(p, line)
         case ("isomsg", Start) =>
           val (_, id) = extractId(line)
           if (id != null)

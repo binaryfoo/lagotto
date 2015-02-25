@@ -298,6 +298,12 @@ class MainTest extends LagoTest {
                          |""".stripMargin
   }
 
+  "--names" should "output an extra name attribute in xml" in {
+    val output = run("--names", testFile("basic.xml"))
+    output should include("""<field id="7" name="Transmission date and time" value="1124000003"/>""")
+    output should include("""<field id="11" name="System trace audit number" value="28928"/>""")
+  }
+
   it should "filter on exact field match with -f option" in {
     val output = run("-f", "11=28928", testFile("basic.xml"))
     output shouldEqual """<log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 00:00:03 EST 2014.292" lifespan="10005ms">
