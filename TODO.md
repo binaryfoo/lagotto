@@ -34,6 +34,9 @@
 * Handle log4j in --digest (just spit it out)
 * Handle jpos errors in --digest (again, spit it out)
 * Add --name to spit out jpos style with extra name="" attribute?
+* Output format for ipAddress/socket ready for socket in (x) in next query
+ - better support nested subquery...
+* With a group show src for a particular record. Eg one with an exception
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
