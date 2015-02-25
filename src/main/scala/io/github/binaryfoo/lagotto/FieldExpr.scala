@@ -247,6 +247,7 @@ object HasAggregateExpressions {
       case e: AggregateExpr => Some(Seq(e))
       case e: CalculationOverAggregates => Some(e.dependencies())
       case AliasExpr(_, t: AggregateExpr, _) => Some(Seq(t))
+      case AliasExpr(_, t: CalculationOverAggregates, _) => Some(t.dependencies())
       case _ => None
     }
   }

@@ -1,8 +1,6 @@
-* (group_trace(blah) as href) as "detail" drops aggregation ?
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
-* Add --splitBy field to Main? Use case would be ip address or transaction id or link
 * Apache Spark module
 * HTML table
   - colour rows by a field like socket

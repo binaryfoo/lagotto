@@ -189,6 +189,16 @@ class MainTest extends LagoTest {
     delete("main-test.2.log")
   }
 
+  it should "record all members of a group with aliased group_trace()" in {
+    val output = run("--csv", "socket,(group_trace(main-test) as href) as \"detail\"", testFile("a-bunch.xml"))
+    output should include regex """<a href="main-test.1.log" title="main-test.1.log">.*</a>"""
+    output should include("socket,detail")
+    FileIO.readToString("main-test.1.log") should include(FileIO.readLines(testFile("a-bunch.xml"), 3, Some(14)))
+    FileIO.readToString("main-test.2.log") should include(FileIO.readLines(testFile("a-bunch.xml"), 15, Some(26)))
+    delete("main-test.1.log")
+    delete("main-test.2.log")
+  }
+
   it should "allow sort on count field included in --csv option" in {
     val output = run("--csv", "time(mm:ss),count", "--sort", "count desc", testFile("a-bunch.xml"))
     output shouldEqual """time(mm:ss),count
