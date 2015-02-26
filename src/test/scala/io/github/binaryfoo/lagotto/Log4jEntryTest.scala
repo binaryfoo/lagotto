@@ -53,4 +53,17 @@ class Log4jEntryTest extends LagoTest {
     val entry = Log4jEntry.fromString(twoLines)
     entry.exprToSeq("message(/(^.*detail.*$)/$1/)") shouldBe Seq("With some details...")
   }
+
+  "An entry containing a jpos entry" should "expose the jpos entry" in {
+    val text = """[08 Nov 2014 00:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 00:00:20 EST 2014.529" lifespan="290ms">
+                 |  <receive>
+                 |    <exception name="Oops">
+                 |    Oops
+                 |    </exception>
+                 |  </receive>
+                 |</log>""".stripMargin
+    val entry = Log4jEntry.fromString(text)
+
+    entry("jpos.exception") shouldBe "Oops"
+  }
 }

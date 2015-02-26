@@ -8,6 +8,7 @@ import scala.collection.mutable
 case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String], lines: String, source: SourceRef = null) extends LogEntry {
 
   val fields = _fields.withDefault {
+    case Log4jEntry.JposAccess(path) if nested.isDefined => nested.get(path)
     case TimeFormatter(format) => format.print(timestamp)
     case _ => null
   }
@@ -16,6 +17,15 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
     _fields.get("timestamp")
       .map(Log4jEntry.TimeFormat.parseDateTime)
       .getOrElse(throw new IAmSorryDave(s"Missing 'timestamp' in ${_fields}"))
+  }
+
+  lazy val nested: Option[JposEntry] = {
+    val jposStart = lines.indexOf("<log ")
+    Option(if (jposStart != -1) {
+      JposEntry.fromString(lines.substring(jposStart), source)
+    } else {
+      null
+    })
   }
 
   def level = _fields("level")
@@ -31,6 +41,7 @@ object Log4jEntry {
 
   val Record = """(?s)\[([^]]+)\] (\w+) +\[([^]]+)\]: (.*)""".r
   val TimeFormat = DateTimeFormat.forPattern("dd MMM yyyy HH:mm:ss,SSS")
+  val JposAccess = """jpos\.(.+)""".r
 
   def fromString(s: String, source: SourceRef = null): Log4jEntry = {
     s match {

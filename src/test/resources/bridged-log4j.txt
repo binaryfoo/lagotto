@@ -1,0 +1,28 @@
+[08 Nov 2014 00:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 00:00:20 EST 2014.529" lifespan="290ms">
+  <receive>
+    <exception name="Received fatal alert: bad_record_mac">
+    javax.net.ssl.SSLException: Received fatal alert: bad_record_mac
+	at sun.security.ssl.Alerts.getSSLException(Alerts.java:208)
+	at sun.security.ssl.Alerts.getSSLException(Alerts.java:154)
+	at sun.security.ssl.SSLSocketImpl.recvAlert(SSLSocketImpl.java:1961)
+	at sun.security.ssl.SSLSocketImpl.readRecord(SSLSocketImpl.java:1077)
+	at sun.security.ssl.SSLSocketImpl.performInitialHandshake(SSLSocketImpl.java:1312)
+	at sun.security.ssl.SSLSocketImpl.readDataRecord(SSLSocketImpl.java:882)
+	at sun.security.ssl.AppInputStream.read(AppInputStream.java:102)
+	at java.io.BufferedInputStream.read1(BufferedInputStream.java:273)
+	at java.io.BufferedInputStream.read(BufferedInputStream.java:334)
+	at java.io.DataInputStream.read(DataInputStream.java:149)
+	at sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:283)
+	at sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:325)
+	at sun.nio.cs.StreamDecoder.read(StreamDecoder.java:177)
+	at java.io.InputStreamReader.read(InputStreamReader.java:184)
+	at java.io.BufferedReader.fill(BufferedReader.java:154)
+	at java.io.BufferedReader.readLine(BufferedReader.java:317)
+	at java.io.BufferedReader.readLine(BufferedReader.java:382)
+	at org.jpos.iso.channel.XMLChannel.streamReceive(XMLChannel.java:88)
+	at org.jpos.iso.BaseChannel.receive(BaseChannel.java:672)
+	at org.jpos.iso.ISOServer$Session.run(ISOServer.java:155)
+	at org.jpos.util.ThreadPool$PooledThread.run(ThreadPool.java:72)
+    </exception>
+  </receive>
+</log>

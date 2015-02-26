@@ -961,6 +961,11 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "jpos entry within log4j entry" should "be accessible" in {
+    val output = run("--csv", "jpos.ipAddress,jpos.exception", testFile("bridged-log4j.txt"))
+    output should include("172.0.1.7,Received fatal alert: bad_record_mac")
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
