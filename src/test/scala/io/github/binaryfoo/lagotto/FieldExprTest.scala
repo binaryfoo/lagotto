@@ -304,10 +304,26 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("48.1" -> "one", "48.1.1" -> "one.one", "48.2" -> "two")) shouldBe "one,one.one,two"
   }
 
-  "href" should "create html anchor for source file:// URL" in {
+  val dummy455 = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = FileRef(new File("/dummy/path.log"), 455))
+
+  "file" should "show file name" in {
+    val expr = expressionFor("file")
+    expr(dummy455) shouldBe "path.log"
+  }
+
+  "line" should "show line number" in {
+    val expr = expressionFor("line")
+    expr(dummy455) shouldBe "455"
+  }
+
+  "src" should "show file name and line number" in {
+    val expr = expressionFor("src")
+    expr(dummy455) shouldBe "path.log:455"
+  }
+
+  "src with Html render hint" should "create html anchor for source file:// URL" in {
     val expr = parser.copy(renderHints = Set(RenderHint.Html)).FieldExpr.expressionFor("src")
-    val entry = SimpleLogEntry(new mutable.LinkedHashMap[String, String](), lines = "", source = FileRef(new File("/dummy/path.log"), 455))
-    expr(entry) shouldBe """<a href="/dummy/path.log?from=454&to=455" title="path.log:455">&#9906;</a>"""
+    expr(dummy455) shouldBe """<a href="/dummy/path.log?from=454&to=455" title="path.log:455">&#9906;</a>"""
   }
 
   it should "not create a link for records from stdin" in {
@@ -348,5 +364,32 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("msgType" -> "session-error")) shouldBe "!!"
     expr(JposEntry("msgType" -> "peer-disconnect")) shouldBe "X"
     expr(JposEntry("msgType" -> "io-timeout")) shouldBe "T"
+  }
+
+  "pivot()" should "collect distinct values" in {
+    val expr = expressionFor("pivot(mti)")
+    expr(JposEntry("0" -> "0200")) shouldBe "0200"
+    expr(JposEntry("0" -> "0200")) shouldBe "0200"
+    expr(JposEntry("0" -> "0210")) shouldBe "0210"
+    expr.asInstanceOf[PivotExpr].distinctValues() shouldBe Seq("0200", "0210")
+  }
+
+  "field(/regex/replacement/)" should "return regex replacement" in {
+    val expr = expressionFor("11(/0+([1-9]+)/x $1 x/)")
+    expr(JposEntry("11" -> "000003")) shouldBe "x 3 x"
+  }
+
+  it should "apply regex to result of another expression" in {
+    val expr = expressionFor("src(/.log//)")
+    expr(dummy455) shouldBe "path:455"
+  }
+
+  "time expressions" should "return timestamp" in {
+    expressionFor("time(HH:mm)")(JposEntry("at" -> new LocalTime(10, 30).toDateTimeToday.asJposAt)) shouldBe "10:30"
+    expressionFor("time(HH:m0)")(JposEntry("at" -> new LocalTime(10, 33).toDateTimeToday.asJposAt)) shouldBe "10:30"
+  }
+
+  "delay" should "return DelayExpr" in {
+    expressionFor("delay") shouldEqual DelayExpr
   }
 }

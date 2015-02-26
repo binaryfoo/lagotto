@@ -27,8 +27,8 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
 
   val fields = _fields.withDefault {
     case "mti" => mti
-    case "link" => realm.link
     case "icon" => icon
+    case "link" => realm.link
     case "socket" => realm.socket
     case "ipAddress" => realm.ipAddress
     case "port" => realm.port
