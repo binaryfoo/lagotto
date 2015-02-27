@@ -7,6 +7,8 @@ import io.github.binaryfoo.lagotto._
 import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
+import scala.language.postfixOps
+import scala.sys.process._
 
 trait Sink {
   def entry(e: LogEntry)
@@ -71,6 +73,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)
+    s"/usr/bin/env gnuplot $gpFileName" !
   }
 
 }

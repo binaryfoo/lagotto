@@ -2,13 +2,14 @@ package io.github.binaryfoo.lagotto.output
 
 object GnuplotScriptWriter {
 
-  def write(fields: Seq[String], csvFileName: String, baseName: String, xRange: (String, String)): String = {
+  def write(fields: Seq[String], csvFileName: String, plotFileName: String, xRange: (String, String)): String = {
     val timeFormat = fields.head match {
       case "time" => "%H:%M:%S"
       case "time(HH:mm:ss)" => "%H:%M:%S"
       case "time(HH:mm:s0)" => "%H:%M:%S"
       case "time(HH:mm)" => "%H:%M"
       case "time(HH:m0)" => "%H:%M"
+      case "date" => "%Y-%m-%d"
       case "datetime" => "%Y-%m-%d %H:%M:%S"
     }
     val columns = fields.tail
@@ -17,10 +18,10 @@ object GnuplotScriptWriter {
     // using tab delimited data fails on empty cells: \t\t gets merged
     // line types cheat sheet: http://kunak.phsx.ku.edu/~sergei/Gnuplot/line_point_types.html
     
-    s"""#!/usr/bin/env gnuplot -persist
+    s"""#!/usr/bin/env gnuplot
       |set datafile separator ','
-      |#set terminal svg size 1280,960
-      |#set output '$baseName.svg'
+      |set terminal svg enhanced mouse size 1280,960
+      |set output '$plotFileName.svg'
       |set xdata time
       |set timefmt '$timeFormat'
       |set format x '$timeFormat'

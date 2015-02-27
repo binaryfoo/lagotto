@@ -13,14 +13,18 @@ import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.shell.output.DigestedFormat
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server}
+import org.eclipse.jetty.util.component.AbstractLifeCycle.AbstractLifeCycleListener
+import org.eclipse.jetty.util.component.LifeCycle
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class WebServerSink(format: OutputFormat) extends Sink {
+/**
+ * Show results as they are produced.
+ */
+class LiveWebServerSink(format: OutputFormat) extends Sink {
 
-  private val port = 1984
   private val file = {
     val f = File.createTempFile("lago", ".out", new File("."))
     f.deleteOnExit()
@@ -29,13 +33,13 @@ class WebServerSink(format: OutputFormat) extends Sink {
   private val out = new PrintStream(new FileOutputStream(file))
   private val delegate = new IncrementalSink(format, true, out)
   private val result = new FileInProgress(file)
-  private val server = new SillyServer(result, port)
+  private val server = new SillyServer(result, browseOnStart = false)
   private var launched = false
 
   override def entry(e: LogEntry) = {
     delegate.entry(e)
     if (!launched) {
-      Desktop.getDesktop.browse(new URI(s"http://localhost:$port"))
+      server.browseIndex()
       launched = true
     }
   }
@@ -50,7 +54,19 @@ class WebServerSink(format: OutputFormat) extends Sink {
 
 }
 
-class SillyServer(index: FileInProgress, port: Int) {
+/**
+ * Show only the final file once it's baked.
+ */
+class OnFinishWebServerSink(index: String) extends Sink {
+  override def entry(e: LogEntry) = {}
+
+  override def finish() = {
+    val server = new SillyServer(new FileInProgress(new File(index), true))
+    server.start()
+  }
+}
+
+class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: String = "text/html; charset=UTF-8", browseOnStart: Boolean = true) {
   private val server = new Server(port)
 
   private val OpenFileReq = "(/.+)".r
@@ -72,12 +88,22 @@ class SillyServer(index: FileInProgress, port: Int) {
           }
           FileIO.copyLines(foundFile, from, to, writer)
         case _ =>
-          response.setContentType("text/html; charset=UTF-8")
+          response.setContentType(indexContentType)
           FileIO.copy(index.open(), response.getOutputStream)
       }
       baseRequest.setHandled(true)
     }
   })
+
+  if (browseOnStart) {
+    server.addLifeCycleListener(new AbstractLifeCycleListener {
+      override def lifeCycleStarted(event: LifeCycle): Unit = browseIndex()
+    })
+  }
+
+  def browseIndex() = {
+    Desktop.getDesktop.browse(new URI(s"http://localhost:$port"))
+  }
 
   def digestTo(writer: PrintWriter, sourceName: String): PrintWriter = {
     val out = new PipedOutputStream()
