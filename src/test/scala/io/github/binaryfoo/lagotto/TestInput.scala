@@ -26,7 +26,7 @@ trait TestInput {
   }
 
   def tempFile() = {
-    val file = File.createTempFile("tail-test", ".txt", new File("."))
+    val file = File.createTempFile("lago-test", ".txt", new File("."))
     file.deleteOnExit()
     file
   }

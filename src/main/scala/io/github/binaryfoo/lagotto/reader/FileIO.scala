@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.reader
 
 import java.io._
+import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
 import scala.io.Source
@@ -27,10 +28,20 @@ object FileIO {
     }
   }
 
-  def readLines(f: String, from: Int, to: Option[Int] = None): String = {
+  def readLines(f: String, from: Int = 0, to: Option[Int] = None): String = {
     val out = new ByteArrayOutputStream()
     copyLines(f, Some(from), to, new PrintWriter(out))
     out.toString
+  }
+
+  def writeLines(f: String, lines: Iterable[String]) = {
+    val writer = new PrintWriter(f)
+    try {
+      lines.foreach(writer.println)
+    }
+    finally {
+      writer.close()
+    }
   }
 
   def copy(src: InputStream, dest: OutputStream) = {

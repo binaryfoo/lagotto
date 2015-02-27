@@ -1,5 +1,8 @@
 package io.github.binaryfoo.lagotto.shell
 
+import java.io.File
+
+import io.github.binaryfoo.lagotto.reader.FileIO
 import io.github.binaryfoo.lagotto.{AggregateLogEntry, JposEntry, LagoTest}
 
 class LogFilterTest extends LagoTest {
@@ -39,6 +42,26 @@ class LogFilterTest extends LagoTest {
 
   "not operator" should "match value not in set" in {
     val filter = filterFor("msgType not in (send,receive)")
+    filter.field shouldBe "msgType"
+    filter(JposEntry("msgType" -> "bollox")) shouldBe true
+    filter(JposEntry("msgType" -> "send")) shouldBe false
+    filter(JposEntry("msgType" -> "receive")) shouldBe false
+  }
+
+  "in file operator" should "match line from file" in {
+    val temp = fileHolding("10.0.0.1:8000", "10.0.0.2:8001")
+    val filter = filterFor(s"""socket in file "$temp"""")
+    filter.field shouldBe "socket"
+    filter(JposEntry("realm" -> "channel/10.0.0.1:8000")) shouldBe true
+    filter(JposEntry("realm" -> "channel/10.0.0.1:8001")) shouldBe false
+    filter(JposEntry("realm" -> "channel/10.0.0.2:8001")) shouldBe true
+    filter(JposEntry("realm" -> "channel/10.0.0.2:8000")) shouldBe false
+    filter(JposEntry("realm" -> "channel/10.0.0.3:8000")) shouldBe false
+  }
+
+  "not in file operator" should "match values not in files" in {
+    val tempFile = fileHolding("send", "receive")
+    val filter = filterFor(s"""msgType not in file "$tempFile"""")
     filter.field shouldBe "msgType"
     filter(JposEntry("msgType" -> "bollox")) shouldBe true
     filter(JposEntry("msgType" -> "send")) shouldBe false
@@ -121,5 +144,11 @@ class LogFilterTest extends LagoTest {
     filter(JposEntry("48" -> "magic", "realm" -> "some/0.0.0.0:1234")) // stateful filter
     filter(JposEntry("realm" -> "some/0.0.0.0:1234", "msgType" -> "session-end")) shouldBe true
     filter(JposEntry("realm" -> "some/0.0.0.0:1234")) shouldBe false
+  }
+
+  private def fileHolding(lines: String*): String = {
+    val temp = tempFile()
+    FileIO.writeLines(temp.getAbsolutePath, lines)
+    temp.getAbsolutePath
   }
 }

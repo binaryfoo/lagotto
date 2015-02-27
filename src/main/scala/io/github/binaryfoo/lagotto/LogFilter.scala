@@ -1,8 +1,10 @@
 package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.LogFilters.MatchOp
+import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.collection.mutable
+import scala.io.Source
 import scala.util.matching.Regex
 
 trait LogFilter extends Function[LogEntry, Boolean] {
@@ -11,6 +13,7 @@ trait LogFilter extends Function[LogEntry, Boolean] {
 
 trait FieldFilter extends LogFilter {
   def field: String = expr.toString()
+
   def expr: FieldExpr
 }
 
@@ -20,23 +23,29 @@ object FieldFilterOn {
 
 case class GrepFilter(pattern: String) extends LogFilter {
   override def apply(entry: LogEntry): Boolean = entry.lines.contains(pattern)
+
   override def toString(): String = s"grep($pattern)"
 }
 
 case class NegativeGrepFilter(pattern: String) extends LogFilter {
   override def apply(entry: LogEntry): Boolean = !entry.lines.contains(pattern)
+
   override def toString(): String = s"grep!($pattern)"
 }
 
 case class InsensitiveGrepFilter(pattern: String) extends LogFilter {
   val lowerPattern = pattern.toLowerCase
+
   override def apply(entry: LogEntry): Boolean = entry.lines.toLowerCase.contains(lowerPattern)
+
   override def toString(): String = s"igrep($pattern)"
 }
 
 case class NegativeInsensitiveGrepFilter(pattern: String) extends LogFilter {
   val lowerPattern = pattern.toLowerCase
+
   override def apply(entry: LogEntry): Boolean = !entry.lines.toLowerCase.contains(lowerPattern)
+
   override def toString(): String = s"igrep!($pattern)"
 }
 
@@ -44,16 +53,19 @@ case class FieldOpFilter(expr: FieldExpr, desired: String, operatorSymbol: Strin
   override def apply(entry: LogEntry): Boolean = {
     op(expr(entry), desired)
   }
+
   override def toString(): String = s"$expr$operatorSymbol$desired"
 }
 
 case class AndFilter(filters: Seq[LogFilter]) extends LogFilter {
   override def apply(entry: LogEntry): Boolean = filters.forall(_.apply(entry))
+
   override def toString(): String = filters.mkString(",")
 }
 
 object AllFilter extends LogFilter {
   override def apply(entry: LogEntry): Boolean = true
+
   override def toString(): String = "all"
 }
 
@@ -62,6 +74,7 @@ case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true
     val value = expr(entry)
     value != null && pattern.findFirstMatchIn(value).isDefined == positive
   }
+
   override def toString(): String = {
     val negation = if (positive) "" else "!"
     s"$expr$negation~/$pattern/"
@@ -70,11 +83,13 @@ case class RegexFilter(expr: FieldExpr, pattern: Regex, positive: Boolean = true
 
 case class InSetFilter(expr: FieldExpr, values: Set[String]) extends FieldFilter {
   override def apply(entry: LogEntry): Boolean = values.contains(expr(entry))
+
   override def toString(): String = s"$expr in (${values.mkString(",")})"
 }
 
 case class NotInSetFilter(expr: FieldExpr, values: Set[String]) extends FieldFilter {
   override def apply(entry: LogEntry): Boolean = !values.contains(expr(entry))
+
   override def toString(): String = s"$expr not in (${values.mkString(",")})"
 }
 
@@ -145,7 +160,9 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
     private val IGrepPattern = """igrep\(([^)]+?)\)""".r
     private val IGrepNotPattern = """igrep!\(([^)]+?)\)""".r
     private val NotInPattern = """(.+) not in \(([^)]+)\)""".r
+    private val NotInFilePattern = """(.+) not in file "([^)]+)"""".r
     private val InPattern = """(.+) in \(([^)]+)\)""".r
+    private val InFilePattern = """(.+) in file "([^"]+)"""".r
     private val ChannelWith = """channelWith\((.+)\)""".r
 
     def unapply(s: String): Option[LogFilter] = s match {
@@ -168,13 +185,25 @@ class LogFilterParser(val fieldParser: FieldExprParser) {
       case IGrepPattern(text) => Some(InsensitiveGrepFilter(text))
       case IGrepNotPattern(text) => Some(NegativeInsensitiveGrepFilter(text))
       case NotInPattern(FieldExpr(expr), list) => Some(NotInSetFilter(expr, list.split(',').toSet))
+      case NotInFilePattern(FieldExpr(expr), file) => Some(NotInSetFilter(expr, readToSet(file)))
       case InPattern(FieldExpr(expr), list) => Some(InSetFilter(expr, list.split(',').toSet))
+      case InFilePattern(FieldExpr(expr), file) => Some(InSetFilter(expr, readToSet(file)))
       case _ =>
         None
     }
 
     def filterFor(expr: String): FieldFilter = expr match {
       case LogFilter(f) if f.isInstanceOf[FieldFilter] => f.asInstanceOf[FieldFilter]
+    }
+
+    private def readToSet(f: String): Set[String] = {
+      val source = Source.fromFile(f)
+      try {
+        source.getLines().toSet
+      }
+      finally {
+        source.close()
+      }
     }
 
   }
