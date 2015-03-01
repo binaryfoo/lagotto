@@ -27,6 +27,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
     val TranslateOp = """translate\((.+)\)""".r
     val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
     val PivotOp = """pivot\((.+)\)""".r
+    val ResultOfPivotOp = """pivoted\((.+)\)""".r
     val XPathAccess = """xpath\((.+)\)""".r
     val Alias = """(.*) as "([^"]*)"""".r
 
@@ -41,6 +42,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
         case RegexReplacementOp(p@DirectExpr(path), regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
+        case ResultOfPivotOp(p@FieldExpr(field)) => PivotResultExpr(expr, p)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
         case "src" if renderHints.contains(RenderHint.Html) => SourceHrefExpr
@@ -106,7 +108,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
     }
 
   }
-
+  
   implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
 }
 
@@ -207,7 +209,7 @@ case class AggregateExpr(field: String, op: AggregateOp) extends FieldExpr {
   /**
    * The field being aggregated. Optional because count doesn't have to act on a single field.
    */
-  def expr: Option[DirectExpr] = {
+  def expr: Option[FieldExpr] = {
     op match {
       case e: FieldBasedAggregateOp => Some(e.expr)
       case _ => None
@@ -577,6 +579,10 @@ case class PivotExpr(field: String, pivot: FieldExpr) extends DirectExpr {
   }
 
   def distinctValues(): Seq[String] = values.toSeq
+}
+
+case class PivotResultExpr(field: String, pivotedField: String) extends DirectExpr {
+  override def apply(e: LogEntry): String = e(pivotedField)
 }
 
 /**

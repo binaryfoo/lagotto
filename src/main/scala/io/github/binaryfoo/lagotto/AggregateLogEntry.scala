@@ -61,7 +61,7 @@ object AggregateOps {
 
 trait FieldBasedAggregateOp extends AggregateOp {
 
-  def expr: DirectExpr
+  def expr: FieldExpr
   def field = expr.field
   def add(v: String)
 
@@ -72,7 +72,7 @@ trait FieldBasedAggregateOp extends AggregateOp {
     }
     this
   }
-
+  def copy(): FieldBasedAggregateOp
 }
 
 case class CountBuilder() extends AggregateOp {
@@ -196,7 +196,7 @@ case class GroupTraceBuilder(filePrefix: String, sequence: AtomicInteger = new A
   }
 }
 
-case class LongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
+case class LongOpBuilder(expr: FieldExpr, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
 
   private var current: Option[Long] = None
 

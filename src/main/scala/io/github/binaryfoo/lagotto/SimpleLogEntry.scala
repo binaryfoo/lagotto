@@ -26,3 +26,7 @@ case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, Str
 
   override def exportAsSeq: Seq[(String, String)] = _fields.toSeq
 }
+
+object SimpleLogEntry {
+  def apply(fields: (String, String)*): SimpleLogEntry = SimpleLogEntry(mutable.LinkedHashMap(fields :_*), lines = "")
+}

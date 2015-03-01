@@ -15,6 +15,22 @@ case class PivotedLogEntry(row: Map[String, String]) extends LogEntry {
 }
 
 /**
+ * A single value for one of the N rows included in a single PivotedLogEntry.
+ */
+case class PivotedValue(field: String, value: String) extends LogEntry {
+  override def timestamp: DateTime = null
+  override def source: SourceRef = null
+  override def exportAsSeq: Seq[(String, String)] = null
+  override def lines: String = ""
+  override def apply(id: String): String = {
+    if (field != id) {
+      throw new IllegalArgumentException(s"Wrong value being queried $id != $field")
+    }
+    value
+  }
+}
+
+/**
  * Supports a use case like:
  *
  *   time(HH:mm),pivot(mti),count
@@ -32,10 +48,19 @@ case class PivotedLogEntry(row: Map[String, String]) extends LogEntry {
  *   13:59,0400,1
  *   13:59,0410,1
  */
-class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggregates: Seq[FieldExpr], val entries: Iterator[LogEntry]) extends AbstractIterator[PivotedLogEntry] {
+class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val pivoted: Seq[FieldExpr], val entries: Iterator[LogEntry]) extends AbstractIterator[PivotedLogEntry] {
 
-  val fields: Seq[String] = Seq(rotateOn.field) ++ pivot.distinctValues().flatMap(v => aggregates.map(v + " - " + _.field))
+  private val (aggregateOfPivot, toPivot) = pivoted.partition {
+    case a@AggregateExpr(_, _) => a.expr.exists(_.isInstanceOf[PivotResultExpr])
+    case _ => false
+  }
+  private val aggregateOps: Seq[PivotAggregate] = extractAggregateOps
+  private val (pivotedFields, pivotedLookup) = pivotResultFields
+  val fields: Seq[String] = Seq(rotateOn.field) ++ pivotedFields ++ aggregateOfPivot.map(_.field)
+  // value of pivot expr
   private var currentKey: String = null
+  // pivot expr -> values of toPivot
+  // will be flattened into a single row
   private var current: Map[String, Seq[String]] = Map.empty
 
   def readNext(): PivotedLogEntry = {
@@ -43,7 +68,7 @@ class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggreg
       val thisKey = rotateOn(e)
       val row = if (thisKey != currentKey) outputRow() else null
       currentKey = thisKey
-      current = current.updated(pivot(e), aggregates.map(_(e)))
+      current = current.updated(pivot(e), toPivot.map(_(e)))
       if (row != null)
         return row
     }
@@ -52,11 +77,16 @@ class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggreg
 
   def outputRow() = {
     if (currentKey != null) {
-      val row = fields.zip(Seq(currentKey) ++ pivot.distinctValues().flatMap { v =>
-        current.getOrElse (v, aggregates.map (_ => "0") )
+      val pivotedRow = fields.zip(Seq(currentKey) ++ pivot.distinctValues().flatMap { v =>
+        current.getOrElse(v, toPivot.map(_ => "0"))
       }).toMap
+      val rowAggregates = aggregateOps.map { case PivotAggregate(resultName, field, op) =>
+        val a = op.copy()
+        pivotedLookup(field).foreach(name => a += PivotedValue(field, pivotedRow(name)))
+        (resultName, a.result())
+      }
       current = Map.empty
-      new PivotedLogEntry (row)
+      new PivotedLogEntry(pivotedRow ++ rowAggregates)
     } else {
       null
     }
@@ -65,4 +95,33 @@ class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val aggreg
   override def hasNext: Boolean = entries.hasNext || current.nonEmpty
 
   override def next(): PivotedLogEntry = readNext()
+
+  private def extractAggregateOps: Seq[PivotAggregate] = {
+    aggregateOfPivot.map {
+      case AggregateExpr(resultName, op) =>
+        op match {
+          case o: FieldBasedAggregateOp =>
+            val pivotedField = o.expr.asInstanceOf[PivotResultExpr].pivotedField
+            if (!toPivot.exists(_.field == pivotedField))
+              throw new IAmSorryDave(s"$pivotedField must be in the field list to calculate ${o.field}")
+            PivotAggregate(resultName, pivotedField, op)
+          case CountIfBuilder(condition@FieldFilterOn(expr)) =>
+            val pivotedField = expr.field
+            if (!toPivot.exists(_.field == pivotedField))
+              throw new IAmSorryDave(s"$pivotedField must be in the field list to calculate count(if($condition))")
+            PivotAggregate(resultName, pivotedField, op)
+        }
+      case x => throw new IAmSorryDave(s"Can't process $x")
+    }
+  }
+
+  private def pivotResultFields: (Seq[String], Map[String, Seq[String]]) = {
+    val pivoted: Seq[(String, String)] = pivot.distinctValues().flatMap(v => toPivot.map(p => p.field -> (v + " - " + p.field)))
+    val pivotResultFields = pivoted.map(_._2)
+    val pivotResultLookup = pivoted.groupBy(_._1).mapValues(_.map(_._2))
+    (pivotResultFields, pivotResultLookup)
+  }
+
 }
+
+case class PivotAggregate(resultName: String, pivotField: String, op: AggregateOp)

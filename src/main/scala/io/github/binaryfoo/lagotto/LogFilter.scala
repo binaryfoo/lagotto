@@ -1,7 +1,6 @@
 package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.LogFilters.MatchOp
-import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.collection.mutable
 import scala.io.Source
@@ -18,7 +17,10 @@ trait FieldFilter extends LogFilter {
 }
 
 object FieldFilterOn {
-  def unapply(f: FieldFilter): Option[FieldExpr] = Some(f.expr)
+  def unapply(f: LogFilter): Option[FieldExpr] = f match {
+    case f: FieldFilter => Some(f.expr)
+    case _ => None
+  }
 }
 
 case class GrepFilter(pattern: String) extends LogFilter {
@@ -149,7 +151,7 @@ object LogFilters {
 class LogFilterParser(val fieldParser: FieldExprParser) {
 
   import fieldParser.FieldExpr
-  import LogFilters._
+  import io.github.binaryfoo.lagotto.LogFilters._
 
   object LogFilter {
 

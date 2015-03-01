@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto.shell
 import java.io.ByteArrayOutputStream
 
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
-import io.github.binaryfoo.lagotto.LagoTest
+import io.github.binaryfoo.lagotto.{Debug, LagoTest}
 import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.collection.mutable.ArrayBuffer
@@ -800,6 +800,15 @@ class MainTest extends LagoTest {
                       |00:03,2,0
                       |00:04,1,1
                       |00:05,0,2
+                      |""".stripMargin
+  }
+
+  "pivoted(sum(count))" should "sum columns in a pivoted row" in {
+    val output = run("--csv", "time(mm:ss),pivot(mti),count,sum(pivoted(count))", testFile("pivot-set.xml"))
+    output shouldBe """time(mm:ss),0200 - count,0210 - count,sum(pivoted(count))
+                      |00:03,2,0,2
+                      |00:04,1,1,2
+                      |00:05,0,2,2
                       |""".stripMargin
   }
 
