@@ -212,6 +212,7 @@ case class AggregateExpr(field: String, op: AggregateOp) extends FieldExpr {
   def expr: Option[FieldExpr] = {
     op match {
       case e: FieldBasedAggregateOp => Some(e.expr)
+      case CountIfBuilder(FieldFilterOn(expr)) => Some(expr)
       case _ => None
     }
   }

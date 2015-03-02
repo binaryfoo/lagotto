@@ -106,7 +106,7 @@ class PivotedIterator(val rotateOn: DirectExpr, val pivot: PivotExpr, val pivote
               throw new IAmSorryDave(s"$pivotedField must be in the field list to calculate ${o.field}")
             PivotAggregate(resultName, pivotedField, op)
           case CountIfBuilder(condition@FieldFilterOn(expr)) =>
-            val pivotedField = expr.field
+            val pivotedField = expr.asInstanceOf[PivotResultExpr].pivotedField
             if (!toPivot.exists(_.field == pivotedField))
               throw new IAmSorryDave(s"$pivotedField must be in the field list to calculate count(if($condition))")
             PivotAggregate(resultName, pivotedField, op)
