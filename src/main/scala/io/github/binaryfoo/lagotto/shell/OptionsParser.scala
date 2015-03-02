@@ -83,6 +83,10 @@ class OptionsParser(val config: Config) {
         c.copy(format = Tabular(parseFields(fields), new IncrementalAsciiTableFormat()))
       } text "Output an ASCII table incrementally. Can be messy."
 
+      opt[String]("live-utf") action { (fields, c) =>
+        c.copy(format = Tabular(parseFields(fields, Set(RenderHint.RichText)), new IncrementalAsciiTableFormat()))
+      } text "Same as --live-ascii but uses symbol characters that might not render"
+
       opt[Unit]("json") action { (_, c) =>
         c.copy(format = JSONOutput(dictionary))
       } text "Output a line of JSON per log entry."
