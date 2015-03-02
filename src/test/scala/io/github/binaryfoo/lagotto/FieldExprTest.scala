@@ -408,4 +408,47 @@ class FieldExprTest extends LagoTest {
     expr.toString() shouldBe "id"
     expr(JposEntry(lines = "a bunch of crap id 123 more crap")) shouldBe "123"
   }
+
+  val summaryExpr = expressionFor("summary")
+
+  "summary" should "include icon,mti,nmic for jpos entry" in {
+    summaryExpr(JposEntry("msgType" -> "receive", "0" -> "0800", "70" -> "301")) shouldBe "<- 0800 301"
+    summaryExpr(JposEntry("msgType" -> "receive", "0" -> "0200")) shouldBe "<- 0200"
+    summaryExpr(JposEntry("msgType" -> "send", "0" -> "0210")) shouldBe "-> 0210"
+    summaryExpr(JposEntry("msgType" -> "session-start")) shouldBe "[~"
+    summaryExpr(JposEntry("msgType" -> "session-end")) shouldBe "~]"
+    summaryExpr(JposEntry("msgType" -> "peer-disconnect")) shouldBe "X"
+  }
+
+  it should "show exception when jpos entry has exception" in {
+    summaryExpr(JposEntry("msgType" -> "receive", "exception" -> "oops")) shouldBe "<- oops"
+    summaryExpr(JposEntry("msgType" -> "session-error", "exception" -> "oops")) shouldBe "!! oops"
+  }
+
+  it should "show message for log4j entry" in {
+    val entry = Log4jEntry.fromString("[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful")
+    summaryExpr(entry) shouldBe "Did something useful"
+  }
+
+  it should "show jpos exception for log4j entry containing an exception" in {
+    val text = """[08 Nov 2014 00:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 00:00:20 EST 2014.529" lifespan="290ms">
+                 |  <receive>
+                 |    <exception name="Oops">
+                 |    Oops
+                 |    </exception>
+                 |  </receive>
+                 |</log>""".stripMargin
+    val entry = Log4jEntry.fromString(text)
+    summaryExpr(entry) shouldBe "<- Oops"
+  }
+
+  it should "show first line when unknown entry" in {
+    summaryExpr(SimpleLogEntry(lines = "one\ntwo")) shouldBe "one"
+    summaryExpr(SimpleLogEntry(lines = "one")) shouldBe "one"
+  }
+
+  it should "show pre-calculated value for aggregate entry" in {
+    val entry = AggregateLogEntry(Map("summary" -> "-> 0210"), Seq.empty)
+    summaryExpr(entry) shouldBe "-> 0210"
+  }
 }

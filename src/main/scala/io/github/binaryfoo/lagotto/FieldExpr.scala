@@ -53,6 +53,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case "icon" if renderHints.contains(RenderHint.RichText) => UnicodeIconExpr
         case "icon" => AsciiIconExpr
         case "lines" => LinesExpr
+        case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -751,5 +752,32 @@ object HtmlIconExpr extends DirectExpr {
       if (icon != null) "&#" + icon.codePointAt(0) + ";"
       else icon
     case _ => e("icon")
+  }
+}
+
+case class SummaryExpr(icon: FieldExpr, dictionary: Option[DataDictionary]) extends DirectExpr {
+  override def field: String = "summary"
+  override def apply(e: LogEntry): String = e match {
+    case j: JposEntry if j.contains("0") && j.contains("70") =>
+      val mti = j("0")
+      val nmic = j("70")
+      val s = icon(j) + " " + mti + " " + nmic
+      dictionary.map(d => s + " (" + d.translateValue("0", e, mti).getOrElse("?") + " " + d.translateValue("70", e, nmic).getOrElse("?") + ")").getOrElse(s)
+    case j: JposEntry if j.contains("0") =>
+      val mti = j("0")
+      val s = icon(j) + " " + mti
+      dictionary.map(d => s + " (" + d.translateValue("0", e, mti).getOrElse("?") + ")").getOrElse(s)
+    case j: JposEntry if j.contains("exception") =>
+      icon(j) + " " + j("exception")
+    case j: JposEntry =>
+      icon(j)
+    case e: Log4jEntry if e.nested.isDefined =>
+      apply(e.nested.get)
+    case e: Log4jEntry =>
+      e.message
+    case e: AggregateLogEntry =>
+      e(field)
+    case _ if e.lines != null =>
+      e.lines.split('\n')(0)
   }
 }

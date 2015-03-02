@@ -28,5 +28,6 @@ case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, Str
 }
 
 object SimpleLogEntry {
+  def apply(lines: String, fields: (String, String)*): SimpleLogEntry = SimpleLogEntry(mutable.LinkedHashMap(fields :_*), lines = lines)
   def apply(fields: (String, String)*): SimpleLogEntry = SimpleLogEntry(mutable.LinkedHashMap(fields :_*), lines = "")
 }

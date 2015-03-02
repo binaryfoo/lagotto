@@ -22,6 +22,8 @@ trait LogEntry {
 
   def get(id: String): Option[String] = Option(apply(id))
 
+  def contains(id: String) = apply(id) != null
+
   /**
    * The record as text (XML)
    * @return XML
