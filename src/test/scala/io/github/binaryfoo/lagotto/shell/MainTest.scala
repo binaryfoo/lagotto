@@ -975,6 +975,11 @@ class MainTest extends LagoTest {
     output should include("172.0.1.7,Received fatal alert: bad_record_mac")
   }
 
+  "jpos.exception" should "be countable" in {
+    val output = run("--csv", "count(jpos.exception~bad)", testFile("bridged-log4j.txt"))
+    output should include("1")
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
