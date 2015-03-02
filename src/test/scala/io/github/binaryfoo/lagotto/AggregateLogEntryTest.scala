@@ -132,6 +132,10 @@ class AggregateLogEntryTest extends LagoTest {
     b.result() shouldBe "0200"
   }
 
+  "alias" should "be supported on key field" in {
+    aggregateToCsv(twoStrings, "48 as \"magic\"", "count") shouldBe List("a,1", "b,1")
+  }
+
   private def aggregate(field: String): List[String] = {
     aggregateToCsv(twoLifespans, field)
   }

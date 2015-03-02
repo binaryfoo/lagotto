@@ -980,6 +980,11 @@ class MainTest extends LagoTest {
     output should include("1")
   }
 
+  "jpos.exception" should "be regex'able and aliasable" in {
+    val output = run("--csv", "jpos.exception(/ .*//) as \"thing\",count", testFile("bridged-log4j.txt"))
+    output should(include("Received,1") and include("thing,count"))
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {

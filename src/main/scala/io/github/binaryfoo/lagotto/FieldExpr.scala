@@ -33,7 +33,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
-        case Alias(FieldExpr(target), alias) => AliasExpr(expr, target, alias)
+        case Alias(FieldExpr(target), alias) => AliasExpr(target, alias)
         case SubtractOp(FieldExpr(left), FieldExpr(right)) => SubtractExpr(expr, left, right)
         case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
         case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
@@ -52,6 +52,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case "icon" if renderHints.contains(RenderHint.Html) => HtmlIconExpr
         case "icon" if renderHints.contains(RenderHint.RichText) => UnicodeIconExpr
         case "icon" => AsciiIconExpr
+        case "lines" => LinesExpr
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -249,8 +250,8 @@ object HasAggregateExpressions {
     expr match {
       case e: AggregateExpr => Some(Seq(e))
       case e: CalculationOverAggregates => Some(e.dependencies())
-      case AliasExpr(_, t: AggregateExpr, _) => Some(Seq(t))
-      case AliasExpr(_, t: CalculationOverAggregates, _) => Some(t.dependencies())
+      case AliasExpr(t: AggregateExpr, _) => Some(Seq(t))
+      case AliasExpr(t: CalculationOverAggregates, _) => Some(t.dependencies())
       case _ => None
     }
   }
@@ -644,7 +645,8 @@ case class AllOfExpr(field: String, expressions: Seq[FieldExpr]) extends FieldEx
   override def apply(e: LogEntry): String = expressions.map(_(e)).mkString(",")
 }
 
-case class AliasExpr(field: String, target: FieldExpr, name: String) extends FieldExpr {
+case class AliasExpr(target: FieldExpr, name: String) extends FieldExpr {
+  override def field: String = target.field
   override def apply(e: LogEntry): String = target(e)
   override def contains(other: FieldExpr): Boolean = target.contains(other)
   override def toString(): String = name
@@ -688,6 +690,11 @@ object FileExpr extends DirectExpr {
 object LineExpr extends DirectExpr {
   override def field: String = "line"
   override def apply(e: LogEntry): String = e.source.line.toString
+}
+
+object LinesExpr extends DirectExpr {
+  override def field: String = "lines"
+  override def apply(e: LogEntry): String = e.lines
 }
 
 abstract class IconExpr extends DirectExpr {

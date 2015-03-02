@@ -392,4 +392,20 @@ class FieldExprTest extends LagoTest {
   "delay" should "return DelayExpr" in {
     expressionFor("delay") shouldEqual DelayExpr
   }
+
+  "lines" should "return full text" in {
+    val expr = expressionFor("lines")
+    expr(JposEntry(lines = "all of the text")) shouldBe "all of the text"
+  }
+
+  it should "be regex'able" in {
+    val expr = expressionFor("lines(/all/some/)")
+    expr(JposEntry(lines = "all of the text")) shouldBe "some of the text"
+  }
+
+  it should "be regex'able and aliasable" in {
+    val expr = expressionFor("lines(/.*id (\\d+).*/$1/) as \"id\"")
+    expr.toString() shouldBe "id"
+    expr(JposEntry(lines = "a bunch of crap id 123 more crap")) shouldBe "123"
+  }
 }
