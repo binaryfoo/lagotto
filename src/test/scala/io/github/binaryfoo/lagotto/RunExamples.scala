@@ -26,7 +26,9 @@ object RunExamples {
     out.close()
     move("rtts.csv")
     move("rtts.gp")
-    JRubyAsciidoctor.create().renderFile(outputFile, OptionsBuilder.options().safe(SafeMode.UNSAFE))
+    val asciiDoctor = JRubyAsciidoctor.create()
+    asciiDoctor.renderFile(outputFile, OptionsBuilder.options().safe(SafeMode.UNSAFE))
+    asciiDoctor.renderFile(new File("docs/reference.adoc"), OptionsBuilder.options().safe(SafeMode.UNSAFE))
   }
 
   def move(file: String): Unit = {

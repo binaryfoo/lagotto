@@ -42,7 +42,11 @@ object Main extends App {
       val fields = OutputFormat.fieldsFor(format)
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
-      new CompositeSink(Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg")))
+      val sinks = if (opts.liveUi)
+        Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg"))
+      else
+        Seq(dataFile, gnuplotScript)
+      new CompositeSink(sinks)
     } else if (opts.liveUi) {
       new LiveWebServerSink(format)
     } else {

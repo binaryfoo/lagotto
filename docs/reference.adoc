@@ -1,0 +1,62 @@
+== Filters
+
+Use these with the filters: -f and --field.
+
+[cols="2*", options="header"]
+|===
+|Example
+|Description
+
+|mti=0200
+|Field 0 (MTI) is 0200
+
+|rtt>500
+|Round trip time (available with --pair) is greater than or equal to 500ms
+
+|11<123456
+|STAN is less than or equal to 123456
+
+|48~magic
+|Field 48 contains magic (case sensitive)
+|===
+
+== Field Expressions
+
+Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).
+
+== Output Formats
+
+By default the same text that's input: just act as a filter not an aggregator or formatter.
+
+[cols="3*", options="header"]
+|===
+| Flag
+| Example
+| Format
+
+| --csv
+| --csv mti,nmic,count
+| Comma separated field values
+
+| --tsv
+| --tsv mti,nmic,count
+| Tab separated field values
+
+| --html
+| --html time,summary,src
+| HTML table
+
+| --ascii
+| --ascii exception,count
+| ASCII 'art' table. Like mysql client.
+
+| --utf
+| --utf time,summary,src
+| Same as --ascii but uses characters that might not print on your terminal.
+
+| --jira-table
+| --jira-table exception,count
+| Table that can be pasted into jira
+|===
+
+There are also --live-html, --live-utf and --live-html versions that spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
