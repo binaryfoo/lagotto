@@ -30,6 +30,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
     val ResultOfPivotOp = """pivoted\((.+)\)""".r
     val XPathAccess = """xpath\((.+)\)""".r
     val Alias = """(.*) as "([^"]*)"""".r
+    val LengthOf = """length\((.+)\)""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -54,6 +55,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case "icon" => AsciiIconExpr
         case "lines" => LinesExpr
         case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
+        case LengthOf(FieldExpr(field)) => LengthExpr(expr, field)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
         case s => PrimitiveExpr(s)
@@ -781,5 +783,12 @@ case class SummaryExpr(icon: FieldExpr, dictionary: Option[DataDictionary]) exte
       e(field)
     case _ if e.lines != null =>
       e.lines.split('\n')(0)
+  }
+}
+
+case class LengthExpr(field: String, of: FieldExpr) extends DirectExpr {
+  override def apply(e: LogEntry): String = {
+    val value = of(e)
+    if (value != null) value.length.toString else null
   }
 }

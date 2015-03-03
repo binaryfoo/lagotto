@@ -455,4 +455,10 @@ class FieldExprTest extends LagoTest {
   it should "show the underlying entry's summary for a delay entry" in {
     summaryExpr(DelayTimer(JposEntry("msgType" -> "receive", "0" -> "0800", "70" -> "301"), None)) shouldBe "<- 0800 301"
   }
+
+  "length()" should "show length of field" in {
+    val expr = expressionFor("length(48)")
+    expr(JposEntry("48" -> "0987654321")) shouldBe "10"
+    expr(JposEntry()) shouldBe null
+  }
 }

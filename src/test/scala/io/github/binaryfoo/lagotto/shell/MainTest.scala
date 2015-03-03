@@ -985,6 +985,11 @@ class MainTest extends LagoTest {
     output should(include("Received,1") and include("thing,count"))
   }
 
+  "length" should "show length of field" in {
+    val output = run("--csv", "7,length(7)", testFile("basic.xml"))
+    output should include("1124000003,10")
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
