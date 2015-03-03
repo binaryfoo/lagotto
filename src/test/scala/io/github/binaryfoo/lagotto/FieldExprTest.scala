@@ -451,4 +451,8 @@ class FieldExprTest extends LagoTest {
     val entry = AggregateLogEntry(Map("summary" -> "-> 0210"), Seq.empty)
     summaryExpr(entry) shouldBe "-> 0210"
   }
+
+  it should "show the underlying entry's summary for a delay entry" in {
+    summaryExpr(DelayTimer(JposEntry("msgType" -> "receive", "0" -> "0800", "70" -> "301"), None)) shouldBe "<- 0800 301"
+  }
 }

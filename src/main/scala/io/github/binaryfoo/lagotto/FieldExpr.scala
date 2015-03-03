@@ -775,6 +775,8 @@ case class SummaryExpr(icon: FieldExpr, dictionary: Option[DataDictionary]) exte
       apply(e.nested.get)
     case e: Log4jEntry =>
       e.message
+    case DelayTimer(timed, _) =>
+      apply(timed)
     case e: AggregateLogEntry =>
       e(field)
     case _ if e.lines != null =>
