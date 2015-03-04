@@ -436,6 +436,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) is 0200</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti!=0200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) is anything other than 0200</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39!=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 39 is not empty</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">rtt&gt;500</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Round trip time (available with --pair) is greater than or equal to 500ms</p></td>
 </tr>
@@ -446,6 +454,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">48~magic</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Field 48 contains magic (case sensitive)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti~/08[0-3]0/</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) matches the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regular expression</a> 08[0-3]0.</p></td>
 </tr>
 </tbody>
 </table>
@@ -459,7 +471,109 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="sect2">
 <h3 id="_jpos">jPOS</h3>
-
+<div class="paragraph">
+<p>In a jPOS log entry a bunch of fields are exposed. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>&lt;log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 01:31:59 EST 2014.292" lifespan="10005ms"&gt;
+  &lt;receive&gt;
+    &lt;isomsg direction="incoming"&gt;
+      &lt;!-- org.jpos.iso.packager.XMLPackager --&gt;
+      &lt;field id="0" value="0800"/&gt;
+      &lt;field id="7" value="1124000003"/&gt;
+      &lt;field id="11" value="28928"/&gt;
+      &lt;isomsg id="48"&gt;
+        &lt;field id="1" value="nested subfield"/&gt;
+      &lt;/isomsg&gt;
+    &lt;/isomsg&gt;
+  &lt;/receive&gt;
+&lt;/log&gt;</pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">realm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel/10.0.0.1:4321</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ipAddress</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10.0.0.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">socket</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10.0.0.1:4321</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:31:59.292</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lifespan</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10005</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0800</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0800</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nested subfield</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">msgType</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Some extra derived fields are available too.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">icon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8592;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">summary</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8592; 0800 (Network Management Request)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">length(48.1)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
 <h3 id="_log4j">log4j</h3>
@@ -542,6 +656,59 @@ If there is a name collision, the value from the jPOS entry is available with th
 </tbody>
 </table>
 </div>
+<div class="sect2">
+<h3 id="_more_fields_available_on_all_log_types">More fields available on all log types</h3>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delay</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Milliseconds elapsed between two consecutive messages</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">src</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File name and line number output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">file</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File name output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">line</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Line number output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">field(/regex/replacement/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regex</a> replacement</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_aggregation">Aggregation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use count,sum,min,max,avg,group_concat,group_sample</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pairing">Pairing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>--pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -594,6 +761,16 @@ If there is a name collision, the value from the jPOS entry is available with th
 <td class="tableblock halign-left valign-top"><p class="tableblock">--jira-table exception,count</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Table that can be pasted into jira</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--digest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slightly shorter. Nesting compacted to one line.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--json</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A single line of JSON per input record.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -601,10 +778,21 @@ If there is a name collision, the value from the jPOS entry is available with th
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_others">Others</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>--names to add a name attribute to each &lt;field&gt; element</p>
+</div>
+<div class="paragraph">
+<p>--ui to open the results in a browser</p>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-04 19:20:34 EST
+Last updated 2015-03-04 20:05:17 EST
 </div>
 </div>
 </body>

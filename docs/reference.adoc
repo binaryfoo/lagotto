@@ -10,6 +10,12 @@ Use these with the filters: -f and --field.
 |mti=0200
 |Field 0 (MTI) is 0200
 
+|mti!=0200
+|Field 0 (MTI) is anything other than 0200
+
+|39!=
+|Field 39 is not empty
+
 |rtt>500
 |Round trip time (available with --pair) is greater than or equal to 500ms
 
@@ -18,6 +24,9 @@ Use these with the filters: -f and --field.
 
 |48~magic
 |Field 48 contains magic (case sensitive)
+
+|mti~/08[0-3]0/
+|Field 0 (MTI) matches the http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regular expression] 08[0-3]0.
 |===
 
 == Field Expressions
@@ -25,6 +34,77 @@ Use these with the filters: -f and --field.
 Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).
 
 === jPOS
+
+In a jPOS log entry a bunch of fields are exposed. For example:
+
+    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 01:31:59 EST 2014.292" lifespan="10005ms">
+      <receive>
+        <isomsg direction="incoming">
+          <!-- org.jpos.iso.packager.XMLPackager -->
+          <field id="0" value="0800"/>
+          <field id="7" value="1124000003"/>
+          <field id="11" value="28928"/>
+          <isomsg id="48">
+            <field id="1" value="nested subfield"/>
+          </isomsg>
+        </isomsg>
+      </receive>
+    </log>
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|realm
+|some.channel/10.0.0.1:4321
+
+|ipAddress
+|10.0.0.1
+
+|socket
+|10.0.0.1:4321
+
+|link
+|some.channel
+
+|timestamp
+|2014-11-08 01:31:59.292
+
+|lifespan
+|10005
+
+|0
+|0800
+
+|mti
+|0800
+
+|48.1
+|nested subfield
+
+|msgType
+|receive
+
+|===
+
+Some extra derived fields are available too.
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|icon
+|<-
+
+|summary
+|<- 0800 (Network Management Request)
+
+|length(48.1)
+|15
+
+|===
 
 === log4j
 
@@ -79,6 +159,38 @@ If there is a name collision, the value from the jPOS entry is available with th
 
 |===
 
+=== More fields available on all log types
+
+[cols="2*", options="header"]
+|===
+|Name
+|Description
+
+|delay
+|Milliseconds elapsed between two consecutive messages
+
+|src
+|File name and line number output row is derived from
+
+|file
+|File name output row is derived from
+
+|line
+|Line number output row is derived from
+
+|field(/regex/replacement/)
+|http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[Regex] replacement
+
+|===
+
+== Aggregation
+
+Use count,sum,min,max,avg,group_concat,group_sample
+
+== Pairing
+
+--pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.
+
 == Output Formats
 
 By default the same text that's input: just act as a filter not an aggregator or formatter.
@@ -112,6 +224,20 @@ By default the same text that's input: just act as a filter not an aggregator or
 | --jira-table
 | --jira-table exception,count
 | Table that can be pasted into jira
+
+| --digest
+| No value required
+| Slightly shorter. Nesting compacted to one line.
+
+| --json
+| No value required
+| A single line of JSON per input record.
 |===
 
 There are also --live-html, --live-utf and --live-html versions that spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
+
+== Others
+
+--names to add a name attribute to each <field> element
+
+--ui to open the results in a browser
