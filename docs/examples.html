@@ -523,17 +523,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,msgType,lifespan,file -f 'lifespan&gt;300'</pre>
+<pre>lago log_samples/q2.log --ascii time,msgType,lifespan,src -f 'lifespan&gt;300'</pre>
 </div>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>===================================================
-| time         | msgType | lifespan | file        |
-===================================================
-| 15:12:41.281 | receive | 362      | q2.log:5544 |
-| 15:12:41.281 | receive | 356      | q2.log:5549 |
-===================================================</pre>
+<pre>===========================================================
+| time         | msgType         | lifespan | src         |
+===========================================================
+| 15:12:41.281 | peer-disconnect | 362      | q2.log:5544 |
+| 15:12:41.281 | receive         | 356      | q2.log:5549 |
+===========================================================</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -541,7 +541,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>LAGO log_samples/q2.log --grep suspicious --ascii time,63,file</pre>
+<pre>LAGO log_samples/q2.log --grep suspicious --ascii time,63,src</pre>
 </div>
 </div>
 </div>
@@ -639,6 +639,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p>The results aren&#8217;t that interesting with such a small data set.</p>
+</div>
+<div class="paragraph">
+<p>TODO group_concat</p>
+</div>
+<div class="paragraph">
+<p>TODO group_sample</p>
 </div>
 </div>
 </div>
@@ -788,11 +794,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Or sort descending using --sort rtt</p>
+<p>Or sort descending using --sort rtt desc</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort-desc rtt</pre>
+<pre>lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -812,20 +818,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 | 15:12:40.836 | 2100 | 10         | 11  |
 | 15:12:40.794 | 2100 | 8          | 10  |
 | 15:12:40.837 | 2100 | 10         | 9   |
-| 15:12:40.917 | 2420 | 14         | 8   |
-| 15:12:40.877 | 2100 | 12         | 8   |
-| 15:12:40.817 | 2100 | 9          | 8   |
-| 15:12:40.817 | 2100 | 9          | 8   |
 | 15:12:40.774 | 2100 | 7          | 8   |
-| 15:12:40.896 | 2100 | 13         | 7   |
-| 15:12:40.861 | 2100 | 11         | 7   |
+| 15:12:40.817 | 2100 | 9          | 8   |
+| 15:12:40.817 | 2100 | 9          | 8   |
+| 15:12:40.877 | 2100 | 12         | 8   |
+| 15:12:40.917 | 2420 | 14         | 8   |
 | 15:12:40.496 | 2100 | 3          | 7   |
-| 15:12:40.918 | 2420 | 14         | 6   |
-| 15:12:40.896 | 2100 | 13         | 6   |
-| 15:12:40.878 | 2100 | 12         | 6   |
-| 15:12:40.775 | 2100 | 7          | 6   |
-| 15:12:40.496 | 2100 | 3          | 6   |
+| 15:12:40.861 | 2100 | 11         | 7   |
+| 15:12:40.896 | 2100 | 13         | 7   |
 | 15:12:40.287 | 2800 | 1          | 6   |
+| 15:12:40.496 | 2100 | 3          | 6   |
+| 15:12:40.775 | 2100 | 7          | 6   |
+| 15:12:40.878 | 2100 | 12         | 6   |
+| 15:12:40.896 | 2100 | 13         | 6   |
+| 15:12:40.918 | 2420 | 14         | 6   |
 | 15:12:40.862 | 2100 | 11         | 5   |
 | 15:12:40.288 | 2800 | 1          | 4   |
 ==========================================</pre>
@@ -864,13 +870,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,mti,11,rtt,file --pair --field rtt&gt;100</pre>
+<pre>lago log_samples/q2.log --ascii time,mti,11,rtt,src --pair --field rtt&gt;100</pre>
 </div>
 </div>
 <div class="literalblock">
 <div class="content">
 <pre>==========================================================
-| time         | mti  | 11           | rtt | file        |
+| time         | mti  | 11           | rtt | src         |
 ==========================================================
 | 15:12:40.331 | 2100 | 000000000002 | 141 | q2.log:378  |
 | 15:12:40.330 | 2100 | 000000000002 | 143 | q2.log:347  |
@@ -903,13 +909,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,delay,file --field delay&gt;100</pre>
+<pre>lago log_samples/q2.log --ascii time,delay,src --field delay&gt;100</pre>
 </div>
 </div>
 <div class="literalblock">
 <div class="content">
 <pre>======================================
-| time         | delay | file        |
+| time         | delay | src         |
 ======================================
 | 15:12:37.626 | 113   | q2.log:55   |
 | 15:12:37.792 | 126   | q2.log:105  |
@@ -926,13 +932,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii exception,file --field exception!=</pre>
+<pre>lago log_samples/q2.log --ascii exception,src --field exception!=</pre>
 </div>
 </div>
 <div class="literalblock">
 <div class="content">
 <pre>==================================================================================
-| exception                                                        | file        |
+| exception                                                        | src         |
 ==================================================================================
 | Sourced file: inline evaluation of: ``DATE=new Date();      MTI= | q2.log:5479 |
 ==================================================================================</pre>
@@ -959,11 +965,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 | session-start     | 1     |
 | trace             | 30    |
 | send              | 28    |
-| receive           | 30    |
+| receive           | 29    |
 | abort             | 12    |
 | debug             | 13    |
 | commit            | 1     |
 | error             | 10    |
+| peer-disconnect   | 1     |
 | session-end       | 1     |
 =============================</pre>
 </div>
@@ -978,20 +985,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'translate(39),count' --field mti=2110</pre>
+<pre>lago log_samples/q2.log --ascii 'translate(39),39,count' --field mti=2110</pre>
 </div>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>=========================
-| translate(39) | count |
-=========================
-| 1011          | 2     |
-| 1015          | 3     |
-| 1002          | 5     |
-| 1014          | 2     |
-| 1803          | 21    |
-=========================</pre>
+<pre>================================
+| translate(39) | 39   | count |
+================================
+|               | 1011 | 2     |
+|               | 1015 | 3     |
+|               | 1002 | 5     |
+|               | 1014 | 2     |
+|               | 1803 | 21    |
+================================</pre>
 </div>
 </div>
 </div>
@@ -1061,7 +1068,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>{"at":"2014-12-18T15:12:40.330-0200","lifespan":1,"realm":"channel/127.0.0.1:9001","msgType":"send","mti":"2100","pan":"6009330000000021","processingCode":"300000","transactionAmount":8582000000000000,"transmissionDateAndTime":"1218151240","stan":2,"localTransactionTime":"20141218151240","expirationDate":"1001","settlementDate":"20141218","captureDate":"1218","pointOfServiceEntryMode":"10000000080000000004000001000000","acquiringInstitutionIdentificationCode":"000001","rrn":"180312760317","cardAcceptorTerminalIdentification":"29110001","cardAcceptorIdentificationCode":"001001","city":"jCard Selftest system","country":"Montevideo","43.5":"MV","43.7":"UY","113.2":"106"}</pre>
+<pre>{"at":"2014-12-18T15:12:40.330-0200","lifespan":1,"realm":"channel/127.0.0.1:9001","mti":"2100","pan":"6009330000000021","processing_code":"300000","transaction_amount":8582000000000000,"transmission_date_and_time":"1218151240","stan":2,"local_transaction_time":"20141218151240","expiration_date":"1001","settlement_date":"20141218","capture_date":"1218","point_of_service_entry_mode":"10000000080000000004000001000000","acquiring_institution_identification_code":"000001","rrn":"180312760317","card_acceptor_terminal_identification":"29110001","card_acceptor_identification_code":"001001","city":"jCard Selftest system","country":"Montevideo","f_43_5":"MV","f_43_7":"UY","f_113_2":"106","msgType":"send"}</pre>
 </div>
 </div>
 </div>
@@ -1080,26 +1087,27 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="literalblock">
 <div class="content">
 <pre>&lt;log realm="channel/127.0.0.1:9001" at="2014-12-18 15:12:40.330" type="send" lifespan="1"&gt;
-  0 (mti): 2100
-  2 (Primary account number): 6009330000000021
-  3 (Processing code): 300000
-  4 (Transaction amount): 8582000000000000
-  7 (Transmission date and time): 1218151240
-  11 (System trace audit number): 000000000002
-  12 (Local transaction time): 20141218151240
-  14 (Expiration date): 1001
-  15 (Settlement date): 20141218
-  17 (Capture date): 1218
-  22 (Point of service entry mode): 10000000080000000004000001000000
-  32 (Acquiring institution identification code): 000001
-  37 (Retrieval reference number): 180312760317
-  41 (Card acceptor terminal identification): 29110001
-  42 (Card acceptor identification code): 001001
-  43.2 (City): jCard Selftest system
-  43.4 (Country): Montevideo
+  0: 2100 [mti]
+  2: 6009330000000021 [Primary account number]
+  3: 300000 [Processing code]
+  4: 8582000000000000 [Transaction amount]
+  7: 1218151240 [Transmission date and time]
+  11: 000000000002 [System trace audit number]
+  12: 20141218151240 [Local transaction time]
+  14: 1001 [Expiration date]
+  15: 20141218 [Settlement date]
+  17: 1218 [Capture date]
+  22: 10000000080000000004000001000000 [Point of service entry mode]
+  32: 000001 [Acquiring institution identification code]
+  37: 180312760317 [Retrieval reference number]
+  41: 29110001 [Card acceptor terminal identification]
+  42: 001001 [Card acceptor identification code]
+  43.2: jCard Selftest system [City]
+  43.4: Montevideo [Country]
   43.5: MV
   43.7: UY
-  113.2: 106</pre>
+  113.2: 106
+&lt;/log&gt;</pre>
 </div>
 </div>
 </div>
@@ -1153,10 +1161,10 @@ Wrote rtts.gp</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>#!/usr/bin/env gnuplot -persist
+<pre>#!/usr/bin/env gnuplot
 set datafile separator ','
-#set terminal svg size 1280,960
-#set output 'rtts.svg'
+set terminal svg enhanced mouse size 1280,960
+set output 'rtts.svg'
 set xdata time
 set timefmt '%H:%M:%S'
 set format x '%H:%M:%S'
@@ -1170,6 +1178,22 @@ do for [i=2:2] {
 }</pre>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_when_you_need_more">When you need more</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>See <a href="https://github.com/binaryfoo/lagotto/tree/master/src/main/scala/io/github/binaryfoo/lagotto/examples">examples</a> or the sbt shell script <a href="https://github.com/binaryfoo/lagotto-examples/tree/master/src/main/script">examples</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mention_log4j">Mention log4j</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Might be a can of worms given the variety of possible input formats&#8230;&#8203;</p>
+</div>
 <div class="paragraph">
 <p><span class="small">The output for all examples is generated by <a href="https://github.com/binaryfoo/lagotto/blob/master/src/test/scala/io/github/binaryfoo/lagotto/RunExamples.scala">RunExamples.scala</a>.</span></p>
 </div>
@@ -1178,7 +1202,7 @@ do for [i=2:2] {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-11 17:33:16 EST
+Last updated 2015-03-04 21:16:56 EST
 </div>
 </div>
 </body>

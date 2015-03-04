@@ -1,7 +1,7 @@
-#!/usr/bin/env gnuplot -persist
+#!/usr/bin/env gnuplot
 set datafile separator ','
-#set terminal svg size 1280,960
-#set output 'rtts.svg'
+set terminal svg enhanced mouse size 1280,960
+set output 'rtts.svg'
 set xdata time
 set timefmt '%H:%M:%S'
 set format x '%H:%M:%S'

@@ -27,11 +27,11 @@ Back to filtering, you can filter using somewhat familiar operators: <, >, !=, ~
 
 To show log events that took more than 300ms to receive or send use >. The following two receives aren't really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.
 
-    LAGO: log_samples/q2.log --ascii time,msgType,lifespan,file -f 'lifespan>300'
+    LAGO: log_samples/q2.log --ascii time,msgType,lifespan,src -f 'lifespan>300'
 
 You can also use --grep to just search the log entries as text.
 
-    LAGO log_samples/q2.log --grep suspicious --ascii time,63,file
+    LAGO log_samples/q2.log --grep suspicious --ascii time,63,src
 
 == Aggregation
 
@@ -77,9 +77,9 @@ Sort using a field with --sort rtt
 
     LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort rtt
 
-Or sort descending using --sort rtt
+Or sort descending using --sort rtt desc
 
-    LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort-desc rtt
+    LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'
 
 == More Filtering
 
@@ -91,7 +91,7 @@ Remember you'll need to use quotes 'rtt>100' or a slash rtt\>100 to escape the '
 
 Add the file name and line number to get more detail (or check lago is not lying)
 
-    LAGO: log_samples/q2.log --ascii time,mti,11,rtt,file --pair --field rtt>100
+    LAGO: log_samples/q2.log --ascii time,mti,11,rtt,src --pair --field rtt>100
 
 Use some aggregate operators min(), max() and avg() to get basic stats about the round trip times
 
@@ -99,11 +99,11 @@ Use some aggregate operators min(), max() and avg() to get basic stats about the
 
 Find delays of more than 100ms in a message sequence
 
-    LAGO: log_samples/q2.log --ascii time,delay,file --field delay>100
+    LAGO: log_samples/q2.log --ascii time,delay,src --field delay>100
 
 Show a table of exceptions. Not very interesting with only one exception but useful when there are many
 
-    LAGO: log_samples/q2.log --ascii exception,file --field exception!=
+    LAGO: log_samples/q2.log --ascii exception,src --field exception!=
 
 Show a breakdown of message types
 
@@ -113,7 +113,7 @@ Show a breakdown of message types
 
 TODO Convert a https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml[snippet] of jPOS' CMF into a dictionary to show how translation works
 
-    LAGO: log_samples/q2.log --ascii 'translate(39),count' --field mti=2110
+    LAGO: log_samples/q2.log --ascii 'translate(39),39,count' --field mti=2110
 
 == Histograms
 

@@ -1,12 +1,13 @@
 package io.github.binaryfoo.lagotto
 
-import java.io.{File, ByteArrayOutputStream, PrintWriter, FileWriter}
-import java.nio.file.{StandardCopyOption, Files}
+import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
+import java.nio.file.{Files, StandardCopyOption}
 
 import io.github.binaryfoo.lagotto.shell.Main
-import org.asciidoctor.{SafeMode, OptionsBuilder, Options, AsciiDocDirectoryWalker}
 import org.asciidoctor.internal.JRubyAsciidoctor
+import org.asciidoctor.{OptionsBuilder, SafeMode}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 object RunExamples {
@@ -36,7 +37,22 @@ object RunExamples {
   }
 
   def cleanAndSplit(arguments: String): Array[String] = {
-    arguments.replaceAll("""'(\S+)'""", "$1").split(" ")
+    var quoted = false
+    val current = new StringBuilder
+    val args = new ArrayBuffer[String]()
+    arguments.foreach {
+      case '\'' => quoted = !quoted
+      case x if quoted => current.append(x)
+      case ' ' =>
+        if (current.nonEmpty) {
+          args += current.toString()
+          current.delete(0, current.length)
+        }
+      case x => current.append(x)
+    }
+    if (current.nonEmpty)
+      args += current.toString()
+    args.toArray
   }
 
   def lagoOutputFrom(args: Array[String]): String = {

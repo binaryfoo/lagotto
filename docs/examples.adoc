@@ -69,19 +69,19 @@ Back to filtering, you can filter using somewhat familiar operators: <, >, !=, ~
 
 To show log events that took more than 300ms to receive or send use >. The following two receives aren't really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.
 
-    lago log_samples/q2.log --ascii time,msgType,lifespan,file -f 'lifespan>300'
+    lago log_samples/q2.log --ascii time,msgType,lifespan,src -f 'lifespan>300'
 
-    ===================================================
-    | time         | msgType | lifespan | file        |
-    ===================================================
-    | 15:12:41.281 | receive | 362      | q2.log:5544 |
-    | 15:12:41.281 | receive | 356      | q2.log:5549 |
-    ===================================================
+    ===========================================================
+    | time         | msgType         | lifespan | src         |
+    ===========================================================
+    | 15:12:41.281 | peer-disconnect | 362      | q2.log:5544 |
+    | 15:12:41.281 | receive         | 356      | q2.log:5549 |
+    ===========================================================
     
 
 You can also use --grep to just search the log entries as text.
 
-    LAGO log_samples/q2.log --grep suspicious --ascii time,63,file
+    LAGO log_samples/q2.log --grep suspicious --ascii time,63,src
 
 == Aggregation
 
@@ -149,6 +149,10 @@ Bucketing results by time. You can use a joda time http://joda-time.sourceforge.
     
 
 The results aren't that interesting with such a small data set.
+
+TODO group_concat
+
+TODO group_sample
 
 == Pairing Requests & Responses
 
@@ -270,9 +274,9 @@ Sort using a field with --sort rtt
     ==========================================
     
 
-Or sort descending using --sort rtt
+Or sort descending using --sort rtt desc
 
-    lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort-desc rtt
+    lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'
 
     ==========================================
     | time         | mti  | 11(/^0+//) | rtt |
@@ -289,20 +293,20 @@ Or sort descending using --sort rtt
     | 15:12:40.836 | 2100 | 10         | 11  |
     | 15:12:40.794 | 2100 | 8          | 10  |
     | 15:12:40.837 | 2100 | 10         | 9   |
-    | 15:12:40.917 | 2420 | 14         | 8   |
-    | 15:12:40.877 | 2100 | 12         | 8   |
-    | 15:12:40.817 | 2100 | 9          | 8   |
-    | 15:12:40.817 | 2100 | 9          | 8   |
     | 15:12:40.774 | 2100 | 7          | 8   |
-    | 15:12:40.896 | 2100 | 13         | 7   |
-    | 15:12:40.861 | 2100 | 11         | 7   |
+    | 15:12:40.817 | 2100 | 9          | 8   |
+    | 15:12:40.817 | 2100 | 9          | 8   |
+    | 15:12:40.877 | 2100 | 12         | 8   |
+    | 15:12:40.917 | 2420 | 14         | 8   |
     | 15:12:40.496 | 2100 | 3          | 7   |
-    | 15:12:40.918 | 2420 | 14         | 6   |
-    | 15:12:40.896 | 2100 | 13         | 6   |
-    | 15:12:40.878 | 2100 | 12         | 6   |
-    | 15:12:40.775 | 2100 | 7          | 6   |
-    | 15:12:40.496 | 2100 | 3          | 6   |
+    | 15:12:40.861 | 2100 | 11         | 7   |
+    | 15:12:40.896 | 2100 | 13         | 7   |
     | 15:12:40.287 | 2800 | 1          | 6   |
+    | 15:12:40.496 | 2100 | 3          | 6   |
+    | 15:12:40.775 | 2100 | 7          | 6   |
+    | 15:12:40.878 | 2100 | 12         | 6   |
+    | 15:12:40.896 | 2100 | 13         | 6   |
+    | 15:12:40.918 | 2420 | 14         | 6   |
     | 15:12:40.862 | 2100 | 11         | 5   |
     | 15:12:40.288 | 2800 | 1          | 4   |
     ==========================================
@@ -328,10 +332,10 @@ Remember you'll need to use quotes 'rtt>100' or a slash rtt\>100 to escape the '
 
 Add the file name and line number to get more detail (or check lago is not lying)
 
-    lago log_samples/q2.log --ascii time,mti,11,rtt,file --pair --field rtt>100
+    lago log_samples/q2.log --ascii time,mti,11,rtt,src --pair --field rtt>100
 
     ==========================================================
-    | time         | mti  | 11           | rtt | file        |
+    | time         | mti  | 11           | rtt | src         |
     ==========================================================
     | 15:12:40.331 | 2100 | 000000000002 | 141 | q2.log:378  |
     | 15:12:40.330 | 2100 | 000000000002 | 143 | q2.log:347  |
@@ -355,10 +359,10 @@ Use some aggregate operators min(), max() and avg() to get basic stats about the
 
 Find delays of more than 100ms in a message sequence
 
-    lago log_samples/q2.log --ascii time,delay,file --field delay>100
+    lago log_samples/q2.log --ascii time,delay,src --field delay>100
 
     ======================================
-    | time         | delay | file        |
+    | time         | delay | src         |
     ======================================
     | 15:12:37.626 | 113   | q2.log:55   |
     | 15:12:37.792 | 126   | q2.log:105  |
@@ -372,10 +376,10 @@ Find delays of more than 100ms in a message sequence
 
 Show a table of exceptions. Not very interesting with only one exception but useful when there are many
 
-    lago log_samples/q2.log --ascii exception,file --field exception!=
+    lago log_samples/q2.log --ascii exception,src --field exception!=
 
     ==================================================================================
-    | exception                                                        | file        |
+    | exception                                                        | src         |
     ==================================================================================
     | Sourced file: inline evaluation of: ``DATE=new Date();      MTI= | q2.log:5479 |
     ==================================================================================
@@ -396,11 +400,12 @@ Show a breakdown of message types
     | session-start     | 1     |
     | trace             | 30    |
     | send              | 28    |
-    | receive           | 30    |
+    | receive           | 29    |
     | abort             | 12    |
     | debug             | 13    |
     | commit            | 1     |
     | error             | 10    |
+    | peer-disconnect   | 1     |
     | session-end       | 1     |
     =============================
     
@@ -409,17 +414,17 @@ Show a breakdown of message types
 
 TODO Convert a https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml[snippet] of jPOS' CMF into a dictionary to show how translation works
 
-    lago log_samples/q2.log --ascii 'translate(39),count' --field mti=2110
+    lago log_samples/q2.log --ascii 'translate(39),39,count' --field mti=2110
 
-    =========================
-    | translate(39) | count |
-    =========================
-    | 1011          | 2     |
-    | 1015          | 3     |
-    | 1002          | 5     |
-    | 1014          | 2     |
-    | 1803          | 21    |
-    =========================
+    ================================
+    | translate(39) | 39   | count |
+    ================================
+    |               | 1011 | 2     |
+    |               | 1015 | 3     |
+    |               | 1002 | 5     |
+    |               | 1014 | 2     |
+    |               | 1803 | 21    |
+    ================================
     
 
 == Histograms
@@ -467,7 +472,7 @@ Export each log entry as a single line of JSON. The driver idea here was to allo
 
     lago log_samples/q2.log --field mti=2100 -n 1 --json
 
-    {"at":"2014-12-18T15:12:40.330-0200","lifespan":1,"realm":"channel/127.0.0.1:9001","msgType":"send","mti":"2100","pan":"6009330000000021","processingCode":"300000","transactionAmount":8582000000000000,"transmissionDateAndTime":"1218151240","stan":2,"localTransactionTime":"20141218151240","expirationDate":"1001","settlementDate":"20141218","captureDate":"1218","pointOfServiceEntryMode":"10000000080000000004000001000000","acquiringInstitutionIdentificationCode":"000001","rrn":"180312760317","cardAcceptorTerminalIdentification":"29110001","cardAcceptorIdentificationCode":"001001","city":"jCard Selftest system","country":"Montevideo","43.5":"MV","43.7":"UY","113.2":"106"}
+    {"at":"2014-12-18T15:12:40.330-0200","lifespan":1,"realm":"channel/127.0.0.1:9001","mti":"2100","pan":"6009330000000021","processing_code":"300000","transaction_amount":8582000000000000,"transmission_date_and_time":"1218151240","stan":2,"local_transaction_time":"20141218151240","expiration_date":"1001","settlement_date":"20141218","capture_date":"1218","point_of_service_entry_mode":"10000000080000000004000001000000","acquiring_institution_identification_code":"000001","rrn":"180312760317","card_acceptor_terminal_identification":"29110001","card_acceptor_identification_code":"001001","city":"jCard Selftest system","country":"Montevideo","f_43_5":"MV","f_43_7":"UY","f_113_2":"106","msgType":"send"}
 
 == Digest format
 
@@ -476,26 +481,28 @@ Output a slightly less wordy output. Supports translation of field paths to name
     lago log_samples/q2.log --field mti=2100 -n 1 --digest
 
     <log realm="channel/127.0.0.1:9001" at="2014-12-18 15:12:40.330" type="send" lifespan="1">
-      0 (mti): 2100
-      2 (Primary account number): 6009330000000021
-      3 (Processing code): 300000
-      4 (Transaction amount): 8582000000000000
-      7 (Transmission date and time): 1218151240
-      11 (System trace audit number): 000000000002
-      12 (Local transaction time): 20141218151240
-      14 (Expiration date): 1001
-      15 (Settlement date): 20141218
-      17 (Capture date): 1218
-      22 (Point of service entry mode): 10000000080000000004000001000000
-      32 (Acquiring institution identification code): 000001
-      37 (Retrieval reference number): 180312760317
-      41 (Card acceptor terminal identification): 29110001
-      42 (Card acceptor identification code): 001001
-      43.2 (City): jCard Selftest system
-      43.4 (Country): Montevideo
+      0: 2100 [mti]
+      2: 6009330000000021 [Primary account number]
+      3: 300000 [Processing code]
+      4: 8582000000000000 [Transaction amount]
+      7: 1218151240 [Transmission date and time]
+      11: 000000000002 [System trace audit number]
+      12: 20141218151240 [Local transaction time]
+      14: 1001 [Expiration date]
+      15: 20141218 [Settlement date]
+      17: 1218 [Capture date]
+      22: 10000000080000000004000001000000 [Point of service entry mode]
+      32: 000001 [Acquiring institution identification code]
+      37: 180312760317 [Retrieval reference number]
+      41: 29110001 [Card acceptor terminal identification]
+      42: 001001 [Card acceptor identification code]
+      43.2: jCard Selftest system [City]
+      43.4: Montevideo [Country]
       43.5: MV
       43.7: UY
       113.2: 106
+    </log>
+    
 
 == Gnuplot script generation
 
@@ -510,5 +517,13 @@ include::rtts.csv[]
 ----
 include::rtts.gp[]
 ----
+
+== When you need more
+
+See https://github.com/binaryfoo/lagotto/tree/master/src/main/scala/io/github/binaryfoo/lagotto/examples[examples] or the sbt shell script https://github.com/binaryfoo/lagotto-examples/tree/master/src/main/script[examples].
+
+== Mention log4j
+
+Might be a can of worms given the variety of possible input formats...
 
 [small]#The output for all examples is generated by https://github.com/binaryfoo/lagotto/blob/master/src/test/scala/io/github/binaryfoo/lagotto/RunExamples.scala[RunExamples.scala].#
