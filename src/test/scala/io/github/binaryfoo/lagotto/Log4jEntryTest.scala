@@ -19,18 +19,18 @@ class Log4jEntryTest extends LagoTest {
   it should "expose fields through apply()" in {
     val entry = Log4jEntry.fromString(oneLine)
 
-    entry("timestamp") shouldBe "08 Nov 2014 00:00:00,001"
+    entry("timestamp") shouldBe "2014-11-08 00:00:00.001"
     entry("level") shouldBe "INFO"
-    entry("realm") shouldBe "a.ClassName"
+    entry("category") shouldBe "a.ClassName"
     entry("message") shouldBe "Did something useful"
   }
 
   it should "export fields" in {
     val entry = Log4jEntry.fromString(oneLine)
 
-    entry.exportAsSeq shouldBe Seq("timestamp" -> "08 Nov 2014 00:00:00,001",
+    entry.exportAsSeq shouldBe Seq("timestamp" -> "2014-11-08 00:00:00.001",
       "level" -> "INFO",
-      "realm" -> "a.ClassName",
+      "category" -> "a.ClassName",
       "message" -> "Did something useful")
   }
 
@@ -55,7 +55,7 @@ class Log4jEntryTest extends LagoTest {
   }
 
   "An entry containing a jpos entry" should "expose the jpos entry" in {
-    val text = """[08 Nov 2014 00:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 00:00:20 EST 2014.529" lifespan="290ms">
+    val text = """[08 Nov 2014 00:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 00:00:21 EST 2014.529" lifespan="290ms">
                  |  <receive>
                  |    <exception name="Oops">
                  |    Oops
@@ -65,5 +65,10 @@ class Log4jEntryTest extends LagoTest {
     val entry = Log4jEntry.fromString(text)
 
     entry("jpos.exception") shouldBe "Oops"
+    entry("exception") shouldBe "Oops"
+    entry("realm") shouldBe "some.channel/172.0.1.7:4779"
+    entry("ipAddress") shouldBe "172.0.1.7"
+    entry("jpos.timestamp") shouldBe "2014-11-08 00:00:21.529"
+    entry("timestamp") shouldBe "2014-11-08 00:00:20.529"
   }
 }

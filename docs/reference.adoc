@@ -24,6 +24,61 @@ Use these with the filters: -f and --field.
 
 Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).
 
+=== jPOS
+
+=== log4j
+
+In a log record like `[08 Nov 2014 13:54:59,001] INFO  [a.ClassName]: Did something useful` the following fields are available.
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|timestamp
+|2014-11-08 13:54:59.001
+
+|level
+|INFO
+
+|category
+|a.ClassName
+
+|message
+|Did something useful
+
+|===
+
+If the log4j record contains a jPOS message, like the following example, all the usual jPOS fields are available.
+If there is a name collision, the value from the jPOS entry is available with the prefix `jpos.`. For example `timestamp` and `jpos.timestamp` in the following example.
+
+    [08 Nov 2014 01:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 01:00:21 EST 2014.001" lifespan="290ms">
+        <receive>
+          <exception name="Oops">
+          Oops
+          </exception>
+        </receive>
+      </log>
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|timestamp
+|2014-11-08 01:00:20.529
+
+|jpos.timestmap
+|2014-11-08 01:00:21.001
+
+|exception
+|Oops
+
+|realm
+|some.channel/172.0.1.7:4779
+
+|===
+
 == Output Formats
 
 By default the same text that's input: just act as a filter not an aggregator or formatter.

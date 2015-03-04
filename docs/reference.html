@@ -457,6 +457,91 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).</p>
 </div>
+<div class="sect2">
+<h3 id="_jpos">jPOS</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_log4j">log4j</h3>
+<div class="paragraph">
+<p>In a log record like <code>[08 Nov 2014 13:54:59,001] INFO  [a.ClassName]: Did something useful</code> the following fields are available.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 13:54:59.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">level</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INFO</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">category</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a.ClassName</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Did something useful</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If the log4j record contains a jPOS message, like the following example, all the usual jPOS fields are available.
+If there is a name collision, the value from the jPOS entry is available with the prefix <code>jpos.</code>. For example <code>timestamp</code> and <code>jpos.timestamp</code> in the following example.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>[08 Nov 2014 01:00:20,529] ERROR [some.package]: &lt;log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 01:00:21 EST 2014.001" lifespan="290ms"&gt;
+    &lt;receive&gt;
+      &lt;exception name="Oops"&gt;
+      Oops
+      &lt;/exception&gt;
+    &lt;/receive&gt;
+  &lt;/log&gt;</pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:00:20.529</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">jpos.timestmap</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:00:21.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exception</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Oops</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">realm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel/172.0.1.7:4779</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -519,7 +604,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-04 07:27:13 EST
+Last updated 2015-03-04 19:20:34 EST
 </div>
 </div>
 </body>
