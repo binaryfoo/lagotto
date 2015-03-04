@@ -21,6 +21,8 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
 
   object FieldExpr {
 
+    import logFilterParser.LogFilter
+
     val SubtractOp = """calc\((.+)-(.+)\)""".r
     val DivideOp = """calc\((.+)/(.+)\)""".r
     val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
@@ -31,6 +33,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
     val XPathAccess = """xpath\((.+)\)""".r
     val Alias = """(.*) as "([^"]*)"""".r
     val LengthOf = """length\((.+)\)""".r
+    val ElapsedSince = """elapsedSince\((.+)\)""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -39,6 +42,8 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
         case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
         case "delay" => DelayExpr
+        case "elapsed" => ElapsedExpr()
+        case ElapsedSince(LogFilter(condition)) => ElapsedSinceExpr(expr, condition)
         case AggregateOp(op) => AggregateExpr(expr, op)
         case TranslateOp(field) => TranslateExpr(expr, field, dictionary.getOrElse(throw new IAmSorryDave(s"No dictionary configured. Can't translate '$expr'")))
         case RegexReplacementOp(p@DirectExpr(path), regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
@@ -180,6 +185,33 @@ object DelayExpr extends DirectExpr {
       previous = Some(e)
       next
     }
+  }
+}
+
+case class ElapsedExpr() extends DirectExpr {
+  private var first = 0l
+  val field = "elapsed"
+  override def apply(e: LogEntry): String = {
+    (if (first == 0) {
+      first = e.timestamp.getMillis
+      0
+    } else {
+      e.timestamp.getMillis - first
+    }).toString
+  }
+}
+
+case class ElapsedSinceExpr(field: String, condition: LogFilter) extends DirectExpr {
+  private var previousMatch = 0l
+  override def apply(e: LogEntry): String = {
+    val result = (if (previousMatch == 0) {
+      0
+    } else {
+      e.timestamp.getMillis - previousMatch
+    }).toString
+    if (condition(e))
+      previousMatch = e.timestamp.getMillis
+    result
   }
 }
 

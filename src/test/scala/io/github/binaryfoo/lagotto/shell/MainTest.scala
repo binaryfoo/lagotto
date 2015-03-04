@@ -990,6 +990,28 @@ class MainTest extends LagoTest {
     output should include("1124000003,10")
   }
 
+  "elapsed" should "show time since the first entry" in {
+    val output = run("--csv", "time,elapsed", testFile("a-bunch.xml"))
+    output shouldBe
+      """time,elapsed
+        |00:00:03.292,0
+        |00:00:04.292,1000
+        |00:00:04.892,1600
+        |00:00:04.992,1700
+        |""".stripMargin
+  }
+
+  "elapsedSince" should "show time since the previous entry matching a filter" in {
+    val output = run("--csv", "time,elapsedSince(48.1~#2)", testFile("a-bunch.xml"))
+    output shouldBe
+      """time,elapsedSince(48.1~#2)
+        |00:00:03.292,0
+        |00:00:04.292,0
+        |00:00:04.892,600
+        |00:00:04.992,700
+        |""".stripMargin
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {

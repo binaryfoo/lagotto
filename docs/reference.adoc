@@ -181,6 +181,12 @@ If there is a name collision, the value from the jPOS entry is available with th
 |field(/regex/replacement/)
 |http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[Regex] replacement
 
+|elapsed
+|Time since the first log entry
+
+|elapsedSince(filter)
+|Time since the last log entry matching filter
+
 |===
 
 == Aggregation

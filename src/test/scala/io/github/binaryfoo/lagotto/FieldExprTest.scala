@@ -461,4 +461,20 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("48" -> "0987654321")) shouldBe "10"
     expr(JposEntry()) shouldBe null
   }
+
+  "elapsed" should "show time since first record" in {
+    val expr = expressionFor("elapsed")
+    val now = new DateTime()
+    expr(JposEntry("at" -> now.asJposAt)) shouldBe "0"
+    expr(JposEntry("at" -> now.plusMinutes(1).asJposAt)) shouldBe "60000"
+  }
+
+  "elapsedSince(filter)" should "show time since last matching record" in {
+    val expr = expressionFor("elapsedSince(lifespan>1)")
+    val now = new DateTime()
+    expr(JposEntry("at" -> now.asJposAt, "lifespan" -> "0")) shouldBe "0"
+    expr(JposEntry("at" -> now.plusMinutes(1).asJposAt, "lifespan" -> "1")) shouldBe "0"
+    expr(JposEntry("at" -> now.plusMinutes(2).asJposAt, "lifespan" -> "0")) shouldBe "60000"
+    expr(JposEntry("at" -> now.plusMinutes(3).asJposAt, "lifespan" -> "0")) shouldBe "120000"
+  }
 }
