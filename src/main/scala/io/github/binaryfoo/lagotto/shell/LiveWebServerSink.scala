@@ -1,3 +1,4 @@
+
 package io.github.binaryfoo.lagotto.shell
 
 import java.awt.Desktop
@@ -10,7 +11,7 @@ import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
 import io.github.binaryfoo.lagotto.reader.{SingleThreadLogReader, FileInProgress, FileIO}
 import io.github.binaryfoo.lagotto.shell.OutputFormat.PipeToOutputFormatIterator
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.shell.output.DigestedFormat
+import io.github.binaryfoo.lagotto.shell.output.{NamedAttributesFormat, DigestedFormat}
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server}
 import org.eclipse.jetty.util.component.AbstractLifeCycle.AbstractLifeCycleListener
@@ -70,6 +71,7 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
   private val server = new Server(port)
 
   private val OpenFileReq = "(/.+)".r
+  private lazy val dictionary = RootDataDictionary(ConfigFactory.load())
 
   server.setHandler(new AbstractHandler {
     override def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -81,11 +83,9 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
           val foundFile = find(file)
           response.setContentType("text/plain")
           val responseWriter = new PrintWriter(response.getOutputStream)
-          val writer = if (request.getParameter("digest") != null) {
-            digestTo(responseWriter, foundFile)
-          } else {
-            responseWriter
-          }
+          val writer = formatFor(request.getParameter("format"))
+            .map(reformat(responseWriter, foundFile, _))
+            .getOrElse(responseWriter)
           FileIO.copyLines(foundFile, from, to, writer)
         case _ =>
           response.setContentType(indexContentType)
@@ -105,12 +105,12 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
     Desktop.getDesktop.browse(new URI(s"http://localhost:$port"))
   }
 
-  def digestTo(writer: PrintWriter, sourceName: String): PrintWriter = {
+  def reformat(writer: PrintWriter, sourceName: String, format: OutputFormat): PrintWriter = {
     val out = new PipedOutputStream()
     val in = new PipedInputStream(out)
     val pipeJob = Future {
       val entries = SingleThreadLogReader().read(in, FileRef(new File(sourceName)))
-      entries.pipeTo(DigestedFormat(RootDataDictionary(ConfigFactory.load()), Some(NameType.English)), writer)
+      entries.pipeTo(format, writer)
       writer.flush()
     }
     new PrintWriter(out) {
@@ -119,6 +119,13 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
         Await.ready(pipeJob, 1.minute)
       }
     }
+  }
+  
+  def formatFor(s: String): Option[OutputFormat] = s match {
+    case "digest" => Some(DigestedFormat(dictionary, Some(NameType.English)))
+    case "named" => Some(NamedAttributesFormat(dictionary))
+    case "raw" | null => None
+    case _ => throw new IAmSorryDave(s"Unknown format '$s'")
   }
 
   def find(file: String) = {

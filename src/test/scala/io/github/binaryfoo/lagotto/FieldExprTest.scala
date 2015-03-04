@@ -323,7 +323,7 @@ class FieldExprTest extends LagoTest {
 
   "src with Html render hint" should "create html anchor for source file:// URL" in {
     val expr = parser.copy(renderHints = Set(RenderHint.Html)).FieldExpr.expressionFor("src")
-    expr(dummy455) shouldBe """<a href="/dummy/path.log?from=454&to=455" title="path.log:455">&#9906;</a>"""
+    expr(dummy455) shouldBe """<a href="/dummy/path.log?from=454&to=455&format=named" title="path.log:455">&#9906;</a>"""
   }
 
   it should "not create a link for records from stdin" in {

@@ -708,7 +708,7 @@ object SourceHrefExpr extends DirectExpr {
       case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').size
       case _ => line + e.lines.split('\n').size
     }) - 1
-    file.toURI.toURL.toString.substring(5) + s"?from=${line-1}&to=$to"
+    file.toURI.toURL.toString.substring(5) + s"?from=${line-1}&to=$to&format=named"
   }
 }
 
