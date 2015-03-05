@@ -70,5 +70,6 @@ class Log4jEntryTest extends LagoTest {
     entry("ipAddress") shouldBe "172.0.1.7"
     entry("jpos.timestamp") shouldBe "2014-11-08 00:00:21.529"
     entry("timestamp") shouldBe "2014-11-08 00:00:20.529"
+    entry("rubbish") shouldBe null
   }
 }

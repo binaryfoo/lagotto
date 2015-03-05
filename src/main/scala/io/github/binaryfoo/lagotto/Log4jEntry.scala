@@ -19,6 +19,7 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
     case TimeFormatter(format) => format.print(timestamp)
     case id => nested.flatMap(jPos => jPos.get(id).orElse{ id match {
       case Log4jEntry.JposAccess(path) => jPos.get(path)
+      case _ => None
     }}).orNull
   }
 
