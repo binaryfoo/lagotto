@@ -164,6 +164,11 @@ class OptionsParser(val config: Config) {
       opt[Unit]('F', "follow") action {(_,c) =>
         c.copy(follow = true)
       } text "Like tail -F. Read input as it's written to the file."
+
+      opt[Unit]("debug") action {(_,c) =>
+        Debug.enabled = true
+        c
+      } text "Show debug output"
     }
 
     parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))
