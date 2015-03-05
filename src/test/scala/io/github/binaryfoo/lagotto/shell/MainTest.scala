@@ -1012,6 +1012,11 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "count(if(...))" should "count if condition matches" in {
+    val output = run("--csv", "count(distinct(if(mti=0200,port,))),mti", testFile("a-bunch.xml"))
+    output should (include("2,0200") and include("0,0210"))
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {

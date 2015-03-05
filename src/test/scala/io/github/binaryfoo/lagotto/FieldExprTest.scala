@@ -477,4 +477,21 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("at" -> now.plusMinutes(2).asJposAt, "lifespan" -> "0")) shouldBe "60000"
     expr(JposEntry("at" -> now.plusMinutes(3).asJposAt, "lifespan" -> "0")) shouldBe "120000"
   }
+
+  "if(condition,exprWhenTrue,exprWhenFalse)" should "pick expr based on condition" in {
+    val expr = expressionFor("if(exception~bad,ipAddress,)")
+    expr(JposEntry("exception" -> "bad thing happened", "realm" -> "channel/10.0.0.1:1234")) shouldBe "10.0.0.1"
+    expr(JposEntry("realm" -> "channel/10.0.0.1:1234")) shouldBe null
+  }
+
+  it should "handle negated condition" in {
+    val expr = expressionFor("if(one!=1,a,b)")
+    expr(JposEntry("one" -> "1", "a" -> "a's value", "b" -> "b's value")) shouldBe "b's value"
+    expr(JposEntry("one" -> "0", "a" -> "a's value", "b" -> "b's value")) shouldBe "a's value"
+  }
+
+  it should "be parsed by expressionsFor()" in {
+    val exprs = expressionsFor("if(one!=1,a,b)")
+    exprs should have length 1
+  }
 }

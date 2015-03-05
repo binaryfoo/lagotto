@@ -187,6 +187,9 @@ If there is a name collision, the value from the jPOS entry is available with th
 |elapsedSince(filter)
 |Time since the last log entry matching filter
 
+|if(filter,trueExpr,falseExpr)
+|If filter is true, show trueExpr, otherwise falseExpr. Either expression can be blank.
+
 |===
 
 == Aggregation

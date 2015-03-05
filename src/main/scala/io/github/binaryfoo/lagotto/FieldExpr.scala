@@ -9,7 +9,9 @@ import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
 import org.joda.time.Period
 
+import scala.StringBuilder
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.language.implicitConversions
 
 /**
@@ -34,6 +36,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
     val Alias = """(.*) as "([^"]*)"""".r
     val LengthOf = """length\((.+)\)""".r
     val ElapsedSince = """elapsedSince\((.+)\)""".r
+    val If = """if\(([^,]+),([^,]*),([^,]*)\)""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -51,6 +54,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case ResultOfPivotOp(p@FieldExpr(field)) => PivotResultExpr(expr, p)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
+        case If(LogFilter(condition),FieldExpr(trueExpr),FieldExpr(falseExpr)) => IfExpr(expr, condition, trueExpr, falseExpr)
         case "src" if renderHints.contains(RenderHint.Html) => SourceHrefExpr
         case "src" => SourceExpr
         case "file" => FileExpr
@@ -72,7 +76,24 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
      */
     def expressionFor(expr: String): FieldExpr = unapply(expr).get
 
-    def expressionsFor(exprList: String): Seq[FieldExpr] = expressionsFor(exprList.split(","))
+    def expressionsFor(exprList: String): Seq[FieldExpr] = {
+      var braces = 0
+      val exprs = new ArrayBuffer[String]()
+      val current = new StringBuilder()
+      exprList.foreach {
+        case ',' if braces == 0 =>
+          exprs += current.toString()
+          current.delete(0, current.length)
+        case c =>
+          current += c
+          if (c == '(')
+            braces += 1
+          else if (c == ')')
+            braces -= 1
+      }
+      exprs += current.toString()
+      expressionsFor(exprs)
+    }
 
     def allOf(exprList: String): AllOfExpr = AllOfExpr(exprList, expressionsFor(exprList))
 
@@ -822,5 +843,17 @@ case class LengthExpr(field: String, of: FieldExpr) extends DirectExpr {
   override def apply(e: LogEntry): String = {
     val value = of(e)
     if (value != null) value.length.toString else null
+  }
+}
+
+/**
+ * Perhaps most useful with count(). Eg count(if(f>10,a,)).
+ */
+case class IfExpr(field: String, condition: LogFilter, trueExpr: FieldExpr, falseExpr: FieldExpr) extends DirectExpr {
+  override def apply(e: LogEntry): String = {
+    if (condition(e))
+      trueExpr(e)
+    else
+      falseExpr(e)
   }
 }
