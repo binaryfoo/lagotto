@@ -54,7 +54,12 @@ object LogTypes {
     name.map(logTypes(_)).getOrElse(LogTypes.auto(config, logTypes))
   }
 
-  def auto(config: Config, logTypes: LogTypeMap) = {
+  /**
+   * LogType that sniffs first few characters of each line to work out what it's reading.
+   */
+  def auto(config: Config): AutoDetectLog = auto(config, load(config))
+
+  def auto(config: Config, logTypes: LogTypeMap): AutoDetectLog = {
     val autoTypes = JavaConversions.asScalaBuffer(config.getStringList("autoDetectLogTypes"))
     new AutoDetectLog(logTypes.list(autoTypes))
   }

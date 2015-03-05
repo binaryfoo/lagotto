@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell.output
 
-import io.github.binaryfoo.lagotto.{JposEntry, LagoTest}
+import io.github.binaryfoo.lagotto.{SimpleLogEntry, JposEntry, LagoTest}
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 
 class NamedAttributesFormatTest extends LagoTest {
@@ -22,5 +22,10 @@ class NamedAttributesFormatTest extends LagoTest {
 
   it should "handle no lines in message" in {
     format.apply(JposEntry()) shouldBe Some("")
+  }
+
+  "A simple log entry" should "pass through unchanged" in {
+    val entry = SimpleLogEntry(lines = "line 1\nline 2")
+    format.apply(entry).get shouldBe "line 1\nline 2"
   }
 }

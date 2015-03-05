@@ -8,7 +8,7 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import com.typesafe.config.ConfigFactory
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
-import io.github.binaryfoo.lagotto.reader.{SingleThreadLogReader, FileInProgress, FileIO}
+import io.github.binaryfoo.lagotto.reader.{LogTypes, SingleThreadLogReader, FileInProgress, FileIO}
 import io.github.binaryfoo.lagotto.shell.OutputFormat.PipeToOutputFormatIterator
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.shell.output.{NamedAttributesFormat, DigestedFormat}
@@ -71,7 +71,9 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
   private val server = new Server(port)
 
   private val OpenFileReq = "(/.+)".r
-  private lazy val dictionary = RootDataDictionary(ConfigFactory.load())
+  private val config = ConfigFactory.load()
+  private lazy val dictionary = RootDataDictionary(config)
+  private val autoDetectLog = LogTypes.auto(config)
 
   server.setHandler(new AbstractHandler {
     override def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse): Unit = {
@@ -109,7 +111,7 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
     val out = new PipedOutputStream()
     val in = new PipedInputStream(out)
     val pipeJob = Future {
-      val entries = SingleThreadLogReader().read(in, FileRef(new File(sourceName)))
+      val entries = SingleThreadLogReader(logType = autoDetectLog).read(in, FileRef(new File(sourceName)))
       entries.pipeTo(format, writer)
       writer.flush()
     }
