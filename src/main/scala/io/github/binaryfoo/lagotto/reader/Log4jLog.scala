@@ -11,24 +11,28 @@ object Log4jLog extends LogType[Log4jEntry] {
 
   override def readLinesForNextRecord(lines: LineIterator): TextAndSource = {
     val buffer = new StringBuffer()
+    var firstLine = -1
     while (lines.hasNext) {
       if (buffer.length() > 0 && isNewRecord(lines.head)) {
-        return newLineSet(lines, buffer)
+        return newLineSet(lines, buffer, firstLine)
       } else {
+        val line = lines.next()
         if (buffer.length() > 0)
           buffer.append('\n')
-        buffer.append(lines.next())
+        else
+          firstLine = lines.lineNumber
+        buffer.append(line)
       }
     }
-    if (buffer.length() > 0) newLineSet(lines, buffer)
+    if (buffer.length() > 0) newLineSet(lines, buffer, firstLine)
     else null
   }
 
   private def isNewRecord(line: String): Boolean = line.startsWith("[") || line.contains("<log")
 
   @inline
-  private def newLineSet(lines: LineIterator, buffer: StringBuffer): TextAndSource = {
-    TextAndSource(buffer.toString, lines.sourceRef)
+  private def newLineSet(lines: LineIterator, buffer: StringBuffer, firstLine: Int): TextAndSource = {
+    TextAndSource(buffer.toString, lines.sourceRef.at(firstLine))
   }
 
   override def canParse(firstLine: String): Boolean = firstLine.nonEmpty && firstLine.charAt(0) == '['

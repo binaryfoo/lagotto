@@ -11,8 +11,12 @@ class Log4jReaderTest extends LagoTest {
   
   "Log4j reader" should "read two records" in {
     val entries = LogReader(logType = Log4jLog).read(inputStreamFrom(twoLines))
-    entries.next().message shouldBe "Did something useful"
-    entries.next().message shouldBe "And again"
+    val first = entries.next()
+    val second = entries.next()
+    first.message shouldBe "Did something useful"
+    first.source.line shouldBe 1
+    second.message shouldBe "And again"
+    second.source.line shouldBe 2
     entries.hasNext shouldBe false
   }
 
