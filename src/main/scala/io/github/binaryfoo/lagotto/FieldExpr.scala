@@ -740,9 +740,9 @@ object SourceExpr extends DirectExpr {
   override def apply(e: LogEntry): String = e.source.toString
 }
 
-object FileExpr extends DirectExpr {
+object FileExpr extends DirectCalculationExpr {
   override def field: String = "file"
-  override def apply(e: LogEntry): String = e.source.name
+  override def calculate(e: LogEntry): String = e.source.name
 }
 
 object LineExpr extends DirectExpr {

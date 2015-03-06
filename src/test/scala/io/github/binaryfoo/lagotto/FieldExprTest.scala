@@ -311,6 +311,11 @@ class FieldExprTest extends LagoTest {
     expr(dummy455) shouldBe "path.log"
   }
 
+  it should "allow aggregation" in {
+    val expr = expressionFor("file")
+    expr(AggregateLogEntry(Map("file" -> "path.log"), Seq.empty)) shouldBe "path.log"
+  }
+
   "line" should "show line number" in {
     val expr = expressionFor("line")
     expr(dummy455) shouldBe "455"
