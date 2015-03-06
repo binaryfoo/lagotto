@@ -37,6 +37,7 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
     val LengthOf = """length\((.+)\)""".r
     val ElapsedSince = """elapsedSince\((.+)\)""".r
     val If = """if\(([^,]+),([^,]*),([^,]*)\)""".r
+    val Lines = """lines\((\d+)\)""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -62,7 +63,8 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case "icon" if renderHints.contains(RenderHint.Html) => HtmlIconExpr
         case "icon" if renderHints.contains(RenderHint.RichText) => UnicodeIconExpr
         case "icon" => AsciiIconExpr
-        case "lines" => LinesExpr
+        case Lines(count) => LinesExpr(expr, count.toInt)
+        case "lines" => AllLinesExpr
         case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
         case LengthOf(FieldExpr(field)) => LengthExpr(expr, field)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
@@ -748,9 +750,13 @@ object LineExpr extends DirectExpr {
   override def apply(e: LogEntry): String = e.source.line.toString
 }
 
-object LinesExpr extends DirectExpr {
+object AllLinesExpr extends DirectExpr {
   override def field: String = "lines"
   override def apply(e: LogEntry): String = e.lines
+}
+
+case class LinesExpr(field: String, count: Int) extends DirectCalculationExpr {
+  override def calculate(e: LogEntry): String = e.lines.split('\n').take(count).mkString("\n")
 }
 
 abstract class IconExpr extends DirectExpr {

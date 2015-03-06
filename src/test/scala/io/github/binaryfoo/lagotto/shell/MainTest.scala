@@ -823,6 +823,15 @@ class MainTest extends LagoTest {
                       |""".stripMargin
   }
 
+  it should "expose lines" in {
+    val output = run("--no-header", "--csv", "lines(1),count", testFile("log4j.txt"))
+    output shouldBe
+      """[08 Nov 2014 00:00:00,001] INFO  [a.ClassName]: Did something useful,1
+        |[08 Nov 2014 00:00:00,002] INFO  [a.ClassName]: And again,1
+        |[08 Nov 2014 00:00:00,003] INFO  [a.ClassName]: One more for good measure,1
+        |""".stripMargin
+  }
+
   "apache log" should "be readable with --in-format=apache option" in {
     val output = run("--csv", "time,url", "--in-format", "apache", testFile("apache.txt"))
     output shouldBe

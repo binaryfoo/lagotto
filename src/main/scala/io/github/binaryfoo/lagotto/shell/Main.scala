@@ -15,6 +15,9 @@ object Main extends App {
   def runWith(args: Array[String], config: Config) = {
     new OptionsParser(config).parse(args).map { opts =>
       try {
+        if (Debug.enabled)
+          Console.err.println(opts)
+
         val (pipeline, format) = (new Pipeline(opts, config))()
         val sink = sinkFor(opts, format)
 

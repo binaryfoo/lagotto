@@ -494,4 +494,16 @@ class FieldExprTest extends LagoTest {
     val exprs = expressionsFor("if(one!=1,a,b)")
     exprs should have length 1
   }
+
+  "lines(1)" should "show the first line" in {
+    val expr = expressionFor("lines(1)")
+    expr(JposEntry(lines = "line 1\nline 2")) shouldBe "line 1"
+    expr(SimpleLogEntry(lines = "line 1\nline 2")) shouldBe "line 1"
+    expr(AggregateLogEntry(Map("lines(1)" -> "line 1"), Seq.empty)) shouldBe "line 1"
+  }
+
+  "lines(2)" should "show the first two lines" in {
+    val expr = expressionFor("lines(2)")
+    expr(JposEntry(lines = "line 1\nline 2\n3")) shouldBe "line 1\nline 2"
+  }
 }
