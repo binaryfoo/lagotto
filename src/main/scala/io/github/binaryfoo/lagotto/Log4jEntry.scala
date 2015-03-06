@@ -15,21 +15,21 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
 
   _fields.put("timestamp", DefaultDateTimeFormat.print(timestamp))
 
-  val fields = _fields.withDefault {
-    case TimeFormatter(format) => format.print(timestamp)
-    case id => nested.flatMap(jPos => jPos.get(id).orElse{ id match {
-      case Log4jEntry.JposAccess(path) => jPos.get(path)
-      case _ => None
-    }}).orNull
-  }
-
-  lazy val nested: Option[JposEntry] = {
+  val nested: Option[JposEntry] = {
     val jposStart = lines.indexOf("<log ")
     Option(if (jposStart != -1) {
       JposEntry.fromString(lines.substring(jposStart), source)
     } else {
       null
     })
+  }
+
+  val fields = _fields.withDefault {
+    case TimeFormatter(format) => format.print(timestamp)
+    case id => nested.flatMap(jPos => jPos.get(id).orElse{ id match {
+      case Log4jEntry.JposAccess(path) => jPos.get(path)
+      case _ => None
+    }}).orNull
   }
 
   def level = _fields("level")
