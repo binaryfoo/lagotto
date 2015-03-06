@@ -140,9 +140,9 @@ object JposEntry {
             case a => a
           }
         case ("exception", Start) =>
-          extractAttributes(line)
-            .collectFirst { case ("name", value) => value }
-            .foreach(v => fields += (("exception", v)))
+          val exception = findException(extractAttributes(line))
+          if (exception != null)
+            fields += (("exception", exception))
         case ("iso-exception", Start) if it.hasNext =>
           fields += (("exception", it.next().trim))
         case (name, Start) if !msgTypeBlackList.contains(name) && msgType == null =>
@@ -170,7 +170,7 @@ object JposEntry {
   }
 
   def fromString(s: String, source: SourceRef = null): JposEntry = {
-    JposEntry(extractFields(s.split('\n')), s, source)
+    JposEntry(extractFields(s.split("\n")), s, source)
   }
 
   private val msgTypeBlackList = Set("log", "!--")
@@ -244,6 +244,15 @@ object JposEntry {
     }
 
     fields
+  }
+
+  @tailrec
+  private def findException(attributes: List[(String, String)]): String = {
+    attributes match {
+      case Nil => null
+      case ("name", exception) :: _ => exception
+      case _ :: rest => findException(rest)
+    }
   }
 
   private val CDataTag = "![CDATA["

@@ -43,21 +43,21 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
 
 object Log4jEntry {
 
-  val Record = """(?s)\[([^]]+)\] (\w+) +\[([^]]+)\]: (.*)""".r
   val TimeFormat = DateTimeFormat.forPattern("dd MMM yyyy HH:mm:ss,SSS")
   val JposAccess = """jpos\.(.+)""".r
 
   def fromString(s: String, source: SourceRef = null): Log4jEntry = {
-    s match {
-      case Record(time, level, realm, message) =>
-        Log4jEntry(mutable.LinkedHashMap(
-          "timestamp" -> time,
-          "level" -> level,
-          "category" -> realm,
-          "message" -> message
-        ), s, source)
-      case _ => throw new IllegalArgumentException(s"Not a log4j record: '$s'")
-    }
+    // avoid a regex to save some time
+    val timeEnd = s.indexOf(']', 1)
+    val levelEnd = s.indexOf(' ', timeEnd + 2)
+    val categoryEnd = s.indexOf(']', levelEnd + 3)
+
+    Log4jEntry(mutable.LinkedHashMap(
+      "timestamp" -> s.substring(1, timeEnd),
+      "level" -> s.substring(timeEnd + 2, levelEnd),
+      "category" -> s.substring(levelEnd + 3, categoryEnd),
+      "message" -> s.substring(categoryEnd + 3)
+    ), s, source)
   }
 
 }
