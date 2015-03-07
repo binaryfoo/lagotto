@@ -134,4 +134,17 @@ class DataDictionaryTest extends LagoTest {
     appDictionary.shortNameOf("99", JposEntry("realm" -> acmeRealm, "0" -> "9999")) shouldBe Some("hot air balloons")
     appDictionary.englishNameOf("48.1", acmeLog) shouldBe Some("Important 48.1")
   }
+
+  "Field for short name" should "produce short name lookup" in {
+    val config = ConfigFactory.parseFile(new File(testFile("test-dictionary.conf"))).withFallback(ConfigFactory.load()).resolve()
+    val appDictionary = RootDataDictionary(config)
+    val shortNameLookup = appDictionary.possibleFieldsForShortName("expirationDate").get
+    shortNameLookup.valueForShortName(JposEntry("realm" -> acmeRealm, "0" -> "9000", "244" -> "today")) shouldBe "today"
+    shortNameLookup.valueForShortName(JposEntry("realm" -> acmeRealm, "0" -> "2000", "244" -> "today")) shouldBe null
+    shortNameLookup.valueForShortName(JposEntry("realm" -> acmeRealm, "0" -> "2000", "14" -> "today")) shouldBe "today"
+
+    appDictionary.possibleFieldsForShortName("notFound") shouldBe None
+    appDictionary.possibleFieldsForShortName("stan").get.valueForShortName(JposEntry("11" -> "123456")) shouldBe "123456"
+    appDictionary.possibleFieldsForShortName("stan").get.valueForShortName(JposEntry("12" -> "123456")) shouldBe null
+  }
 }

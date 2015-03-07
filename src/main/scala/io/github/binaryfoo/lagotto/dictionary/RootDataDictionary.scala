@@ -9,6 +9,7 @@ import io.github.binaryfoo.lagotto.dictionary.FieldType.FieldType
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 
 import scala.collection.JavaConversions
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * Field number to human name translation.
@@ -34,6 +35,27 @@ case class RootDataDictionary(config: Config = ConfigFactory.load()) extends Dat
 
   override def fieldForShortName(name: String, context: LogEntry): Option[String] = {
     chain.fieldForShortName(name, context)
+  }
+
+  def possibleFieldsForShortName(name: String): Option[ShortNameLookup] = {
+    var current: DataDictionary = chain
+    val mappings = new ArrayBuffer[(LogFilter, String)]()
+    while (current != null) {
+      current match {
+        case ChainedDictionary(d, filter, next) =>
+          val field = d.fieldForShortName(name, null)
+          if (field.isDefined) {
+            mappings += ((filter, field.get))
+          }
+          current = next
+        case _ =>
+          current = null
+      }
+    }
+    if (mappings.nonEmpty)
+      Some(new ShortNameLookup(mappings))
+    else
+      None
   }
 
   def nameChain(): Seq[String] = chain.nameChain()
@@ -80,5 +102,21 @@ case class RootDataDictionary(config: Config = ConfigFactory.load()) extends Dat
     } else {
       Array.empty
     }
+  }
+}
+
+/**
+ * A subset of dictionary mappings used for a single short name.
+ * We still need a set of (LogFilter, field name) pairs for the short name since a given short name can map to multiple
+ * different fields depending on the log entry. Typically based mti and optionally nmic and/or realm.
+ */
+class ShortNameLookup(mappings: Seq[(LogFilter, String)]) {
+  def valueForShortName(e: LogEntry): String = {
+    for ((filter, field) <- mappings) {
+      if (filter(e)) {
+        return e(field)
+      }
+    }
+    null
   }
 }

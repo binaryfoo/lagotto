@@ -6,10 +6,9 @@ import java.util.regex.Pattern
 
 import io.github.binaryfoo.lagotto.ConvertExpr.TimeConversionOp
 import io.github.binaryfoo.lagotto.RenderHint.RenderHint
-import io.github.binaryfoo.lagotto.dictionary.DataDictionary
+import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, RootDataDictionary, ShortNameLookup}
 import org.joda.time.Period
 
-import scala.StringBuilder
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.implicitConversions
@@ -17,7 +16,7 @@ import scala.language.implicitConversions
 /**
  * Needed to be able to parse expressions using the dictionary for translations.
  */
-case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHints: Set[RenderHint] = Set.empty) {
+case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, renderHints: Set[RenderHint] = Set.empty) {
 
   private val logFilterParser = new LogFilterParser(this)
 
@@ -68,8 +67,10 @@ case class FieldExprParser(dictionary: Option[DataDictionary] = None, renderHint
         case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
         case LengthOf(FieldExpr(field)) => LengthExpr(expr, field)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
-        case s if dictionary.isDefined => PrimitiveWithDictionaryFallbackExpr(s, dictionary.get)
-        case s => PrimitiveExpr(s)
+        case s =>
+          dictionary.flatMap(_.possibleFieldsForShortName(s))
+            .map(PrimitiveWithDictionaryFallbackExpr(s, _))
+            .getOrElse(PrimitiveExpr(s))
       })
     }
 
@@ -176,11 +177,11 @@ case class PrimitiveExpr(field: String) extends DirectExpr {
  * paths based on some combination of realm, mti, nmic, etc. Eg Some message format might have privateThing as 48.1
  * some messages and 48.48 in others.
  */
-case class PrimitiveWithDictionaryFallbackExpr(field: String, dictionary: DataDictionary) extends DirectExpr {
+case class PrimitiveWithDictionaryFallbackExpr(field: String, lookup: ShortNameLookup) extends DirectExpr {
   def apply(e: LogEntry): String = {
     val v = e(field)
     if (v == null && field != "mti") {
-      dictionary.fieldForShortName(field, e).map(e(_)).orNull
+      lookup.valueForShortName(e)
     } else {
       v
     }
