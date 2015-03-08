@@ -17,10 +17,7 @@ case class SimpleLogEntry(private val _fields: mutable.LinkedHashMap[String, Str
     }.orNull
   }
 
-  val fields = _fields.withDefault {
-    case TimeFormatter(format) => format.print(timestamp)
-    case _ => null
-  }
+  val fields = _fields.withDefaultValue(null)
 
   def apply(id: String) = fields(id)
 

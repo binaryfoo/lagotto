@@ -8,6 +8,7 @@ import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
 import io.github.binaryfoo.lagotto.reader.{SingleThreadLogReader, LogReader}
 
 class LogReaderTest extends LagoTest {
+  import fieldParser.stringAsFieldExpr
 
   "A log reader" should "read a single entry" in {
     val entries = readEntries("basic.xml").toList
@@ -18,21 +19,21 @@ class LogReaderTest extends LagoTest {
 
   it should "support conversion of pairs to a .csv file" in {
     val entries = readEntries("a-pair.xml")
-    val csv = MsgPair.pair(entries).toCsv("time", "mti", "11", "rtt")
+    val csv = MsgPair.pair(entries).exprToCsv("time", "mti", "11", "rtt")
 
     csv shouldEqual "00:00:03.292,0800,28928,808"
   }
 
   it should "support conversion of pairs to a .csv file succinctly" in {
     val entries = readEntries("a-pair.xml")
-    val csv = MsgPair.pair(entries).toCsv("time", "mti", "11", "rtt")
+    val csv = MsgPair.pair(entries).exprToCsv("time", "mti", "11", "rtt")
 
     csv shouldEqual "00:00:03.292,0800,28928,808"
   }
 
   it should "support conversion of entries to a .csv file" in {
     val entries = readEntries("a-pair.xml")
-    val csv = entries.toCsv("time", "mti", "11")
+    val csv = entries.exprToCsv("time", "mti", "11")
 
     csv shouldEqual
       """00:00:03.292,0800,28928
@@ -42,7 +43,7 @@ class LogReaderTest extends LagoTest {
 
   it should "support conversion of entries to a .csv file succinctly" in {
     val entries = readEntries("a-pair.xml")
-    val csv = entries.toCsv("time", "mti", "11")
+    val csv = entries.exprToCsv("time", "mti", "11")
 
     csv shouldEqual
       """00:00:03.292,0800,28928
@@ -52,7 +53,7 @@ class LogReaderTest extends LagoTest {
 
   it should "support conversion of two paired entries to a .csv file" in {
     val entries = readEntries("a-bunch.xml")
-    val csv = entries.pair().toCsv("time", "mti", "11", "4", "39", "rtt")
+    val csv = entries.pair().exprToCsv("time", "mti", "11", "4", "39", "rtt")
 
     csv shouldEqual
       """00:00:04.292,0200,2,5000,01,600
@@ -61,11 +62,10 @@ class LogReaderTest extends LagoTest {
 
   it should "tag each record with a line starting line number" in {
     val parser = new FieldExprParser()
-    import parser.stringAsFieldAccessor
-    import io.github.binaryfoo.lagotto.output.Xsv.IteratorSeqToXsv
+    import parser.stringAsFieldExpr
 
     val entries = readEntries("a-bunch.xml")
-    val csv = entries.map(_.exprToSeq("48.1", "src")).toCsv
+    val csv = entries.exprToCsv("48.1", "src")
     csv shouldEqual """a-bunch.xml #1,:3
                       |a-bunch.xml #2,:15
                       |a-bunch.xml #3,:27
@@ -74,7 +74,7 @@ class LogReaderTest extends LagoTest {
 
   "Reading 2 files" should "read records in order" in {
     val entries = LogReader().read(testFiles("a-bunch.xml", "a-second-bunch.xml"), follow = false)
-    val csv = entries.toCsv("time", "48.1")
+    val csv = entries.exprToCsv("time", "48.1")
     csv shouldEqual """00:00:03.292,a-bunch.xml #1
                       |00:00:04.292,a-bunch.xml #2
                       |00:00:04.892,a-bunch.xml #3
@@ -92,11 +92,10 @@ class LogReaderTest extends LagoTest {
 
   it should "tag each record with a line starting line number" in {
     val parser = new FieldExprParser()
-    import parser.stringAsFieldAccessor
-    import io.github.binaryfoo.lagotto.output.Xsv.IteratorSeqToXsv
+    import parser.stringAsFieldExpr
 
     val entries = SingleThreadLogReader().read(new File(testFile("a-bunch.xml")))
-    val csv = entries.map(_.exprToSeq("48.1", "src")).toCsv
+    val csv = entries.exprToCsv("48.1", "src")
     csv shouldEqual """a-bunch.xml #1,a-bunch.xml:3
                       |a-bunch.xml #2,a-bunch.xml:15
                       |a-bunch.xml #3,a-bunch.xml:27

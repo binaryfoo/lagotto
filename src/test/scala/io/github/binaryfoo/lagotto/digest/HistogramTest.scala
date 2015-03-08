@@ -1,12 +1,14 @@
 package io.github.binaryfoo.lagotto.digest
 
-import io.github.binaryfoo.lagotto.{JposTimestamp, JposEntry}
+import io.github.binaryfoo.lagotto.{LagoTest, JposTimestamp, JposEntry}
 import org.joda.time.{LocalDate, LocalTime}
 import org.scalatest.{FlatSpec, Matchers}
 
-class HistogramTest extends FlatSpec with Matchers {
+class HistogramTest extends LagoTest {
 
-  def testSet = HistogramSet({e: JposEntry => e("time")}, "time",
+  val timeExpr = fieldParser.FieldExpr.expressionFor("time")
+
+  def testSet = HistogramSet(timeExpr, "time",
     Histogram("auths", {_.mti == "0200"}),
     Histogram("reversals", {_.mti == "0400"}))
 

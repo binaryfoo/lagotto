@@ -53,6 +53,9 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, render
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case ResultOfPivotOp(p@FieldExpr(field)) => PivotResultExpr(expr, p)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
+        case MsgPairFieldAccess(part, DirectExpr(field)) => MsgPartExpr(expr, part, field)
+        case JoinedEntryFieldAccess(part, DirectExpr(field)) => MsgPartExpr(expr, part, field)
+        case Log4jEntry.JposAccess(DirectExpr(field)) => NestedJposExpr(expr, field)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
         case If(LogFilter(condition),FieldExpr(trueExpr),FieldExpr(falseExpr)) => IfExpr(expr, condition, trueExpr, falseExpr)
         case "src" if renderHints.contains(RenderHint.Html) => SourceHrefExpr
@@ -143,6 +146,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, render
   }
   
   implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
+  implicit def stringAsFieldExpr(s: String): FieldExpr = FieldExpr.expressionFor(s)
 }
 
 object RenderHint extends Enumeration {
@@ -686,12 +690,7 @@ case class XPathExpr(field: String, xpath: String) extends DirectExpr {
 }
 
 case class TimeExpr(field: String, formatter: TimeFormatter) extends DirectCalculationExpr {
-  override def calculate(e: LogEntry): String = {
-    e match {
-      case p: MsgPair => e(field)
-      case _ => formatter.print(e.timestamp)
-    }
-  }
+  override def calculate(e: LogEntry): String = formatter.print(e.timestamp)
 }
 
 object TimeExpr {
@@ -862,5 +861,34 @@ case class IfExpr(field: String, condition: LogFilter, trueExpr: FieldExpr, fals
       trueExpr(e)
     else
       falseExpr(e)
+  }
+}
+
+case class MsgPartExpr(field: String, part: String, expr: FieldExpr) extends DirectExpr {
+  override def apply(e: LogEntry): String = {
+    e match {
+      case a: AggregateLogEntry => e(field)
+      case DelayTimer(timed, _) => apply(timed)
+      case MsgPair(request, response) =>
+        if (part == "request") {
+          expr(request)
+        } else {
+          expr(response)
+        }
+      case JoinedEntry(left, right, _, _) =>
+        if (part == "left") {
+          expr(left)
+        } else {
+          expr(right)
+        }
+    }
+  }
+}
+
+case class NestedJposExpr(field: String, expr: FieldExpr) extends DirectCalculationExpr {
+  override def calculate(e: LogEntry): String = {
+    e match {
+      case j: Log4jEntry => j.nested.map(expr).orNull
+    }
   }
 }

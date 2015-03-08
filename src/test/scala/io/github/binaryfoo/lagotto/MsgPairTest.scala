@@ -61,16 +61,17 @@ class MsgPairTest extends LagoTest {
   }
 
   it should "provide access to fields and attributes" in {
+    import fieldParser.FieldExpr.expressionFor
     val pair = MsgPair.pair(LogReader().read(new File(testFile("a-pair.xml")))).next()
 
     pair("0") shouldEqual "0800"
     pair("48.1") shouldEqual "subfield 48.1"
-    pair("req.time") shouldEqual "00:00:03.292"
-    pair("request.time") shouldEqual "00:00:03.292"
-    pair("response.time") shouldEqual "00:00:04.100"
+    expressionFor("req.time")(pair) shouldEqual "00:00:03.292"
+    expressionFor("request.time")(pair) shouldEqual "00:00:03.292"
+    expressionFor("response.time")(pair) shouldEqual "00:00:04.100"
     pair("rtt") shouldEqual "808"
     pair("mti") shouldEqual "0800"
-    pair("timestamp") shouldEqual "2014-11-24 00:00:03.292"
+    expressionFor("timestamp")(pair) shouldEqual "2014-11-24 00:00:03.292"
   }
 
   def pair(requestFields: (String, String)*): MsgPair = MsgPair(JposEntry(requestFields : _*), JposEntry())

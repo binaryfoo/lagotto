@@ -511,4 +511,32 @@ class FieldExprTest extends LagoTest {
     val expr = expressionFor("lines(2)")
     expr(JposEntry(lines = "line 1\nline 2\n3")) shouldBe "line 1\nline 2"
   }
+
+  val pair = MsgPair(JposEntry("at" -> new LocalTime(8, 10, 3, 101).toDateTimeToday.asJposAt), JposEntry("at" -> new LocalTime(8, 11, 4, 399).toDateTimeToday.asJposAt))
+
+  "MsgPair request and response times" should "be accessible" in {
+    expressionFor("req.time")(pair) shouldBe "08:10:03.101"
+    expressionFor("request.time")(pair) shouldBe "08:10:03.101"
+    expressionFor("request.time(HH:mm)")(pair) shouldBe "08:10"
+    expressionFor("resp.time")(pair) shouldBe "08:11:04.399"
+    expressionFor("response.time(HH:mm)")(pair) shouldBe "08:11"
+  }
+
+  it should "support being the aggregation key" in {
+    expressionFor("req.time")(AggregateLogEntry(Map("req.time" -> "13:01:02.999"), Seq.empty)) shouldBe "13:01:02.999"
+  }
+
+  it should "support delay calculation" in {
+    val entry = DelayTimer(pair, None)
+    expressionFor("req.time")(entry) shouldBe "08:10:03.101"
+    expressionFor("delay")(entry) shouldBe "0"
+  }
+
+  "JoinedEntry request and response times" should "be accessible" in {
+    val joined = JoinedEntry(JposEntry("at" -> new LocalTime(8, 10, 3, 101).toDateTimeToday.asJposAt), JposEntry("at" -> new LocalTime(8, 11, 4, 399).toDateTimeToday.asJposAt), null, ',')
+    expressionFor("left.time")(joined) shouldBe "08:10:03.101"
+    expressionFor("left.time(HH:mm)")(joined) shouldBe "08:10"
+    expressionFor("right.time")(joined) shouldBe "08:11:04.399"
+    expressionFor("right.time(HH:mm)")(joined) shouldBe "08:11"
+  }
 }

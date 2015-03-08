@@ -75,6 +75,7 @@ class MainTest extends LagoTest {
                          |00:00:04.992,0210,1,1.7
                          |""".stripMargin
   }
+
   it should "calculate delays when included in aggregate" in {
     val individual = run("--csv", "delay", testFile("a-bunch.xml"))
     individual shouldEqual """delay
@@ -113,6 +114,14 @@ class MainTest extends LagoTest {
                          |0
                          |808
                          |47450900
+                         |""".stripMargin
+  }
+
+  it should "calculate delays between paired results" in {
+    val output = run("--pair", "--csv", "req.time,resp.time,rtt,delay", testFile("a-bunch.xml"))
+    output shouldEqual """req.time,resp.time,rtt,delay
+                         |00:00:04.292,00:00:04.892,600,0
+                         |00:00:03.292,00:00:04.992,1700,-1000
                          |""".stripMargin
   }
 
@@ -262,7 +271,7 @@ class MainTest extends LagoTest {
   }
 
   it should "output difference between two direct timestamps" in {
-    val output = run("--csv", "11,calc(resp.time-req.time)","--pair", testFile("a-bunch.xml"))
+    val output = run("--csv", "11,calc(resp.time-req.time)", "--pair", testFile("a-bunch.xml"))
     output shouldEqual """11,calc(resp.time-req.time)
                          |2,00:00:00.600
                          |1,00:00:01.700
@@ -387,6 +396,23 @@ class MainTest extends LagoTest {
                          |00:00:04.292,0200,2,600
                          |00:00:03.292,0200,1,1700
                          |""".stripMargin
+  }
+
+  it should "support aggregation on response time" in {
+    val output = run("--pair", "--csv", "max(response.time),min(response.time)", testFile("a-bunch.xml"))
+    output shouldBe
+      """max(response.time),min(response.time)
+        |00:00:04.992,00:00:04.892
+        |""".stripMargin
+  }
+
+  it should "support aggregation key of response time" in {
+    val output = run("--pair", "--csv", "response.time,count", testFile("a-bunch.xml"))
+    output shouldBe
+      """response.time,count
+        |00:00:04.892,1
+        |00:00:04.992,1
+        |""".stripMargin
   }
 
   "--sort" should "sort by the chosen field" in {

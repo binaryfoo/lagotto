@@ -27,11 +27,12 @@ class AutoDetectLogTest extends LagoTest {
   private val types = LogTypes.load(ConfigFactory.parseString(logTypes).getObject("logTypes"))
 
   it should "produce a log type that sniffs lines" in {
+    import fieldParser.stringAsFieldAccessor
     val sourceLines = new LineIterator(inputStreamFrom("01/02/1970: Month after Epoch", "SILLY 01-JAN-1971 *** Year after"), true, true)
     val log = new AutoDetectLog(types.list(Seq("a", "b")))
 
-    log(sourceLines).toCsv("time(yyyy-MM-dd)", "message") shouldBe "1970-02-01,Month after Epoch"
-    log(sourceLines).toCsv("time(yyyy-MM-dd)", "message") shouldBe "1971-01-01,Year after"
+    log(sourceLines).toXsv(",", "time(yyyy-MM-dd)", "message") shouldBe "1970-02-01,Month after Epoch"
+    log(sourceLines).toXsv(",", "time(yyyy-MM-dd)", "message") shouldBe "1971-01-01,Year after"
   }
 
   it should "complain if unable to parse a line" in {

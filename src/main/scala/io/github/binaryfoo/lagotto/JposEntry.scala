@@ -32,7 +32,6 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
     case "socket" => realm.socket
     case "ipAddress" => realm.ipAddress
     case "port" => realm.port
-    case TimeFormatter(format) => format.print(timestamp)
     case _ => null
   }
 

@@ -45,6 +45,7 @@ class JposEntryTest extends LagoTest {
   }
 
   it should "expose both fields and attributes via apply" in {
+    import fieldParser.FieldExpr.expressionFor
     val entry = JposEntry.fromLines(lines)
 
     entry("0") shouldEqual "0800"
@@ -52,12 +53,12 @@ class JposEntryTest extends LagoTest {
     entry("mti") shouldEqual "0800"
     entry("at") shouldEqual timestamp
     entry("realm") shouldEqual realm
-    entry("timestamp") shouldEqual "2014-11-24 16:59:03.292"
-    entry("time") shouldEqual "16:59:03.292"
-    entry("time(HH:mm)") shouldEqual "16:59"
-    entry("time(HH:mm:s0)") shouldEqual "16:59:00"
-    entry("time(HH:m0)") shouldEqual "16:50"
-    entry("date") shouldEqual "2014-11-24"
+    expressionFor("timestamp")(entry) shouldEqual "2014-11-24 16:59:03.292"
+    expressionFor("time")(entry) shouldEqual "16:59:03.292"
+    expressionFor("date")(entry) shouldEqual "2014-11-24"
+    expressionFor("time(HH:mm)")(entry) shouldEqual "16:59"
+    expressionFor("time(HH:mm:s0)")(entry) shouldEqual "16:59:00"
+    expressionFor("time(HH:m0)")(entry) shouldEqual "16:50"
     entry("42") shouldEqual null
     entry("rubbish") shouldEqual null
     entry.get("rubbish") shouldEqual None

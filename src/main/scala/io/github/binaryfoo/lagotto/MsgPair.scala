@@ -13,8 +13,6 @@ case class MsgPair(request: JposEntry, response: JposEntry) extends Coalesced wi
   def apply(field: String): String = {
     field match {
       case "rtt" => rtt.toString
-      case MsgPairFieldAccess.Request(_, f) => request(f)
-      case MsgPairFieldAccess.Response(_, f) => response(f)
       case _ =>
         val v = request(field)
         if (v == null) response(field) else v
@@ -102,8 +100,8 @@ object MsgPairFieldAccess {
   val Response = """(resp|response)\.(.*)""".r
 
   def unapply(expr: String): Option[(String, String)] = expr match {
-    case Request(p, f) => Some((p, f))
-    case Response(p, f) => Some((p, f))
+    case Request(p, f) => Some(("request", f))
+    case Response(p, f) => Some(("response", f))
     case _ => None
   }
 }

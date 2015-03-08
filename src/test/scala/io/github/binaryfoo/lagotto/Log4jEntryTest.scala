@@ -34,10 +34,10 @@ class Log4jEntryTest extends LagoTest {
       "message" -> "Did something useful")
   }
 
-  it should "support reformatting the timestamp" in {
+  it should "normalize the timestamp format" in {
     val entry = Log4jEntry.fromString(oneLine)
 
-    entry("time") shouldBe "00:00:00.001"
+    entry("timestamp") shouldBe "2014-11-08 00:00:00.001"
   }
 
   it should "read a two line record" in {
@@ -55,6 +55,7 @@ class Log4jEntryTest extends LagoTest {
   }
 
   "An entry containing a jpos entry" should "expose the jpos entry" in {
+    import fieldParser.FieldExpr.expressionFor
     val text = """[08 Nov 2014 00:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 00:00:21 EST 2014.529" lifespan="290ms">
                  |  <receive>
                  |    <exception name="Oops">
@@ -64,12 +65,12 @@ class Log4jEntryTest extends LagoTest {
                  |</log>""".stripMargin
     val entry = Log4jEntry.fromString(text)
 
-    entry("jpos.exception") shouldBe "Oops"
+    expressionFor("jpos.exception")(entry) shouldBe "Oops"
     entry("exception") shouldBe "Oops"
     entry("realm") shouldBe "some.channel/172.0.1.7:4779"
     entry("ipAddress") shouldBe "172.0.1.7"
-    entry("jpos.timestamp") shouldBe "2014-11-08 00:00:21.529"
-    entry("timestamp") shouldBe "2014-11-08 00:00:20.529"
+    expressionFor("jpos.timestamp")(entry) shouldBe "2014-11-08 00:00:21.529"
+    expressionFor("timestamp")(entry) shouldBe "2014-11-08 00:00:20.529"
     entry("rubbish") shouldBe null
   }
 }

@@ -25,11 +25,7 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
   }
 
   val fields = _fields.withDefault {
-    case TimeFormatter(format) => format.print(timestamp)
-    case id => nested.flatMap(jPos => jPos.get(id).orElse{ id match {
-      case Log4jEntry.JposAccess(path) => jPos.get(path)
-      case _ => None
-    }}).orNull
+    case id => nested.map(_(id)).orNull
   }
 
   def level = _fields("level")

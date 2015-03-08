@@ -39,6 +39,8 @@ trait LogEntry {
     }.toSeq
   }
 
+  def exprsToSeq(ids: FieldExpr*): Seq[String] = exprToSeq(ids.toIterable)
+
   /**
    * The implicit in io.github.binaryfoo.lagotto.FieldExprParser#stringAsFieldAccessor(java.lang.String) might be useful.
    */
@@ -83,6 +85,8 @@ object LogEntry {
     def toCsv(ids: String*): String = toCsv(ids.toIterable)
 
     def toCsv(ids: Iterable[String]): String = v.map(_.toCsv(ids)).mkString("\n")
+
+    def exprToCsv(ids: FieldExpr*): String = v.map(e => Xsv.toCsv(e.exprsToSeq(ids :_*))).mkString("\n")
 
     def toTsv(ids: String*): String = toTsv(ids.toIterable)
 
