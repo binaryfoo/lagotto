@@ -73,4 +73,10 @@ class Log4jEntryTest extends LagoTest {
     expressionFor("timestamp")(entry) shouldBe "2014-11-08 00:00:20.529"
     entry("rubbish") shouldBe null
   }
+
+  "custom parseDateTime" should "work" in {
+    Log4jEntry.parseDateTime("28 Aug 2014 00:00:00,002") shouldBe new DateTime(2014, 8, 28, 0, 0, 0, 2)
+    Log4jEntry.parseDateTime("28 Aug 2014 01:02:03,004") shouldBe new DateTime(2014, 8, 28, 1, 2, 3, 4)
+    Log4jEntry.parseDateTime("1 Jan 2015 13:14:15,999") shouldBe new DateTime(2015, 1, 1, 13, 14, 15, 999)
+  }
 }

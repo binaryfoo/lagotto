@@ -1,7 +1,9 @@
 package io.github.binaryfoo.lagotto
 
+import java.lang.Integer.parseInt
+
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+import org.joda.time.chrono.ISOChronology
 
 import scala.collection.mutable
 
@@ -9,7 +11,7 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
 
   val timestamp: DateTime = {
     _fields.get("timestamp")
-      .map(Log4jEntry.TimeFormat.parseDateTime)
+      .map(Log4jEntry.parseDateTime)
       .getOrElse(throw new IAmSorryDave(s"Missing 'timestamp' in ${_fields}"))
   }
 
@@ -39,7 +41,29 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
 
 object Log4jEntry {
 
-  val TimeFormat = DateTimeFormat.forPattern("dd MMM yyyy HH:mm:ss,SSS")
+  private val chronology = ISOChronology.getInstance()
+
+  def parseDateTime(s: String): DateTime = {
+    // Avoid DateTimeFormat.forPattern("dd MMM yyyy HH:mm:ss,SSS") for speed with N million+ entries
+
+    val dayEnd = s.indexOf(' ')
+    val monthEnd = s.indexOf(' ', dayEnd + 1)
+    val yearEnd = s.indexOf(' ', monthEnd + 1)
+    val hourEnd = s.indexOf(':', yearEnd + 1)
+    val minuteEnd = s.indexOf(':', hourEnd + 1)
+    val secondEnd = s.indexOf(',', minuteEnd + 1)
+
+    val day = parseInt(s.substring(0, dayEnd))
+    val month = EnglishMonths.months(s.substring(dayEnd + 1, monthEnd))
+    val year = parseInt(s.substring(monthEnd + 1, yearEnd))
+    val hour = parseInt(s.substring(yearEnd + 1, hourEnd))
+    val minute = parseInt(s.substring(hourEnd + 1, minuteEnd))
+    val second = parseInt(s.substring(minuteEnd + 1, secondEnd))
+    val millis = parseInt(s.substring(secondEnd + 1))
+
+    new DateTime(year, month, day, hour, minute, second, millis, chronology)
+  }
+
   val JposAccess = """jpos\.(.+)""".r
 
   def fromString(s: String, source: SourceRef = null): Log4jEntry = {

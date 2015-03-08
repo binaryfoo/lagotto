@@ -11,7 +11,6 @@ import scala.collection.mutable
 object JposTimestamp {
 
   private val FORMAT = DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss zzz yyyy")
-  private val months = Map("Jan" -> 1, "Feb" -> 2, "Mar" -> 3, "Apr" -> 4, "May" -> 5, "Jun" -> 6, "Jul" -> 7, "Aug" -> 8, "Sep" -> 9, "Oct" -> 10, "Nov" -> 11, "Dec" -> 12)
 
   def parse(s: String): DateTime = {
     try {
@@ -34,7 +33,7 @@ object JposTimestamp {
       val dot = s.lastIndexOf('.', endOfZone + 5)
       val millis = if (dot == -1) 0 else parseInt(s.substring(dot + 1))
 
-      new DateTime(year, months(month), day, hour, minute, second, millis, juTimeZone(zone))
+      new DateTime(year, EnglishMonths.months(month), day, hour, minute, second, millis, juTimeZone(zone))
     }
     catch {
       case e: Throwable => throw new IllegalArgumentException(s"Failed to parse time: $s", e)
@@ -58,4 +57,8 @@ object JposTimestamp {
   implicit class DateTimeExtension(val d: DateTime) extends AnyVal {
     def asJposAt: String = format(d)
   }
+}
+
+object EnglishMonths {
+  val months = Map("Jan" -> 1, "Feb" -> 2, "Mar" -> 3, "Apr" -> 4, "May" -> 5, "Jun" -> 6, "Jul" -> 7, "Aug" -> 8, "Sep" -> 9, "Oct" -> 10, "Nov" -> 11, "Dec" -> 12)
 }
