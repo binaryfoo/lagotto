@@ -104,7 +104,11 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
   }
 
   private def read[T <: LogEntry](logType: LogType[T]): Iterator[T] = {
-    val reader = LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
+    val reader = if (System.getProperty("single.thread") == "true") {
+      SingleThreadLogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
+    } else {
+      LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
+    }
     reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber), opts.follow)
   }
 
