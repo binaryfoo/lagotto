@@ -56,6 +56,11 @@ class AggregateLogEntryTest extends LagoTest {
     aggregateToCsv(threeStans, "mti", "group_sample(11 1)") should (contain("0210,3") and (contain("0200,1") or contain("0200,2")))
   }
 
+  // TODO this will make count(distinct(field)) an aggregate of an aggregate ?
+//  it should "support distinct(field)" in {
+//    aggregate("distinct(lifespan)") shouldBe List("100", "300")
+//  }
+
   "group_trace" should "write a file per group" in {
     aggregateToCsv(twoLifespans, "lifespan", "group_trace(agg-test)") should (contain("100,agg-test.1.log") and contain("200,agg-test.2.log"))
     FileIO.readToString("agg-test.1.log") shouldBe "<log>1</log>\n"

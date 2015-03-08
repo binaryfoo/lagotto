@@ -1052,6 +1052,18 @@ class MainTest extends LagoTest {
     output should (include("2,0200") and include("0,0210"))
   }
 
+  "--sqlIn output format" should "output a SQL in clause" in {
+    val output = run("--sqlIn", "ipAddress", testFile("a-bunch.xml"))
+    output shouldBe
+      """(
+        |'10.0.0.1'
+        |,'10.0.0.1'
+        |,'10.0.0.1'
+        |,'10.0.0.1'
+        |)
+        |""".stripMargin
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
