@@ -539,4 +539,11 @@ class FieldExprTest extends LagoTest {
     expressionFor("right.time")(joined) shouldBe "08:11:04.399"
     expressionFor("right.time(HH:mm)")(joined) shouldBe "08:11"
   }
+
+  "distinct(field)" should "output only one instance of each value" in {
+    val expr = expressionFor("distinct(11)")
+    expr(JposEntry("11" -> "1")) shouldBe "1"
+    expr(JposEntry("11" -> "2")) shouldBe "2"
+    expr(JposEntry("11" -> "1")) shouldBe null
+  }
 }

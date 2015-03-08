@@ -37,6 +37,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, render
     val ElapsedSince = """elapsedSince\((.+)\)""".r
     val If = """if\(([^,]+),([^,]*),([^,]*)\)""".r
     val Lines = """lines\((\d+)\)""".r
+    val Distinct = """distinct\((.+)\)""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -52,6 +53,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, render
         case RegexReplacementOp(p@DirectExpr(path), regex, replacement) => RegexReplaceExpr(expr, path, regex, replacement)
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case ResultOfPivotOp(p@FieldExpr(field)) => PivotResultExpr(expr, p)
+        case Distinct(FieldExpr(field)) => DistinctExpr(expr, field)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case MsgPairFieldAccess(part, DirectExpr(field)) => MsgPartExpr(expr, part, field)
         case JoinedEntryFieldAccess(part, DirectExpr(field)) => MsgPartExpr(expr, part, field)
@@ -889,6 +891,20 @@ case class NestedJposExpr(field: String, expr: FieldExpr) extends DirectCalculat
   override def calculate(e: LogEntry): String = {
     e match {
       case j: Log4jEntry => j.nested.map(expr).orNull
+    }
+  }
+}
+
+case class DistinctExpr(field: String, expr: FieldExpr) extends DirectExpr {
+
+  private val seen = mutable.HashSet[String]()
+
+  override def apply(e: LogEntry): String = {
+    val v = expr(e)
+    if (seen.add(v)) {
+      v
+    } else {
+      null
     }
   }
 }

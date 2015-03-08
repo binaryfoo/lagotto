@@ -1053,13 +1053,10 @@ class MainTest extends LagoTest {
   }
 
   "--sqlIn output format" should "output a SQL in clause" in {
-    val output = run("--sqlIn", "ipAddress", testFile("a-bunch.xml"))
+    val output = run("--sqlIn", "distinct(ipAddress)", testFile("a-bunch.xml"))
     output shouldBe
       """(
         |'10.0.0.1'
-        |,'10.0.0.1'
-        |,'10.0.0.1'
-        |,'10.0.0.1'
         |)
         |""".stripMargin
   }

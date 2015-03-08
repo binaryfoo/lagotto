@@ -12,17 +12,21 @@ class SqlInClauseOutputFormat() extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some("(")
 
   override def row(row: Seq[String]): Option[String] = {
-    val quoted = row.map(v => s"'$v'")
-    val value = if (quoted.size == 1) {
-      quoted.head
+    if (row.exists(_.nonEmpty)) {
+      val quoted = row.map(v => s"'$v'")
+      val value = if (quoted.size == 1) {
+        quoted.head
+      } else {
+        quoted.mkString("(", ",", ")")
+      }
+      Some(if (first) {
+        first = false
+        value
+      } else {
+        "," + value
+      })
     } else {
-      quoted.mkString("(", ",", ")")
+      None
     }
-    Some(if (first) {
-      first = false
-      value
-    } else {
-      "," + value
-    })
   }
 }
