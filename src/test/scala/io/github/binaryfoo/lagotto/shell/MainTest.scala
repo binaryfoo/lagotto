@@ -220,7 +220,6 @@ class MainTest extends LagoTest {
     val output = run("--csv", "ipAddress,max(lifespan)", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,max(lifespan)
                           |10.0.0.1,10005
-                          |,
                           |""".stripMargin
   }
 
@@ -228,7 +227,6 @@ class MainTest extends LagoTest {
     val output = run("--csv", "ipAddress,max(lifespan) as \"slowest\"", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,slowest
                           |10.0.0.1,10005
-                          |,
                           |""".stripMargin
   }
 
@@ -243,7 +241,6 @@ class MainTest extends LagoTest {
     val output = run("--jira-table", "ipAddress,max(lifespan)", testFile("a-pair.xml"))
     output shouldEqual """||ipAddress||max(lifespan)||
 |10.0.0.1|10005|
-|||
 """
   }
 
@@ -251,7 +248,6 @@ class MainTest extends LagoTest {
     val output = run("--csv", "ipAddress,min(lifespan)", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,min(lifespan)
                           |10.0.0.1,1000
-                          |,
                           |""".stripMargin
   }
 
@@ -259,7 +255,6 @@ class MainTest extends LagoTest {
     val output = run("--csv", "ipAddress,sum(lifespan)", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,sum(lifespan)
                           |10.0.0.1,11005
-                          |,
                           |""".stripMargin
   }
 
@@ -299,7 +294,6 @@ class MainTest extends LagoTest {
     val output = run("--csv", "ipAddress,(min(lifespan) as time(s))", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,(min(lifespan) as time(s))
                          |10.0.0.1,1
-                         |,
                          |""".stripMargin
   }
 
@@ -688,7 +682,6 @@ class MainTest extends LagoTest {
     output shouldBe
       """mti,lifespan
         |0810,1000
-        |,
         |""".stripMargin
   }
 
@@ -1050,6 +1043,14 @@ class MainTest extends LagoTest {
   "count(if(...))" should "count if condition matches" in {
     val output = run("--csv", "count(distinct(if(mti=0200,port,))),mti", testFile("a-bunch.xml"))
     output should (include("2,0200") and include("0,0210"))
+  }
+
+  "distinct(field)" should "output each value only once" in {
+    val output = run("--no-header", "--csv", "distinct(mti)", testFile("a-bunch.xml"))
+    output shouldBe
+      """0200
+        |0210
+        |""".stripMargin
   }
 
   "--sqlIn output format" should "output a SQL in clause" in {

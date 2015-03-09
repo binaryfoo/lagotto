@@ -1,7 +1,6 @@
 package io.github.binaryfoo.lagotto.shell.output
 
-import io.github.binaryfoo.lagotto.{FieldExpr, LogEntry}
-import io.github.binaryfoo.lagotto.shell.{TableFormatter, OutputFormat}
+import io.github.binaryfoo.lagotto.shell.TableFormatter
 
 class SqlInClauseOutputFormat() extends TableFormatter {
   
@@ -12,21 +11,17 @@ class SqlInClauseOutputFormat() extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some("(")
 
   override def row(row: Seq[String]): Option[String] = {
-    if (row.exists(_.nonEmpty)) {
-      val quoted = row.map(v => s"'$v'")
-      val value = if (quoted.size == 1) {
-        quoted.head
-      } else {
-        quoted.mkString("(", ",", ")")
-      }
-      Some(if (first) {
-        first = false
-        value
-      } else {
-        "," + value
-      })
+    val quoted = row.map(v => s"'$v'")
+    val value = if (quoted.size == 1) {
+      quoted.head
     } else {
-      None
+      quoted.mkString("(", ",", ")")
     }
+    Some(if (first) {
+      first = false
+      value
+    } else {
+      "," + value
+    })
   }
 }

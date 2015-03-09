@@ -36,7 +36,14 @@ object FullText extends OutputFormat {
 
 case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat {
   override def header(): Option[String] = tableFormatter.header(fields.map(_.toString()))
-  override def apply(e: LogEntry): Option[String] = tableFormatter.row(e.exprToSeq(fields))
+  override def apply(e: LogEntry): Option[String] = {
+    val row = e.exprToSeq(fields)
+    if (row.exists(_.nonEmpty)) {
+      tableFormatter.row(row)
+    } else {
+      None
+    }
+  }
   override def footer(): Option[String] = tableFormatter.footer()
 }
 
