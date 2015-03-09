@@ -58,11 +58,11 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
 /**
  * Show only the final file once it's baked.
  */
-class OnFinishWebServerSink(index: String) extends Sink {
+class OnFinishWebServerSink(index: String, contentType: String) extends Sink {
   override def entry(e: LogEntry) = {}
 
   override def finish() = {
-    val server = new SillyServer(new FileInProgress(new File(index), true))
+    val server = new SillyServer(index = new FileInProgress(new File(index), true), indexContentType = contentType)
     server.start()
   }
 }

@@ -20,7 +20,7 @@ object GnuplotScriptWriter {
     
     s"""#!/usr/bin/env gnuplot
       |set datafile separator ','
-      |set terminal svg enhanced mouse size 1280,960
+      |set terminal svg enhanced mouse standalone size 1280,960
       |set output '$plotFileName.svg'
       |set xdata time
       |set timefmt '$timeFormat'
