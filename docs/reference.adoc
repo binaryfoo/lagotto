@@ -190,11 +190,14 @@ If there is a name collision, the value from the jPOS entry is available with th
 |if(filter,trueExpr,falseExpr)
 |If filter is true, show trueExpr, otherwise falseExpr. Either expression can be blank.
 
+|distinct(field)
+|Only one row per unique value of field.
+
 |===
 
 == Aggregation
 
-Use count,sum,min,max,avg,group_concat,group_sample
+Use count,sum,min,max,avg,group_concat,group_sample,count(condition)
 
 == Pairing
 
@@ -241,6 +244,10 @@ By default the same text that's input: just act as a filter not an aggregator or
 | --json
 | No value required
 | A single line of JSON per input record.
+
+| --sqlIn
+| --sqlIn distinct(ipAddress)
+| A list of values that can be used in a SQL IN clause.
 |===
 
 There are also --live-html, --live-utf and --live-html versions that spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
@@ -250,3 +257,5 @@ There are also --live-html, --live-utf and --live-html versions that spit out th
 --names to add a name attribute to each <field> element
 
 --ui to open the results in a browser
+
+--merge to remove duplicates when reading partially overlapping files

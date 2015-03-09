@@ -13,7 +13,7 @@ object Main extends App {
   runWith(args, ConfigFactory.load())
 
   def runWith(args: Array[String], config: Config) = {
-    new OptionsParser(config).parse(args).map { opts =>
+    new OptionsParser(config).parse(args).foreach { opts =>
       try {
         if (Debug.enabled)
           Console.err.println(opts)
@@ -109,7 +109,8 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     } else {
       LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
     }
-    reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber), opts.follow)
+    val raw = reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber), opts.follow)
+    if (opts.merge) raw.filter(new DeDuplicator) else raw
   }
 
   private def join(v: Iterator[LogEntry], join: Option[(FieldExpr, JoinMode)], logType: LogType[LogEntry]): Iterator[LogEntry] = {
@@ -189,7 +190,7 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     if (aggregationConfig.aggregates.isEmpty) {
       v
     } else {
-      AggregateExpr.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq).toIterator
+      AggregateExpr.aggregate(v, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     }
   }
 

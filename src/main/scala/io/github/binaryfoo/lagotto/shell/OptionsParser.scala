@@ -169,6 +169,10 @@ class OptionsParser(val config: Config) {
         c.copy(follow = true)
       } text "Like tail -F. Read input as it's written to the file."
 
+      opt[Unit]("merge") action {(_,c) =>
+        c.copy(merge = true)
+      } text "Remove duplicates records on input. Uses SHA-256 of record."
+
       opt[Unit]("debug") action {(_,c) =>
         Debug.enabled = true
         c

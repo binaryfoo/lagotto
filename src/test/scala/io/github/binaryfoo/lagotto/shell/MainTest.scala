@@ -1062,6 +1062,11 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "--merge" should "remove duplicates from input" in {
+    val output = run("--merge", testFile("one.xml"), testFile("two.xml"), testFile("one.xml"))
+    output shouldBe contentsOf("one.xml") + contentsOf("two.xml")
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {

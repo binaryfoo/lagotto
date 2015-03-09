@@ -25,7 +25,8 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    histogramFields: Seq[FieldExpr] = Seq(),
                    gnuplotFileName: Option[String] = None,
                    liveUi: Boolean = false,
-                   limit: Option[Int] = None) {
+                   limit: Option[Int] = None,
+                   merge: Boolean = false) {
   
   def requiresDelayCalculation(): Boolean = includesDelayInFieldList() || includesDelayInFilters()
   
