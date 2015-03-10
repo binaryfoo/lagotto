@@ -35,7 +35,7 @@ class XsvLog(val delimiter: Char = ',', val hasHeader: Boolean = true) extends L
       }
       Header(fields, timeFormat)
     } else {
-      val indices = 0 to split(it.head).size - 1
+      val indices = 0 to split(it.head).length - 1
       Header(indices.map(_.toString), None)
     }
   }
