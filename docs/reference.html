@@ -461,6 +461,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>If you specify multiple filters only records that match all filters will be returned.</p>
+</div>
+<div class="paragraph">
+<p>To match one thing or another you can use a regex like 48~/(one thing)|(or another)/. A little contrived but it works for now.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -469,6 +475,32 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).</p>
 </div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (the MTI) from a jPOS &lt;log&gt; entry. Aliased by mti.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48.3.2.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A quite deeply nested subfield</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">field(/regex/$1/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apply the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regular expression</a> to the value of field. Ouput the replacement. A bit like sed but with Java&#8217;s regex flavour.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="sect2">
 <h3 id="_jpos">jPOS</h3>
 <div class="paragraph">
@@ -698,6 +730,14 @@ If there is a name collision, the value from the jPOS entry is available with th
 <td class="tableblock halign-left valign-top"><p class="tableblock">elapsedSince(filter)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Time since the last log entry matching filter</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if(filter,trueExpr,falseExpr)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If filter is true, show trueExpr, otherwise falseExpr. Either expression can be blank.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">distinct(field)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only one row per unique value of field.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -707,7 +747,13 @@ If there is a name collision, the value from the jPOS entry is available with th
 <h2 id="_aggregation">Aggregation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Use count,sum,min,max,avg,group_concat,group_sample</p>
+<p>Use count, sum, min, max, avg, group_concat, group_sample, count(condition)</p>
+</div>
+<div class="paragraph">
+<p>Can also use distinct(). Eg group_concat(distinct(2))</p>
+</div>
+<div class="paragraph">
+<p>group_sample(src 3) picks 3 random src values from the N values in a group</p>
 </div>
 </div>
 </div>
@@ -717,6 +763,92 @@ If there is a name collision, the value from the jPOS entry is available with th
 <div class="paragraph">
 <p>--pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.</p>
 </div>
+<div class="paragraph">
+<p>The following additional fields will be available to filter, aggregate and display.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">request.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Value of &lt;field&gt; on the request. Eg request.timestamp or request.2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">req.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as above</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">response.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Value of &lt;field&gt; on the response. Eg response.timestamp or resp.39</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">resp.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as above</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">rtt</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Round trip time in milliseconds: response.timestamp - request.timestamp.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>By default fields are looked up on the request. If not found then on the response.
+Eg timestamp is the same as req.timestamp whilst 39 would typically fall through to resp.39 as 39 is typically a response field.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_input_formats">Input Formats</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>By default the input type is sniffed (automagically detected) by looking at the start of each line. jPOS and log4j entries are detected.</p>
+</div>
+<div class="paragraph">
+<p>Other formats can be explicitly specified with --in-format.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Format</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">csv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated values. The field names are taken from the first row: the header.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">icsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated values without a header row. Fields are numbered starting at zero rather than named.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tab separated values. The field names are taken from the first row: the header.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">gc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Java Garbage Collection log output. Quite brittle depending on the JVM and version.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">apache</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache access logs.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="sect1">
@@ -779,6 +911,11 @@ If there is a name collision, the value from the jPOS entry is available with th
 <td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A single line of JSON per input record.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--sqlIn</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--sqlIn distinct(ipAddress)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of values that can be used in a SQL IN clause.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -795,12 +932,15 @@ If there is a name collision, the value from the jPOS entry is available with th
 <div class="paragraph">
 <p>--ui to open the results in a browser</p>
 </div>
+<div class="paragraph">
+<p>--merge to remove duplicates when reading partially overlapping files</p>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-04 20:47:05 EST
+Last updated 2015-03-11 07:11:13 EST
 </div>
 </div>
 </body>

@@ -29,9 +29,28 @@ Use these with the filters: -f and --field.
 |Field 0 (MTI) matches the http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regular expression] 08[0-3]0.
 |===
 
+If you specify multiple filters only records that match all filters will be returned.
+
+To match one thing or another you can use a regex like 48~/(one thing)|(or another)/. A little contrived but it works for now.
+
 == Field Expressions
 
 Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).
+
+[cols="2*", options="header"]
+|===
+|Example
+|Description
+
+|0
+|Field 0 (the MTI) from a jPOS <log> entry. Aliased by mti.
+
+|48.3.2.1
+|A quite deeply nested subfield
+
+|field(/regex/$1/)
+|Apply the http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regular expression] to the value of field. Ouput the replacement. A bit like sed but with Java's regex flavour.
+|===
 
 === jPOS
 
@@ -197,11 +216,70 @@ If there is a name collision, the value from the jPOS entry is available with th
 
 == Aggregation
 
-Use count,sum,min,max,avg,group_concat,group_sample,count(condition)
+Use count, sum, min, max, avg, group_concat, group_sample, count(condition)
+
+Can also use distinct(). Eg group_concat(distinct(2))
+
+group_sample(src 3) picks 3 random src values from the N values in a group
 
 == Pairing
 
 --pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.
+
+The following additional fields will be available to filter, aggregate and display.
+
+[cols="2*", options="header"]
+|===
+|Name
+|Description
+
+|request.<field>
+|Value of <field> on the request. Eg request.timestamp or request.2
+
+|req.<field>
+|Same as above
+
+|response.<field>
+|Value of <field> on the response. Eg response.timestamp or resp.39
+
+|resp.<field>
+|Same as above
+
+|rtt
+|Round trip time in milliseconds: response.timestamp - request.timestamp.
+
+|===
+
+By default fields are looked up on the request. If not found then on the response.
+Eg timestamp is the same as req.timestamp whilst 39 would typically fall through to resp.39 as 39 is typically a response field.
+
+== Input Formats
+
+By default the input type is sniffed (automagically detected) by looking at the start of each line. jPOS and log4j entries are detected.
+
+Other formats can be explicitly specified with --in-format.
+
+[cols="2*", options="header"]
+|===
+|Format
+|Description
+
+|csv
+|Comma separated values. The field names are taken from the first row: the header.
+
+|icsv
+|Comma separated values without a header row. Fields are numbered starting at zero rather than named.
+
+|tsv
+|Tab separated values. The field names are taken from the first row: the header.
+
+|gc
+|Java Garbage Collection log output. Quite brittle depending on the JVM and version.
+
+|apache
+|Apache access logs.
+
+|===
 
 == Output Formats
 
