@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.reader
 
 import java.io.{File, FileOutputStream, PrintStream}
+import java.nio.file.{Files, StandardCopyOption}
 
 import io.github.binaryfoo.lagotto.LagoTest
 
@@ -39,7 +40,7 @@ class TailInputStreamTest extends LagoTest {
     readString(in) shouldBe "line three"
   }
 
-  it should "read from new file with the same path" in {
+  it should "read from new file with the same path when old file deleted" in {
     val (in, _) = tailOfTempFile()
     afterDelay(100, {
       val file = in.file.file
@@ -50,6 +51,40 @@ class TailInputStreamTest extends LagoTest {
     })
 
     readString(in) shouldBe "a line"
+  }
+
+  it should "read from new file with the same path when old file moved" in {
+    val (in, out) = tailOfTempFile()
+    out.println("line 1")
+    afterDelay(100, {
+      val trash = new File("lago-test-trash.txt")
+      trash.deleteOnExit()
+      val file = in.file.file
+      Files.move(file.toPath, trash.toPath, StandardCopyOption.REPLACE_EXISTING)
+      val path = file.getAbsolutePath
+      val newOut = new FileOutputStream(path, false)
+      newOut.write("two".getBytes)
+      newOut.close()
+    })
+
+    readString(in) shouldBe "line 1\n"
+    readString(in) shouldBe "two"
+  }
+
+  it should "keep waiting if the file disappears" in {
+    val (in, out) = tailOfTempFile()
+    out.println("line one")
+    afterDelay(100, {
+      in.file.file.delete()
+      Thread.sleep(500) // magic: long enough the poller wakes up and finds the file missing
+      val path = in.file.file.getAbsolutePath
+      val newOut = new FileOutputStream(path, false)
+      newOut.write("two".getBytes)
+      newOut.close()
+    })
+
+    readString(in) shouldBe "line one\n"
+    readString(in) shouldBe "two"
   }
 
   it should "stop waiting if the file is done" in {
