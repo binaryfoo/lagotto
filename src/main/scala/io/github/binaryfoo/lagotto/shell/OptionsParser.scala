@@ -177,6 +177,10 @@ class OptionsParser(val config: Config) {
         Debug.enabled = true
         c
       } text "Show debug output"
+
+      opt[Unit]("highlight") action {(_,c) =>
+        c.copy(format = HighlightedText)
+      } text "Print with colours"
     }
 
     parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))

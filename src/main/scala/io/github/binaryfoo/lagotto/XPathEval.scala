@@ -28,7 +28,7 @@ object XPathEval {
 case class HintedXPathExpression(hint: Option[String], compiled: XPathExpression) {
 
   def apply(xml: String): String = {
-    if (couldApply(xml)) evaluate(parse(xml))
+    if (couldApply(xml)) evaluate(XmlParser.parse(xml))
     else null
   }
 
@@ -45,7 +45,10 @@ case class HintedXPathExpression(hint: Option[String], compiled: XPathExpression
     if (v == "") null else v
   }
 
-  private def parse(xml: String): Document = {
+}
+
+object XmlParser {
+  def parse(xml: String): Document = {
     val factory = DocumentBuilderFactory.newInstance()
     factory.setNamespaceAware(false)
     factory.setValidating(false)

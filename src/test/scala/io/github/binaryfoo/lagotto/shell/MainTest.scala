@@ -1067,6 +1067,11 @@ class MainTest extends LagoTest {
     output shouldBe contentsOf("one.xml") + contentsOf("two.xml")
   }
 
+  "--highlight" should "use colours" in {
+    val output = run("--highlight", testFile("one.xml"))
+    output shouldBe contentsOf("expected-ansi-one.txt")
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {

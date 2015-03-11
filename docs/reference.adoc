@@ -337,3 +337,5 @@ There are also --live-html, --live-utf and --live-html versions that spit out th
 --ui to open the results in a browser
 
 --merge to remove duplicates when reading partially overlapping files
+
+--highlight for ANSI colour codes

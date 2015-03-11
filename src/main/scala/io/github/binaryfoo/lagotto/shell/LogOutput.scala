@@ -2,7 +2,8 @@ package io.github.binaryfoo.lagotto.shell
 
 import java.io.PrintWriter
 
-import io.github.binaryfoo.lagotto.{FieldExpr, LogEntry}
+import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, XmlHighlighter}
+import io.github.binaryfoo.lagotto.{JposEntry, FieldExpr, LogEntry}
 
 trait OutputFormat {
   def header(): Option[String]
@@ -31,6 +32,17 @@ object OutputFormat {
 object FullText extends OutputFormat {
   override def header(): Option[String] = None
   override def apply(e: LogEntry): Option[String] = Some(e.lines)
+  override def footer(): Option[String] = None
+}
+
+object HighlightedText extends OutputFormat {
+  override def header(): Option[String] = None
+  override def apply(e: LogEntry): Option[String] = {
+    e match {
+      case j: JposEntry => Some(XmlHighlighter.highlight(e.lines, AnsiMarkup))
+      case _ => Some(e.lines)
+    }
+  }
   override def footer(): Option[String] = None
 }
 
