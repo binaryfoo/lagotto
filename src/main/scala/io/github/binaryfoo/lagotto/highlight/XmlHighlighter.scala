@@ -1,12 +1,10 @@
 package io.github.binaryfoo.lagotto.highlight
 
-import java.io.{StringReader, StringWriter, PrintWriter}
+import java.io.{PrintWriter, StringReader, StringWriter}
 import javax.xml.stream.XMLStreamConstants._
-import javax.xml.stream.{XMLStreamReader, XMLStreamConstants, XMLInputFactory}
+import javax.xml.stream.{XMLStreamException, XMLInputFactory, XMLStreamReader}
 
-import io.github.binaryfoo.lagotto.XmlParser
-import io.github.binaryfoo.lagotto.shell.{Html, PlainText, ContentType}
-import org.w3c.dom.{NamedNodeMap, Node, NodeList}
+import io.github.binaryfoo.lagotto.shell.{ContentType, Html, PlainText}
 
 import scala.io.AnsiColor
 
@@ -24,31 +22,37 @@ class XmlHighlighter(out: PrintWriter, markup: MarkupType) {
       }
       canInline = false
     }
-    while (reader.hasNext) {
-      reader.next() match {
-        case START_ELEMENT =>
-          closeIfRequired()
-          val name = reader.getLocalName
-          out.print(markup.elementStart(name))
-          if (reader.getAttributeCount > 0) {
-            writeAttrs(reader)
-          }
-          started = true
-          canInline = true
-        case END_ELEMENT =>
-          if (canInline)
-            out.print(markup.finishInlineElement)
-          else
-            out.print(markup.finishElementWithChildren(reader.getLocalName))
-          started = false
-        case CHARACTERS =>
-          closeIfRequired()
-          out.print(reader.getText)
-        case COMMENT =>
-          closeIfRequired()
-          out.print(markup.comment(reader.getText))
-        case _ =>
+    try {
+      while (reader.hasNext) {
+        reader.next() match {
+          case START_ELEMENT =>
+            closeIfRequired()
+            val name = reader.getLocalName
+            out.print(markup.elementStart(name))
+            if (reader.getAttributeCount > 0) {
+              writeAttrs(reader)
+            }
+            started = true
+            canInline = true
+          case END_ELEMENT =>
+            if (canInline)
+              out.print(markup.finishInlineElement)
+            else
+              out.print(markup.finishElementWithChildren(reader.getLocalName))
+            started = false
+          case CHARACTERS =>
+            closeIfRequired()
+            out.print(reader.getText)
+          case COMMENT =>
+            closeIfRequired()
+            out.print(markup.comment(reader.getText))
+          case _ =>
+        }
       }
+    }
+    catch {
+      case e: XMLStreamException =>
+        closeIfRequired()
     }
   }
 
@@ -81,6 +85,10 @@ trait MarkupType {
   def finishElementWithChildren(name: String): String
   def finishInlineElement: String
   def comment(value: String): String
+
+  def key(k: String): String
+  def value(v: String): String
+
   def contentType: ContentType
 }
 
@@ -93,6 +101,9 @@ object NotMarkedUp extends MarkupType {
   override def startChildren: String = ">"
   override def contentType: ContentType = PlainText
   override def finishElementWithChildren(name: String): String = s"</$name>"
+
+  override def key(k: String): String = k
+  override def value(v: String): String = v
 }
 
 object AnsiMarkup extends MarkupType with AnsiColor {
@@ -104,6 +115,9 @@ object AnsiMarkup extends MarkupType with AnsiColor {
   override def finishInlineElement: String = up("/>", YELLOW)
   override def comment(value: String): String = s"<!--$value-->"
   override val contentType: ContentType = PlainText
+
+  override def key(k: String): String = up(k, YELLOW)
+  override def value(v: String): String = up(v, GREEN)
 
   private def up(s: String, up: String) = s"$up$s$RESET"
 
@@ -147,6 +161,9 @@ object HtmlMarkup extends MarkupType {
   override def finishInlineElement: String = up(s"/$EndTag", Elem)
   override def comment(value: String): String = s"$StartTag!--$value--$EndTag"
   override val contentType: ContentType = Html
+
+  override def key(k: String): String = up(k, Elem)
+  override def value(v: String): String = up(v, Value)
 
   private def up(s: String, cssClass: String) = s"""<span class="$cssClass">$s</span>"""
 

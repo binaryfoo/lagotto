@@ -23,4 +23,10 @@ class XmlHighlighterTest extends LagoTest {
     val highlighted = XmlHighlighter.highlight(xml, NotMarkedUp)
     highlighted shouldBe contentsOf("one.xml").dropRight(1) // drop trailing newline
   }
+
+  it should "handle just a start tag" in {
+    val xml = """<log realm="terminal-server-1-newCA.server.channel/203.39.124.193:22740" at="Wed Dec 10 13:56:24 EST 2014.106">"""
+    val highlighted = XmlHighlighter.highlight(xml, NotMarkedUp)
+    highlighted shouldBe xml
+  }
 }

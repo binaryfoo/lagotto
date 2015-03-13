@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.shell.output
 
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
+import io.github.binaryfoo.lagotto.highlight.AnsiMarkup
 import io.github.binaryfoo.lagotto.{SimpleLogEntry, LagoTest, JposEntry}
 
 import scala.collection.mutable

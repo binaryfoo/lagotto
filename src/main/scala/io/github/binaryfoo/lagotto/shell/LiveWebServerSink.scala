@@ -142,7 +142,7 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
   }
   
   def formatFor(s: String): Option[OutputFormat] = s match {
-    case "digest" => Some(DigestedFormat(dictionary, Some(NameType.English)))
+    case "digest" => Some(DigestedFormat(dictionary, Some(NameType.English), HtmlMarkup))
     case "named" => Some(NamedAndHighlightedFormat(dictionary, HtmlMarkup))
     case "raw" | null => None
     case _ => throw new IAmSorryDave(s"Unknown format '$s'")

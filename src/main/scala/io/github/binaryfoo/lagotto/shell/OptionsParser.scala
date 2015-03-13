@@ -7,6 +7,7 @@ import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
+import io.github.binaryfoo.lagotto.highlight.{NotMarkedUp, AnsiMarkup}
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.output._
 import scopt.Read
@@ -23,7 +24,8 @@ class OptionsParser(val config: Config) {
   def parse(args: Array[String]): Option[CmdLineOptions] = {
 
     val canHandleAnsi = IsATty()
-
+    val defaultMarkup = if (canHandleAnsi) AnsiMarkup else NotMarkedUp
+    val defaultOutput = if (canHandleAnsi) HighlightedText else FullText
     val parser = new scopt.OptionParser[CmdLineOptions]("lago") {
       head(s"lagotto", "0.0.1")
 
@@ -98,15 +100,15 @@ class OptionsParser(val config: Config) {
       } text "Output a line of JSON per log entry."
 
       opt[Unit]("digest") action { (_, c) =>
-        c.copy(format = DigestedFormat(dictionary, Some(NameType.English)))
+        c.copy(format = DigestedFormat(dictionary, Some(NameType.English), defaultMarkup))
       } text "Output full message in a compact format."
 
       opt[Unit]("names") action { (_, c) =>
-        c.copy(format = NamedAttributesFormat(dictionary))
+        c.copy(format = NamedAndHighlightedFormat(dictionary, defaultMarkup))
       } text "XML with extra name=\"\" attribute for each <field/>"
 
       opt[Option[NameType]]("digest-as") action { (nameType, c) =>
-        c.copy(format = DigestedFormat(dictionary, nameType))
+        c.copy(format = DigestedFormat(dictionary, nameType, defaultMarkup))
       } text "Output full message in a compact format with name type: English, Short or Export."
 
       opt[String]("histogram") action { (fields, c) =>
@@ -185,9 +187,7 @@ class OptionsParser(val config: Config) {
       } text "Print with colours"
     }
 
-    val autoDetectLog = LogTypes.auto(config, logTypes)
-    val defaultOutput = if (canHandleAnsi) HighlightedText else FullText
-    parser.parse(args, CmdLineOptions(autoDetectLog, format = defaultOutput))
+    parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes), format = defaultOutput))
   }
 
   private def parseFields(fields: String, renderHints: Set[RenderHint] = Set.empty): Seq[FieldExpr] = {
