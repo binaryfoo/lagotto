@@ -61,7 +61,24 @@ object FileIO {
     }
   }
 
-  def copyLines(file: String, from: Option[Int], to: Option[Int], out: PrintWriter) = {
+  def copy(src: Reader, dest: Writer) = {
+    try {
+      val buffer = new Array[Char](bufferSize)
+      var len = 0
+      do {
+        len = src.read(buffer, 0, bufferSize)
+        if (len > 0) {
+          dest.write(buffer, 0, len)
+          dest.flush()
+        }
+      } while (len >= 0)
+    }
+    finally {
+      src.close()
+    }
+  }
+
+  def copyLines(file: String, from: Option[Int] = None, to: Option[Int] = None, out: PrintWriter) = {
     val source = Source.fromInputStream(FileIO.open(file))
     try {
       for (line <- slice(source.getLines(), from, to)) {

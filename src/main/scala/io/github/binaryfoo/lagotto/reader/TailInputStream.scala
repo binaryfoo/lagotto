@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto.reader
 import java.io._
 
 import io.github.binaryfoo.lagotto.Debug
+import io.github.binaryfoo.lagotto.shell.{PlainText, ContentType}
 
 /**
  * Tail a log file until it's marked as done.
@@ -59,7 +60,7 @@ object TailInputStream {
   def apply(file: File): TailInputStream = new TailInputStream(new FileInProgress(file))
 }
 
-class FileInProgress(val file: File, var done: Boolean = false) {
+class FileInProgress(val file: File, var done: Boolean = false, val contentType: ContentType = PlainText) {
   def open(): InputStream = {
     if (done)
       new FileInputStream(file)

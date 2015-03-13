@@ -1,7 +1,7 @@
-[33m<log[0m at=[32m"Mon Nov 24 00:00:03 EST 2014.292"[0m lifespan=[32m"10005ms"[0m realm=[32m"some.channel/10.0.0.1:4321"[0m[33m>[0m
+[33m<log[0m realm=[32m"some.channel/10.0.0.1:4321"[0m at=[32m"Mon Nov 24 00:00:03 EST 2014.292"[0m lifespan=[32m"10005ms"[0m[33m>[0m
   [33m<receive[0m[33m>[0m
     [33m<isomsg[0m direction=[32m"incoming"[0m[33m>[0m
-      <!--  org.jpos.iso.packager.XMLPackager  -->
+      <!-- org.jpos.iso.packager.XMLPackager -->
       [33m<field[0m id=[32m"0"[0m value=[32m"0800"[0m[33m/>[0m
       [33m<field[0m id=[32m"7"[0m value=[32m"1124000003"[0m[33m/>[0m
       [33m<field[0m id=[32m"11"[0m value=[32m"28928"[0m[33m/>[0m

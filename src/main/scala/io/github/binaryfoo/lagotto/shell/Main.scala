@@ -46,7 +46,7 @@ object Main extends App {
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
       val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName)
       val sinks = if (opts.liveUi)
-        Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", "image/svg+xml"))
+        Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else
         Seq(dataFile, gnuplotScript)
       new CompositeSink(sinks)

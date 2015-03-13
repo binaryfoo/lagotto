@@ -1,7 +1,7 @@
 package io.github.binaryfoo.lagotto.shell.output
 
 import io.github.binaryfoo.lagotto.dictionary.DataDictionary
-import io.github.binaryfoo.lagotto.shell.OutputFormat
+import io.github.binaryfoo.lagotto.shell.{ContentType, PlainText, OutputFormat}
 import io.github.binaryfoo.lagotto.{JposEntry, LogEntry}
 
 import scala.collection.mutable
@@ -15,8 +15,8 @@ case class NamedAttributesFormat(dictionary: DataDictionary) extends OutputForma
       case j: JposEntry => Some(addAttributeNames(e))
       case _ => Some(e.lines)
     }
-
   }
+  override val contentType: ContentType = PlainText
 
   private def addAttributeNames(e: LogEntry): String = {
     val paths = mutable.HashMap[String, String]()

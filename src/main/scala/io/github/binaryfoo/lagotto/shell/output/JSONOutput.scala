@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.shell.output
 
 import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, FieldType}
 import io.github.binaryfoo.lagotto.output.{GZip, DeadSimpleJsonWriter}
-import io.github.binaryfoo.lagotto.shell.OutputFormat
+import io.github.binaryfoo.lagotto.shell.{Json, ContentType, OutputFormat}
 import io.github.binaryfoo.lagotto.{ISO8601TimeFormat, LogEntry}
 
 case class JSONOutput(dictionary: DataDictionary) extends OutputFormat {
@@ -33,4 +33,6 @@ case class JSONOutput(dictionary: DataDictionary) extends OutputFormat {
   }
 
   override def footer(): Option[String] = None
+
+  override val contentType: ContentType = Json
 }

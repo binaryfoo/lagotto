@@ -1,8 +1,11 @@
 package io.github.binaryfoo.lagotto.highlight
 
-import java.io.{StringWriter, PrintWriter}
+import java.io.{StringReader, StringWriter, PrintWriter}
+import javax.xml.stream.XMLStreamConstants._
+import javax.xml.stream.{XMLStreamReader, XMLStreamConstants, XMLInputFactory}
 
 import io.github.binaryfoo.lagotto.XmlParser
+import io.github.binaryfoo.lagotto.shell.{Html, PlainText, ContentType}
 import org.w3c.dom.{NamedNodeMap, Node, NodeList}
 
 import scala.io.AnsiColor
@@ -10,43 +13,50 @@ import scala.io.AnsiColor
 class XmlHighlighter(out: PrintWriter, markup: MarkupType) {
 
   def highlight(xml: String) = {
-    val doc = XmlParser.parse(xml)
-    val children = doc.getChildNodes
-    write(children, 0)
-  }
-
-  def write(children: NodeList, depth: Int): Unit = {
-    for (i <- 0 until children.getLength) {
-      val node = children.item(i)
-      node.getNodeType match {
-        case Node.ELEMENT_NODE =>
-          val name = node.getNodeName
+    val factory = XMLInputFactory.newInstance()
+    val reader = factory.createXMLStreamReader(new StringReader(xml))
+    var started = false
+    var canInline = true
+    def closeIfRequired() = {
+      if (started) {
+        out.print(markup.startChildren)
+        started = false
+      }
+      canInline = false
+    }
+    while (reader.hasNext) {
+      reader.next() match {
+        case START_ELEMENT =>
+          closeIfRequired()
+          val name = reader.getLocalName
           out.print(markup.elementStart(name))
-          if (node.hasAttributes) {
-            writeAttrs(node.getAttributes)
+          if (reader.getAttributeCount > 0) {
+            writeAttrs(reader)
           }
-          if (node.hasChildNodes) {
-            out.print(markup.startChildren)
-            write(node.getChildNodes, depth + 1)
-            out.print(markup.finishElementWithChildren(name))
-          } else {
+          started = true
+          canInline = true
+        case END_ELEMENT =>
+          if (canInline)
             out.print(markup.finishInlineElement)
-          }
-        case Node.TEXT_NODE =>
-          out.print(node.getTextContent)
-        case Node.COMMENT_NODE =>
-          out.print(markup.comment(node.getTextContent))
+          else
+            out.print(markup.finishElementWithChildren(reader.getLocalName))
+          started = false
+        case CHARACTERS =>
+          closeIfRequired()
+          out.print(reader.getText)
+        case COMMENT =>
+          closeIfRequired()
+          out.print(markup.comment(reader.getText))
         case _ =>
       }
     }
   }
-  
-  def writeAttrs(attrs: NamedNodeMap) = {
-    for (i <- 0 until attrs.getLength) {
-      val attr = attrs.item(i)
-      val name = attr.getNodeName
-      val value = attr.getNodeValue
-      out.print(" " + markup.attributeName(name) + markup.attributeValue(value))
+
+  private def writeAttrs(reader: XMLStreamReader) = {
+    for (i <- 0 until reader.getAttributeCount) {
+      val name = reader.getAttributeLocalName(i)
+      val value = reader.getAttributeValue(i)
+      out.print(" " + markup.attributeName(name) + "=" + markup.attributeValue(value))
     }
   }
 }
@@ -62,6 +72,8 @@ object XmlHighlighter {
 }
 
 trait MarkupType {
+  def header: Option[String] = None
+  def footer: Option[String] = None
   def elementStart(name: String): String
   def attributeName(name: String): String
   def attributeValue(value: String): String
@@ -69,17 +81,73 @@ trait MarkupType {
   def finishElementWithChildren(name: String): String
   def finishInlineElement: String
   def comment(value: String): String
+  def contentType: ContentType
+}
+
+object NotMarkedUp extends MarkupType {
+  override def elementStart(name: String): String = "<" + name
+  override def comment(value: String): String = s"<!--$value-->"
+  override def finishInlineElement: String = "/>"
+  override def attributeValue(value: String): String = '"' + value + '"'
+  override def attributeName(name: String): String = name
+  override def startChildren: String = ">"
+  override def contentType: ContentType = PlainText
+  override def finishElementWithChildren(name: String): String = s"</$name>"
 }
 
 object AnsiMarkup extends MarkupType with AnsiColor {
   override def elementStart(name: String): String = up("<" + name, YELLOW)
-  override def attributeName(name: String): String = name + "="
+  override def attributeName(name: String): String = name
   override def attributeValue(value: String): String = up(s""""$value"""", GREEN)
   override def startChildren: String = up(">", YELLOW)
   override def finishElementWithChildren(name: String): String = up(s"</$name>", YELLOW)
   override def finishInlineElement: String = up("/>", YELLOW)
-  override def comment(value: String): String = s"<!-- $value -->"
+  override def comment(value: String): String = s"<!--$value-->"
+  override val contentType: ContentType = PlainText
 
   private def up(s: String, up: String) = s"$up$s$RESET"
+
+}
+
+object HtmlMarkup extends MarkupType {
+  val StartTag = "&lt;"
+  val EndTag = "&gt;"
+  val Elem = "elem"
+  val Value = "value"
+
+  override def header: Option[String] = Some(
+    """<!DOCTYPE html>
+       |<html lang="en">
+       |<head>
+       |<style>
+       |  body {
+       |    white-space: pre
+       |  }
+       |  .elem {
+       |    color: #b58900;
+       |  }
+       |  .value {
+       |    color: #859900;
+       |  }
+       |</style>
+       |</head>
+       |<body>
+       |""".stripMargin)
+
+  override def footer: Option[String] = Some(
+    """</body>
+      |</html>
+      |""".stripMargin)
+
+  override def elementStart(name: String): String = up(StartTag + name, Elem)
+  override def attributeName(name: String): String = name
+  override def attributeValue(value: String): String = up(s""""$value"""", Value)
+  override def startChildren: String = up(EndTag, Elem)
+  override def finishElementWithChildren(name: String): String = up(s"$StartTag/$name$EndTag", Elem)
+  override def finishInlineElement: String = up(s"/$EndTag", Elem)
+  override def comment(value: String): String = s"$StartTag!--$value--$EndTag"
+  override val contentType: ContentType = Html
+
+  private def up(s: String, cssClass: String) = s"""<span class="$cssClass">$s</span>"""
 
 }

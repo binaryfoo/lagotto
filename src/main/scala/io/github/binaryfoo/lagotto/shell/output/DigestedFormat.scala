@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto.shell.output
 import io.github.binaryfoo.lagotto.dictionary.{FieldType, DataDictionary}
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.output.GZip
-import io.github.binaryfoo.lagotto.shell.OutputFormat
+import io.github.binaryfoo.lagotto.shell.{PlainText, ContentType, OutputFormat}
 import io.github.binaryfoo.lagotto.{DefaultDateTimeFormat, JposEntry, LogEntry}
 
 case class DigestedFormat(dictionary: DataDictionary, nameType: Option[NameType]) extends OutputFormat {
@@ -18,6 +18,8 @@ case class DigestedFormat(dictionary: DataDictionary, nameType: Option[NameType]
       case _ => e.lines
     })
   }
+
+  override val contentType: ContentType = PlainText
 
   def format(e: JposEntry): String = {
     e.exportAsSeq.collect { case (k, v) if !headerAttributes.contains(k) =>

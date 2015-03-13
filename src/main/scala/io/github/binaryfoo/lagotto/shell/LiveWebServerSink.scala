@@ -7,19 +7,20 @@ import java.net.URI
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import com.typesafe.config.ConfigFactory
-import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
-import io.github.binaryfoo.lagotto.reader.{LogTypes, SingleThreadLogReader, FileInProgress, FileIO}
-import io.github.binaryfoo.lagotto.shell.OutputFormat.PipeToOutputFormatIterator
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.shell.output.{NamedAttributesFormat, DigestedFormat}
+import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
+import io.github.binaryfoo.lagotto.highlight.HtmlMarkup
+import io.github.binaryfoo.lagotto.reader.{FileIO, FileInProgress, LogTypes, SingleThreadLogReader}
+import io.github.binaryfoo.lagotto.shell.OutputFormat.PipeToOutputFormatIterator
+import io.github.binaryfoo.lagotto.shell.output.{DigestedFormat, NamedAndHighlightedFormat}
 import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.{Request, Server}
 import org.eclipse.jetty.util.component.AbstractLifeCycle.AbstractLifeCycleListener
 import org.eclipse.jetty.util.component.LifeCycle
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
  * Show results as they are produced.
@@ -33,7 +34,7 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
   }
   private val out = new PrintStream(new FileOutputStream(file))
   private val delegate = new IncrementalSink(format, true, out)
-  private val result = new FileInProgress(file)
+  private val result = new FileInProgress(file, contentType = format.contentType)
   private val server = new SillyServer(result, browseOnStart = false)
   private var launched = false
 
@@ -58,16 +59,16 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
 /**
  * Show only the final file once it's baked.
  */
-class OnFinishWebServerSink(index: String, contentType: String) extends Sink {
+class OnFinishWebServerSink(index: String, contentType: ContentType) extends Sink {
   override def entry(e: LogEntry) = {}
 
   override def finish() = {
-    val server = new SillyServer(index = new FileInProgress(new File(index), true), indexContentType = contentType)
+    val server = new SillyServer(index = new FileInProgress(new File(index), true, contentType))
     server.start()
   }
 }
 
-class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: String = "text/html; charset=UTF-8", browseOnStart: Boolean = true) {
+class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolean = true) {
   private val server = new Server(port)
 
   private val OpenFileReq = "(/.+)".r
@@ -79,23 +80,35 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
     override def handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse): Unit = {
       request.getPathInfo match {
         case "/favicon.ico" =>
+        case "/" if request.getParameter("format") != null && index.contentType == PlainText =>
+          val writer = formatted(request, response, StdInRef())
+          FileIO.copy(new InputStreamReader(index.open()), writer)
+          writer.close()
         case OpenFileReq(file) =>
           val from = request.getParameter("from").maybeToInt()
           val to = request.getParameter("to").maybeToInt()
           val foundFile = find(file)
-          response.setContentType("text/plain")
-          val responseWriter = new PrintWriter(response.getOutputStream)
-          val writer = formatFor(request.getParameter("format"))
-            .map(reformat(responseWriter, foundFile, _))
-            .getOrElse(responseWriter)
+          val writer = formatted(request, response, FileRef(new File(foundFile)))
           FileIO.copyLines(foundFile, from, to, writer)
         case _ =>
-          response.setContentType(indexContentType)
+          response.setContentType(index.contentType.mimeType)
           FileIO.copy(index.open(), response.getOutputStream)
       }
       baseRequest.setHandled(true)
     }
   })
+
+  private def formatted(request: HttpServletRequest, response: HttpServletResponse, sourceRef: SourceRef): PrintWriter = {
+    val responseWriter = new PrintWriter(response.getOutputStream)
+    formatFor(request.getParameter("format")) match {
+      case Some(format) =>
+        response.setContentType(format.contentType.mimeType)
+        reformat(responseWriter, sourceRef, format)
+      case None =>
+        response.setContentType(PlainText.mimeType)
+        responseWriter
+    }
+  }
 
   if (browseOnStart) {
     server.addLifeCycleListener(new AbstractLifeCycleListener {
@@ -104,14 +117,19 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
   }
 
   def browseIndex() = {
-    Desktop.getDesktop.browse(new URI(s"http://localhost:$port"))
+    val url = if (index.contentType == PlainText) {
+      s"http://localhost:$port?format=named"
+    } else {
+      s"http://localhost:$port"
+    }
+    Desktop.getDesktop.browse(new URI(url))
   }
 
-  def reformat(writer: PrintWriter, sourceName: String, format: OutputFormat): PrintWriter = {
+  def reformat(writer: PrintWriter, source: SourceRef, format: OutputFormat): PrintWriter = {
     val out = new PipedOutputStream()
     val in = new PipedInputStream(out)
     val pipeJob = Future {
-      val entries = SingleThreadLogReader(logType = autoDetectLog).read(in, FileRef(new File(sourceName)))
+      val entries = SingleThreadLogReader(logType = autoDetectLog).read(in, source)
       entries.pipeTo(format, writer)
       writer.flush()
     }
@@ -125,7 +143,7 @@ class SillyServer(index: FileInProgress, port: Int = 1984, indexContentType: Str
   
   def formatFor(s: String): Option[OutputFormat] = s match {
     case "digest" => Some(DigestedFormat(dictionary, Some(NameType.English)))
-    case "named" => Some(NamedAttributesFormat(dictionary))
+    case "named" => Some(NamedAndHighlightedFormat(dictionary, HtmlMarkup))
     case "raw" | null => None
     case _ => throw new IAmSorryDave(s"Unknown format '$s'")
   }
