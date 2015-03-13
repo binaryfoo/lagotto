@@ -22,6 +22,8 @@ class OptionsParser(val config: Config) {
 
   def parse(args: Array[String]): Option[CmdLineOptions] = {
 
+    val canHandleAnsi = IsATty()
+
     val parser = new scopt.OptionParser[CmdLineOptions]("lago") {
       head(s"lagotto", "0.0.1")
 
@@ -178,12 +180,14 @@ class OptionsParser(val config: Config) {
         c
       } text "Show debug output"
 
-      opt[Unit]("highlight") action {(_,c) =>
-        c.copy(format = HighlightedText)
+      opt[Boolean]("highlight") action {(highlight,c) =>
+        c.copy(format = if (highlight) HighlightedText else FullText)
       } text "Print with colours"
     }
 
-    parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes)))
+    val autoDetectLog = LogTypes.auto(config, logTypes)
+    val defaultOutput = if (canHandleAnsi) HighlightedText else FullText
+    parser.parse(args, CmdLineOptions(autoDetectLog, format = defaultOutput))
   }
 
   private def parseFields(fields: String, renderHints: Set[RenderHint] = Set.empty): Seq[FieldExpr] = {

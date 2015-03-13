@@ -7,14 +7,15 @@ import java.util.{GregorianCalendar, TimeZone}
 import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
 import io.github.binaryfoo.lagotto.reader.ProgressInputStream
+import io.github.binaryfoo.lagotto.shell.IsATty
 import org.joda.time.DateTimeZone
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.Future
 
-class LagoTest
+class LagoTest extends FlatSpec with Matchers with TestInput {
 
-  extends FlatSpec with Matchers with TestInput {
+  IsATty.enabled = false
 
   val SYSTEM_TZ_ID = new SimpleDateFormat("zzz").format(new GregorianCalendar().getTime)
   // Unfortunately this will be Australian EST (AEST) or US EST (New_York) depending on the TZ of the machine running the build

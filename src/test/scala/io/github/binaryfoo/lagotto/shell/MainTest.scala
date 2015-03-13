@@ -1068,7 +1068,7 @@ class MainTest extends LagoTest {
   }
 
   "--highlight" should "use colours" in {
-    val output = run("--highlight", testFile("one.xml"))
+    val output = run("--highlight", "yes", testFile("one.xml"))
     output shouldBe contentsOf("expected-ansi-one.txt")
   }
 
