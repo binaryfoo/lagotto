@@ -36,6 +36,9 @@ sealed trait ContentType {
 object PlainText extends ContentType {
   override val mimeType: String = "text/plain; charset=UTF-8"
 }
+object RichText extends ContentType {
+  override val mimeType: String = "text/plain; charset=UTF-8"
+}
 object Html extends ContentType {
   override val mimeType: String = "text/html; charset=UTF-8"
 }

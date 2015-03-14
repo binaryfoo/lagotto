@@ -13,7 +13,8 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    filters: Seq[LogFilter] = Seq.empty,
                    input: Seq[String] = Seq.empty,
                    follow: Boolean = false,
-                   format: OutputFormat = FullText,
+                   format: OutputFormat = FullText, 
+                   table: TableOptions = null,
                    pair: Boolean = false,
                    header: Boolean = true,
                    beforeContext: Int = 0,
@@ -63,6 +64,8 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
 
 }
 
+case class TableOptions(formatter: TableFormatter, fields: String, contentType: ContentType = PlainText)
+  
 case class SortKey(expr: FieldExpr, ascending: Boolean, asNumber: Boolean = true) {
 
   def compare(x: LogEntry, y: LogEntry): Int = {

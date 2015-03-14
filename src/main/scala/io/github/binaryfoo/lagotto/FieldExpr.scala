@@ -5,8 +5,8 @@ import java.text.DecimalFormat
 import java.util.regex.Pattern
 
 import io.github.binaryfoo.lagotto.ConvertExpr.TimeConversionOp
-import io.github.binaryfoo.lagotto.RenderHint.RenderHint
 import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, RootDataDictionary, ShortNameLookup}
+import io.github.binaryfoo.lagotto.shell.{ContentType, Html, PlainText, RichText}
 import org.joda.time.Period
 
 import scala.collection.mutable
@@ -16,7 +16,7 @@ import scala.language.implicitConversions
 /**
  * Needed to be able to parse expressions using the dictionary for translations.
  */
-case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, renderHints: Set[RenderHint] = Set.empty) {
+case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, contentType: ContentType = PlainText) {
 
   private val logFilterParser = new LogFilterParser(this)
 
@@ -60,12 +60,12 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, render
         case Log4jEntry.JposAccess(DirectExpr(field)) => NestedJposExpr(expr, field)
         case TimeFormatter(formatter) => TimeExpr(expr, formatter)
         case If(LogFilter(condition),FieldExpr(trueExpr),FieldExpr(falseExpr)) => IfExpr(expr, condition, trueExpr, falseExpr)
-        case "src" if renderHints.contains(RenderHint.Html) => SourceHrefExpr
+        case "src" if contentType == Html => SourceHrefExpr
         case "src" => SourceExpr
         case "file" => FileExpr
         case "line" => LineExpr
-        case "icon" if renderHints.contains(RenderHint.Html) => HtmlIconExpr
-        case "icon" if renderHints.contains(RenderHint.RichText) => UnicodeIconExpr
+        case "icon" if contentType == Html => HtmlIconExpr
+        case "icon" if contentType == RichText => UnicodeIconExpr
         case "icon" => AsciiIconExpr
         case Lines(count) => LinesExpr(expr, count.toInt)
         case "lines" => AllLinesExpr
@@ -149,11 +149,6 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, render
   
   implicit def stringAsFieldAccessor[T <: LogEntry](s: String): FieldAccessor[T] = { e: T => FieldExpr.expressionFor(s)(e) }
   implicit def stringAsFieldExpr(s: String): FieldExpr = FieldExpr.expressionFor(s)
-}
-
-object RenderHint extends Enumeration {
-  type RenderHint = Value
-  val Html, RichText = Value
 }
 
 /**
@@ -729,9 +724,9 @@ object SourceHrefExpr extends DirectExpr {
 
   def urlFor(file: File, line: Int, e: LogEntry) = {
     val to = (e match {
-      case MsgPair(req, resp) => resp.source.line + resp.lines.split('\n').size
-      case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').size
-      case _ => line + e.lines.split('\n').size
+      case MsgPair(req, resp) => resp.source.line + resp.lines.split('\n').length
+      case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').length
+      case _ => line + e.lines.split('\n').length
     }) - 1
     file.toURI.toURL.toString.substring(5) + s"?from=${line-1}&to=$to&format=named"
   }

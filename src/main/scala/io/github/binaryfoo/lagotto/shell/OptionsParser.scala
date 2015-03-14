@@ -4,10 +4,10 @@ import java.awt.Desktop
 
 import com.typesafe.config.Config
 import io.github.binaryfoo.lagotto.RenderHint.RenderHint
-import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.{RenderHint, _}
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
-import io.github.binaryfoo.lagotto.highlight.{NotMarkedUp, AnsiMarkup}
+import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, NotMarkedUp}
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.output._
 import scopt.Read
@@ -60,39 +60,39 @@ class OptionsParser(val config: Config) {
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"
 
       opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat("\t")))
+        c.copy(table = TableOptions(DelimitedTableFormat("\t"), fields))
       } text "Output tab separated values"
 
       opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), DelimitedTableFormat(",")))
+        c.copy(table = TableOptions(DelimitedTableFormat(","), fields))
       } text "Output comma separated values"
 
       opt[String]('j', "jira-table") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), JiraTableFormat))
+        c.copy(table = TableOptions(JiraTableFormat, fields))
       } text "Output a table that can be pasted into Jira"
 
       opt[String]("html") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields, Set(RenderHint.Html)), HtmlTableFormat))
+        c.copy(table = TableOptions(HtmlTableFormat, fields, Html))
       } text "Output an HTML table"
 
       opt[String]("ascii") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), new AsciiTableFormat()))
+        c.copy(table = TableOptions(new AsciiTableFormat(), fields))
       } text "Output an ASCII table"
 
       opt[String]("utf") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields, Set(RenderHint.RichText)), new AsciiTableFormat()))
+        c.copy(table = TableOptions(new AsciiTableFormat(), fields, RichText))
       } text "Same as --ascii but uses symbol characters that might not render"
 
       opt[String]("live-ascii") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), new IncrementalAsciiTableFormat()))
+        c.copy(table = TableOptions(new IncrementalAsciiTableFormat(), fields))
       } text "Output an ASCII table incrementally. Can be messy."
 
       opt[String]("live-utf") action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields, Set(RenderHint.RichText)), new IncrementalAsciiTableFormat()))
+        c.copy(table = TableOptions(new IncrementalAsciiTableFormat(), fields, RichText))
       } text "Same as --live-ascii but uses symbol characters that might not render"
 
       opt[String]("sqlIn") maxOccurs 1 action { (fields, c) =>
-        c.copy(format = Tabular(parseFields(fields), new SqlInClauseOutputFormat()))
+        c.copy(table = TableOptions(new SqlInClauseOutputFormat(), fields))
       } text "Output a SQL IN statement for the results"
 
       opt[Unit]("json") action { (_, c) =>
@@ -187,11 +187,20 @@ class OptionsParser(val config: Config) {
       } text "Print with colours"
     }
 
-    parser.parse(args, CmdLineOptions(LogTypes.auto(config, logTypes), format = defaultOutput))
+    parser
+    .parse(args, CmdLineOptions(LogTypes.auto(config, logTypes), format = defaultOutput))
+    .map { opts =>
+      val format = opts.table match {
+        case TableOptions(formatter, fields, contentType) =>
+          Tabular(parseFields(fields, contentType), formatter)
+        case _ => opts.format
+      }
+      opts.copy(format = format)
+    }
   }
 
-  private def parseFields(fields: String, renderHints: Set[RenderHint] = Set.empty): Seq[FieldExpr] = {
-    fieldParser.copy(renderHints = renderHints).FieldExpr.expressionsFor(fields)
+  private def parseFields(fields: String, contentType: ContentType = PlainText): Seq[FieldExpr] = {
+    fieldParser.copy(contentType = contentType).FieldExpr.expressionsFor(fields)
   }
 
   private def parseSortKey(key: String): Seq[SortKey] = {

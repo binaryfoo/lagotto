@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto
 import java.io.File
 
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
+import io.github.binaryfoo.lagotto.shell.{RichText, Html}
 import org.joda.time.{DateTime, LocalTime}
 
 import scala.collection.mutable
@@ -327,7 +328,7 @@ class FieldExprTest extends LagoTest {
   }
 
   "src with Html render hint" should "create html anchor for source file:// URL" in {
-    val expr = parser.copy(renderHints = Set(RenderHint.Html)).FieldExpr.expressionFor("src")
+    val expr = parser.copy(contentType = Html).FieldExpr.expressionFor("src")
     expr(dummy455) shouldBe """<a href="/dummy/path.log?from=454&to=455&format=named" title="path.log:455">&#9906;</a>"""
   }
 
@@ -339,7 +340,7 @@ class FieldExprTest extends LagoTest {
 
   "icon" should "use msgType for rich html" in {
     val htmlize = (x: String) => "&#" + x(0).toInt + ";"
-    val expr = parser.copy(renderHints = Set(RenderHint.Html)).FieldExpr.expressionFor("icon")
+    val expr = parser.copy(contentType = Html).FieldExpr.expressionFor("icon")
     expr(JposEntry("msgType" -> "send")) shouldBe htmlize("→")
     expr(JposEntry("msgType" -> "receive")) shouldBe htmlize("←")
     expr(JposEntry("msgType" -> "session-start")) shouldBe htmlize("↦")
@@ -350,7 +351,7 @@ class FieldExprTest extends LagoTest {
   }
 
   "icon" should "use msgType for rich text" in {
-    val expr = parser.copy(renderHints = Set(RenderHint.RichText)).FieldExpr.expressionFor("icon")
+    val expr = parser.copy(contentType = RichText).FieldExpr.expressionFor("icon")
     expr(JposEntry("msgType" -> "send")) shouldBe "→"
     expr(JposEntry("msgType" -> "receive")) shouldBe "←"
     expr(JposEntry("msgType" -> "session-start")) shouldBe "↦"
