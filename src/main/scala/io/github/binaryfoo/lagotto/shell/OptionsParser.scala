@@ -3,12 +3,12 @@ package io.github.binaryfoo.lagotto.shell
 import java.awt.Desktop
 
 import com.typesafe.config.Config
-import io.github.binaryfoo.lagotto.RenderHint.RenderHint
-import io.github.binaryfoo.lagotto.{RenderHint, _}
+import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
 import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, NotMarkedUp}
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
+import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat.{Csv, Tsv}
 import io.github.binaryfoo.lagotto.shell.output._
 import scopt.Read
 
@@ -20,6 +20,8 @@ class OptionsParser(val config: Config) {
   val filterParser = new LogFilterParser(fieldParser)
   import fieldParser.FieldExpr
   import filterParser.LogFilter
+
+  val tableFormats = Seq("tsv", "csv", "ascii", "html", "jira", "sqlIn")
 
   def parse(args: Array[String]): Option[CmdLineOptions] = {
 
@@ -59,41 +61,25 @@ class OptionsParser(val config: Config) {
           c.copy(filters = c.filters :+ filter)
       } keyValueName ("path", "value") text "Filter by field path. Eg 48.1.2=value. Operators: =, ~, >, < ~/regex/"
 
-      opt[String]('t', "tsv") action { (fields, c) =>
-        c.copy(table = TableOptions(DelimitedTableFormat("\t"), fields))
-      } text "Output tab separated values"
+      opt[String]('t', "table") action { (fields, c) =>
+        c.copy(table = c.table.copy(fields = fields))
+      } text "Output a table of values instead of the raw logs"
 
-      opt[String]('c', "csv") action { (fields, c) =>
-        c.copy(table = TableOptions(DelimitedTableFormat(","), fields))
-      } text "Output comma separated values"
+      opt[TableFormatter]('o', "out-format") action { (formatter, c) =>
+        val contentType = formatter match {
+          case HtmlTableFormat => Html
+          case _ => c.table.contentType
+        }
+        c.copy(table = c.table.copy(formatter = formatter, contentType = contentType))
+      } text s"The output format for tables: ${tableFormats.mkString(", ")}"
 
-      opt[String]('j', "jira-table") action { (fields, c) =>
-        c.copy(table = TableOptions(JiraTableFormat, fields))
-      } text "Output a table that can be pasted into Jira"
+      opt[Unit]("plain") action { (_, c) =>
+        c.copy(table = c.table.copy(contentType = PlainText))
+      } text "Don't use Unicode symbol characters that might not render"
 
-      opt[String]("html") action { (fields, c) =>
-        c.copy(table = TableOptions(HtmlTableFormat, fields, Html))
-      } text "Output an HTML table"
-
-      opt[String]("ascii") action { (fields, c) =>
-        c.copy(table = TableOptions(new AsciiTableFormat(), fields))
-      } text "Output an ASCII table"
-
-      opt[String]("utf") action { (fields, c) =>
-        c.copy(table = TableOptions(new AsciiTableFormat(), fields, RichText))
-      } text "Same as --ascii but uses symbol characters that might not render"
-
-      opt[String]("live-ascii") action { (fields, c) =>
-        c.copy(table = TableOptions(new IncrementalAsciiTableFormat(), fields))
-      } text "Output an ASCII table incrementally. Can be messy."
-
-      opt[String]("live-utf") action { (fields, c) =>
-        c.copy(table = TableOptions(new IncrementalAsciiTableFormat(), fields, RichText))
-      } text "Same as --live-ascii but uses symbol characters that might not render"
-
-      opt[String]("sqlIn") maxOccurs 1 action { (fields, c) =>
-        c.copy(table = TableOptions(new SqlInClauseOutputFormat(), fields))
-      } text "Output a SQL IN statement for the results"
+      opt[String]("live") action { (fields, c) =>
+        c.copy(incremental = true)
+      } text "Output table incrementally. Can be messy."
 
       opt[Unit]("json") action { (_, c) =>
         c.copy(format = JSONOutput(dictionary))
@@ -121,7 +107,7 @@ class OptionsParser(val config: Config) {
 
       opt[Unit]("no-header") action {(_, c) =>
         c.copy(header = false)
-      } text "Don't print the tsv/csv header row"
+      } text "Don't print the table header row"
 
       opt[Int]('B', "before-context") action {(n,c) =>
         c.copy(beforeContext = n)
@@ -170,7 +156,7 @@ class OptionsParser(val config: Config) {
       } text "Only output n entries"
 
       opt[Unit]('F', "follow") action {(_,c) =>
-        c.copy(follow = true)
+        c.copy(follow = true, incremental = true)
       } text "Like tail -F. Read input as it's written to the file."
 
       opt[Unit]("merge") action {(_,c) =>
@@ -191,8 +177,10 @@ class OptionsParser(val config: Config) {
     .parse(args, CmdLineOptions(LogTypes.auto(config, logTypes), format = defaultOutput))
     .map { opts =>
       val format = opts.table match {
-        case TableOptions(formatter, fields, contentType) =>
-          Tabular(parseFields(fields, contentType), formatter)
+          // TODO: validate only 1 field when sqlIn
+        case TableOptions(formatter, fields, contentType) if fields != "" =>
+          val formatToUse = if (opts.incremental) formatter.liveVersion else formatter
+          Tabular(parseFields(fields, contentType), formatToUse)
         case _ => opts.format
       }
       opts.copy(format = format)
@@ -217,12 +205,10 @@ class OptionsParser(val config: Config) {
 
   implicit def logFilterRead: Read[LogFilter] = new Read[LogFilter] {
     val arity = 2
-    val reads = { (s: String) =>
-      s match {
-        case LogFilter(f) => f
-        case _ =>
-          throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
-      }
+    override def reads = {
+      case LogFilter(f) => f
+      case _ =>
+        throw new IllegalArgumentException("Expected a key<op>value pair where <op> is one of =,<,>")
     }
   }
 
@@ -243,6 +229,20 @@ class OptionsParser(val config: Config) {
     override def arity: Int = 1
     override def reads = { (s: String) =>
       logTypes.getOrElse(s, throw new IllegalArgumentException(s"Unknown input format '$s'. Known formats are ${logTypes.keys.mkString(", ")}"))
+    }
+  }
+
+  implicit def tableFormatterRead: Read[TableFormatter] = new Read[TableFormatter] {
+    override def arity: Int = 1
+    override def reads = {
+      case "tsv" | "t" => Tsv
+      case "csv" | "c" => Csv
+      case "ascii" => new AsciiTableFormat()
+      case "html" => HtmlTableFormat
+      case "jira" => JiraTableFormat
+      case "sqlIn" => new SqlInClauseOutputFormat()
+      case s =>
+        throw new IllegalArgumentException(s"Unknown output format '$s'. Known formats are ${tableFormats.mkString(", ")}")
     }
   }
 }

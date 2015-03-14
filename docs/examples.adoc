@@ -47,16 +47,16 @@ Only output entries with an MTI (field 0) of 2100 using --field.
 
 The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.
 
-To make the remaining example output shorter let's introduce the idea tabular output (--csv, --tsv, --ascii, --jira and --html). List out just the fields you're interested in.
+To make the remaining example output shorter let's introduce the idea tabular output (--table). List out just the fields you're interested in.
 
-    lago log_samples/q2.log --tsv time,2,11 -f mti=2100 -n 1
+    lago log_samples/q2.log --table time,2,11 -f mti=2100 -n 1
 
-    time	2	11
-    15:12:40.330	6009330000000021	000000000002
+    time,2,11
+    15:12:40.330,6009330000000021,000000000002
 
 Whilst comma and tab separated data might be good for import into Excel/Google Docs/Libre Office/MySQL an ASCII table like mysql's command line client is a bit easier for humans to parse on the command line.
 
-    lago log_samples/q2.log --ascii time,2,11 -f mti=2100 -n 1
+    lago log_samples/q2.log -o ascii --table time,2,11 -f mti=2100 -n 1
 
     ==================================================
     | time         | 2                | 11           |
@@ -69,7 +69,7 @@ Back to filtering, you can filter using somewhat familiar operators: <, >, !=, ~
 
 To show log events that took more than 300ms to receive or send use >. The following two receives aren't really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.
 
-    lago log_samples/q2.log --ascii time,msgType,lifespan,src -f 'lifespan>300'
+    lago log_samples/q2.log -o ascii --table time,msgType,lifespan,src -f 'lifespan>300'
 
     ===========================================================
     | time         | msgType         | lifespan | src         |
@@ -81,7 +81,7 @@ To show log events that took more than 300ms to receive or send use >. The follo
 
 You can also use --grep to just search the log entries as text.
 
-    LAGO log_samples/q2.log --grep suspicious --ascii time,63,src
+    LAGO log_samples/q2.log --grep suspicious -o ascii -t time,63,src
 
 == Aggregation
 
@@ -89,7 +89,7 @@ Some rather basic SQL like group by and aggregation operators are supported.
 
 Show a table of message type and count.
 
-    lago log_samples/q2.log --ascii mti,count
+    lago log_samples/q2.log -o ascii -t mti,count
 
     ================
     | mti  | count |
@@ -106,7 +106,7 @@ Show a table of message type and count.
 
 Count rows matching a condition (like approved).
 
-    lago log_samples/q2.log --ascii 'mti,count,count(39=0000)'
+    lago log_samples/q2.log -o ascii -t 'mti,count,count(39=0000)'
 
     =================================
     | mti  | count | count(39=0000) |
@@ -123,7 +123,7 @@ Count rows matching a condition (like approved).
 
 Combine with filtering to get the spread of response codes for auths.
 
-    lago log_samples/q2.log --ascii '39,count' --field '39!=0000' --field mti=2110
+    lago log_samples/q2.log -o ascii -t '39,count' --field '39!=0000' --field mti=2110
 
     ================
     | 39   | count |
@@ -138,7 +138,7 @@ Combine with filtering to get the spread of response codes for auths.
 
 Bucketing results by time. You can use a joda time http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[format] or a few extras to aggregate by 10 minute (HH:m0) or 10 second (HH:mm:s0) buckets.
 
-    lago log_samples/q2.log --ascii 'time(HH:mm:s0),count'
+    lago log_samples/q2.log -o ascii -t 'time(HH:mm:s0),count'
 
     ==========================
     | time(HH:mm:s0) | count |
@@ -158,7 +158,7 @@ TODO group_sample
 
 Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time
 
-    lago log_samples/q2.log --ascii time,mti,11,rtt --pair
+    lago log_samples/q2.log -o ascii -t time,mti,11,rtt --pair
 
     ============================================
     | time         | mti  | 11           | rtt |
@@ -198,7 +198,7 @@ Match responses to requests using --pair. Show one line per pair including the r
 
 Tidy up a field a little using a regex replacement. This feature is probably somewhat gratuitous.
 
-    lago log_samples/q2.log --ascii 'time(HH:mm),mti,11(/^0+//),rtt' --pair
+    lago log_samples/q2.log -o ascii -t 'time(HH:mm),mti,11(/^0+//),rtt' --pair
 
     =========================================
     | time(HH:mm) | mti  | 11(/^0+//) | rtt |
@@ -238,7 +238,7 @@ Tidy up a field a little using a regex replacement. This feature is probably som
 
 Sort using a field with --sort rtt
 
-    lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort rtt
+    lago log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort rtt
 
     ==========================================
     | time         | mti  | 11(/^0+//) | rtt |
@@ -276,7 +276,7 @@ Sort using a field with --sort rtt
 
 Or sort descending using --sort rtt desc
 
-    lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'
+    lago log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'
 
     ==========================================
     | time         | mti  | 11(/^0+//) | rtt |
@@ -316,7 +316,7 @@ Or sort descending using --sort rtt desc
 
 Show only pairs where the response took more than 100ms using --field
 
-    lago log_samples/q2.log --ascii time,mti,11,rtt --pair --field rtt>100
+    lago log_samples/q2.log -o ascii -t time,mti,11,rtt --pair --field rtt>100
 
     ============================================
     | time         | mti  | 11           | rtt |
@@ -332,7 +332,7 @@ Remember you'll need to use quotes 'rtt>100' or a slash rtt\>100 to escape the '
 
 Add the file name and line number to get more detail (or check lago is not lying)
 
-    lago log_samples/q2.log --ascii time,mti,11,rtt,src --pair --field rtt>100
+    lago log_samples/q2.log -o ascii -t time,mti,11,rtt,src --pair --field rtt>100
 
     ==========================================================
     | time         | mti  | 11           | rtt | src         |
@@ -346,7 +346,7 @@ Add the file name and line number to get more detail (or check lago is not lying
 
 Use some aggregate operators min(), max() and avg() to get basic stats about the round trip times
 
-    lago log_samples/q2.log --ascii mti,min(rtt),max(rtt),avg(rtt),count --pair
+    lago log_samples/q2.log -o ascii -t mti,min(rtt),max(rtt),avg(rtt),count --pair
 
     =================================================
     | mti  | min(rtt) | max(rtt) | avg(rtt) | count |
@@ -359,7 +359,7 @@ Use some aggregate operators min(), max() and avg() to get basic stats about the
 
 Find delays of more than 100ms in a message sequence
 
-    lago log_samples/q2.log --ascii time,delay,src --field delay>100
+    lago log_samples/q2.log -o ascii -t time,delay,src --field delay>100
 
     ======================================
     | time         | delay | src         |
@@ -376,7 +376,7 @@ Find delays of more than 100ms in a message sequence
 
 Show a table of exceptions. Not very interesting with only one exception but useful when there are many
 
-    lago log_samples/q2.log --ascii exception,src --field exception!=
+    lago log_samples/q2.log -o ascii -t exception,src --field exception!=
 
     ==================================================================================
     | exception                                                        | src         |
@@ -387,7 +387,7 @@ Show a table of exceptions. Not very interesting with only one exception but use
 
 Show a breakdown of message types
 
-    lago log_samples/q2.log --ascii msgType,count
+    lago log_samples/q2.log -o ascii -t msgType,count
 
     =============================
     | msgType           | count |
@@ -414,7 +414,7 @@ Show a breakdown of message types
 
 TODO Convert a https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml[snippet] of jPOS' CMF into a dictionary to show how translation works
 
-    lago log_samples/q2.log --ascii 'translate(39),39,count' --field mti=2110
+    lago log_samples/q2.log -o ascii -t 'translate(39),39,count' --field mti=2110
 
     ================================
     | translate(39) | 39   | count |
@@ -506,7 +506,7 @@ Output a slightly less wordy output. Supports translation of field paths to name
 
 == Gnuplot script generation
 
-    lago log_samples/q2.log --pair --tsv time,rtt --gnuplot rtts
+    lago log_samples/q2.log --pair --table time,rtt --gnuplot rtts
 
     Wrote rtts.csv
     Wrote rtts.gp

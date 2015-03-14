@@ -35,5 +35,7 @@ class AsciiTableFormat extends TableFormatter {
     }
   }
 
+  override def liveVersion: TableFormatter = new IncrementalAsciiTableFormat()
+
   private def maximumWidths(): Seq[Int] = AsciiTable.maximumWidths(fields :: rows.toList)
 }

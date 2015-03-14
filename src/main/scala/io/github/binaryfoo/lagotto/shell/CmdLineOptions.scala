@@ -3,6 +3,7 @@ package io.github.binaryfoo.lagotto.shell
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.reader.LogType
+import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat._
 
 import scala.annotation.tailrec
 
@@ -14,7 +15,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    input: Seq[String] = Seq.empty,
                    follow: Boolean = false,
                    format: OutputFormat = FullText, 
-                   table: TableOptions = null,
+                   table: TableOptions = TableOptions(),
                    pair: Boolean = false,
                    header: Boolean = true,
                    beforeContext: Int = 0,
@@ -25,6 +26,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[FieldExpr] = Seq.empty,
                    gnuplotFileName: Option[String] = None,
+                   incremental: Boolean = false,
                    liveUi: Boolean = false,
                    limit: Option[Int] = None,
                    merge: Boolean = false) {
@@ -64,7 +66,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
 
 }
 
-case class TableOptions(formatter: TableFormatter, fields: String, contentType: ContentType = PlainText)
+case class TableOptions(formatter: TableFormatter = Csv, fields: String = "", contentType: ContentType = RichText)
   
 case class SortKey(expr: FieldExpr, ascending: Boolean, asNumber: Boolean = true) {
 

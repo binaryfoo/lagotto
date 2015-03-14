@@ -87,11 +87,17 @@ trait TableFormatter {
   def row(row: Seq[String]): Option[String]
   def footer(): Option[String] = None
   def contentType: ContentType = PlainText
+  def liveVersion: TableFormatter = this
 }
 
 case class DelimitedTableFormat(delimiter: String) extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some(fields.mkString(delimiter))
   override def row(row: Seq[String]): Option[String] = Some(row.mkString(delimiter))
+}
+
+object DelimitedTableFormat {
+  val Tsv = DelimitedTableFormat("\t")
+  val Csv = DelimitedTableFormat(",")
 }
 
 object JiraTableFormat extends TableFormatter {

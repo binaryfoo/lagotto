@@ -15,23 +15,23 @@ Only output entries with an MTI (field 0) of 2100 using --field.
 
 The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.
 
-To make the remaining example output shorter let's introduce the idea tabular output (--csv, --tsv, --ascii, --jira and --html). List out just the fields you're interested in.
+To make the remaining example output shorter let's introduce the idea tabular output (--table). List out just the fields you're interested in.
 
-    LAGO: log_samples/q2.log --tsv time,2,11 -f mti=2100 -n 1
+    LAGO: log_samples/q2.log --table time,2,11 -f mti=2100 -n 1
 
 Whilst comma and tab separated data might be good for import into Excel/Google Docs/Libre Office/MySQL an ASCII table like mysql's command line client is a bit easier for humans to parse on the command line.
 
-    LAGO: log_samples/q2.log --ascii time,2,11 -f mti=2100 -n 1
+    LAGO: log_samples/q2.log -o ascii --table time,2,11 -f mti=2100 -n 1
 
 Back to filtering, you can filter using somewhat familiar operators: <, >, !=, ~, and ~/regex/. The last two are contains and http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regex].
 
 To show log events that took more than 300ms to receive or send use >. The following two receives aren't really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.
 
-    LAGO: log_samples/q2.log --ascii time,msgType,lifespan,src -f 'lifespan>300'
+    LAGO: log_samples/q2.log -o ascii --table time,msgType,lifespan,src -f 'lifespan>300'
 
 You can also use --grep to just search the log entries as text.
 
-    LAGO log_samples/q2.log --grep suspicious --ascii time,63,src
+    LAGO log_samples/q2.log --grep suspicious -o ascii -t time,63,src
 
 == Aggregation
 
@@ -39,19 +39,19 @@ Some rather basic SQL like group by and aggregation operators are supported.
 
 Show a table of message type and count.
 
-    LAGO: log_samples/q2.log --ascii mti,count
+    LAGO: log_samples/q2.log -o ascii -t mti,count
 
 Count rows matching a condition (like approved).
 
-    LAGO: log_samples/q2.log --ascii 'mti,count,count(39=0000)'
+    LAGO: log_samples/q2.log -o ascii -t 'mti,count,count(39=0000)'
 
 Combine with filtering to get the spread of response codes for auths.
 
-    LAGO: log_samples/q2.log --ascii '39,count' --field '39!=0000' --field mti=2110
+    LAGO: log_samples/q2.log -o ascii -t '39,count' --field '39!=0000' --field mti=2110
 
 Bucketing results by time. You can use a joda time http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[format] or a few extras to aggregate by 10 minute (HH:m0) or 10 second (HH:mm:s0) buckets.
 
-    LAGO: log_samples/q2.log --ascii 'time(HH:mm:s0),count'
+    LAGO: log_samples/q2.log -o ascii -t 'time(HH:mm:s0),count'
 
 The results aren't that interesting with such a small data set.
 
@@ -63,57 +63,57 @@ TODO group_sample
 
 Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time
 
-    LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair
+    LAGO: log_samples/q2.log -o ascii -t time,mti,11,rtt --pair
 
 == Cleaning Data
 
 Tidy up a field a little using a regex replacement. This feature is probably somewhat gratuitous.
 
-    LAGO: log_samples/q2.log --ascii 'time(HH:mm),mti,11(/^0+//),rtt' --pair
+    LAGO: log_samples/q2.log -o ascii -t 'time(HH:mm),mti,11(/^0+//),rtt' --pair
 
 == Sorting
 
 Sort using a field with --sort rtt
 
-    LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort rtt
+    LAGO: log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort rtt
 
 Or sort descending using --sort rtt desc
 
-    LAGO: log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'
+    LAGO: log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'
 
 == More Filtering
 
 Show only pairs where the response took more than 100ms using --field
 
-    LAGO: log_samples/q2.log --ascii time,mti,11,rtt --pair --field rtt>100
+    LAGO: log_samples/q2.log -o ascii -t time,mti,11,rtt --pair --field rtt>100
 
 Remember you'll need to use quotes 'rtt>100' or a slash rtt\>100 to escape the '>' when using bash.
 
 Add the file name and line number to get more detail (or check lago is not lying)
 
-    LAGO: log_samples/q2.log --ascii time,mti,11,rtt,src --pair --field rtt>100
+    LAGO: log_samples/q2.log -o ascii -t time,mti,11,rtt,src --pair --field rtt>100
 
 Use some aggregate operators min(), max() and avg() to get basic stats about the round trip times
 
-    LAGO: log_samples/q2.log --ascii mti,min(rtt),max(rtt),avg(rtt),count --pair
+    LAGO: log_samples/q2.log -o ascii -t mti,min(rtt),max(rtt),avg(rtt),count --pair
 
 Find delays of more than 100ms in a message sequence
 
-    LAGO: log_samples/q2.log --ascii time,delay,src --field delay>100
+    LAGO: log_samples/q2.log -o ascii -t time,delay,src --field delay>100
 
 Show a table of exceptions. Not very interesting with only one exception but useful when there are many
 
-    LAGO: log_samples/q2.log --ascii exception,src --field exception!=
+    LAGO: log_samples/q2.log -o ascii -t exception,src --field exception!=
 
 Show a breakdown of message types
 
-    LAGO: log_samples/q2.log --ascii msgType,count
+    LAGO: log_samples/q2.log -o ascii -t msgType,count
 
 == Dictionaries
 
 TODO Convert a https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml[snippet] of jPOS' CMF into a dictionary to show how translation works
 
-    LAGO: log_samples/q2.log --ascii 'translate(39),39,count' --field mti=2110
+    LAGO: log_samples/q2.log -o ascii -t 'translate(39),39,count' --field mti=2110
 
 == Histograms
 
@@ -135,7 +135,7 @@ Output a slightly less wordy output. Supports translation of field paths to name
 
 == Gnuplot script generation
 
-    LAGO: log_samples/q2.log --pair --tsv time,rtt --gnuplot rtts
+    LAGO: log_samples/q2.log --pair --table time,rtt --gnuplot rtts
 
 ----
 include::rtts.csv[]

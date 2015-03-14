@@ -485,17 +485,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.</p>
 </div>
 <div class="paragraph">
-<p>To make the remaining example output shorter let&#8217;s introduce the idea tabular output (--csv, --tsv, --ascii, --jira and --html). List out just the fields you&#8217;re interested in.</p>
+<p>To make the remaining example output shorter let&#8217;s introduce the idea tabular output (--table). List out just the fields you&#8217;re interested in.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --tsv time,2,11 -f mti=2100 -n 1</pre>
+<pre>lago log_samples/q2.log --table time,2,11 -f mti=2100 -n 1</pre>
 </div>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>time    2    11
-15:12:40.330    6009330000000021    000000000002</pre>
+<pre>time,2,11
+15:12:40.330,6009330000000021,000000000002</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -503,7 +503,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,2,11 -f mti=2100 -n 1</pre>
+<pre>lago log_samples/q2.log -o ascii --table time,2,11 -f mti=2100 -n 1</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -523,7 +523,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,msgType,lifespan,src -f 'lifespan&gt;300'</pre>
+<pre>lago log_samples/q2.log -o ascii --table time,msgType,lifespan,src -f 'lifespan&gt;300'</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -541,7 +541,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>LAGO log_samples/q2.log --grep suspicious --ascii time,63,src</pre>
+<pre>LAGO log_samples/q2.log --grep suspicious -o ascii -t time,63,src</pre>
 </div>
 </div>
 </div>
@@ -557,7 +557,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii mti,count</pre>
+<pre>lago log_samples/q2.log -o ascii -t mti,count</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -580,7 +580,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'mti,count,count(39=0000)'</pre>
+<pre>lago log_samples/q2.log -o ascii -t 'mti,count,count(39=0000)'</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -603,7 +603,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii '39,count' --field '39!=0000' --field mti=2110</pre>
+<pre>lago log_samples/q2.log -o ascii -t '39,count' --field '39!=0000' --field mti=2110</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -624,7 +624,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'time(HH:mm:s0),count'</pre>
+<pre>lago log_samples/q2.log -o ascii -t 'time(HH:mm:s0),count'</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -656,7 +656,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,mti,11,rtt --pair</pre>
+<pre>lago log_samples/q2.log -o ascii -t time,mti,11,rtt --pair</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -705,7 +705,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'time(HH:mm),mti,11(/^0+//),rtt' --pair</pre>
+<pre>lago log_samples/q2.log -o ascii -t 'time(HH:mm),mti,11(/^0+//),rtt' --pair</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -754,7 +754,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort rtt</pre>
+<pre>lago log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort rtt</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -798,7 +798,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'</pre>
+<pre>lago log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -847,7 +847,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,mti,11,rtt --pair --field rtt&gt;100</pre>
+<pre>lago log_samples/q2.log -o ascii -t time,mti,11,rtt --pair --field rtt&gt;100</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -870,7 +870,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,mti,11,rtt,src --pair --field rtt&gt;100</pre>
+<pre>lago log_samples/q2.log -o ascii -t time,mti,11,rtt,src --pair --field rtt&gt;100</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -890,7 +890,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii mti,min(rtt),max(rtt),avg(rtt),count --pair</pre>
+<pre>lago log_samples/q2.log -o ascii -t mti,min(rtt),max(rtt),avg(rtt),count --pair</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -909,7 +909,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii time,delay,src --field delay&gt;100</pre>
+<pre>lago log_samples/q2.log -o ascii -t time,delay,src --field delay&gt;100</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -932,7 +932,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii exception,src --field exception!=</pre>
+<pre>lago log_samples/q2.log -o ascii -t exception,src --field exception!=</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -949,7 +949,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii msgType,count</pre>
+<pre>lago log_samples/q2.log -o ascii -t msgType,count</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -985,7 +985,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --ascii 'translate(39),39,count' --field mti=2110</pre>
+<pre>lago log_samples/q2.log -o ascii -t 'translate(39),39,count' --field mti=2110</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -1117,7 +1117,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/q2.log --pair --tsv time,rtt --gnuplot rtts</pre>
+<pre>lago log_samples/q2.log --pair --table time,rtt --gnuplot rtts</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -1202,7 +1202,7 @@ do for [i=2:2] {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-11 07:11:46 EST
+Last updated 2015-03-14 22:23:59 EST
 </div>
 </div>
 </body>

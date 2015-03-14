@@ -35,7 +35,7 @@ To match one thing or another you can use a regex like 48~/(one thing)|(or anoth
 
 == Field Expressions
 
-Use these with the table output formats: --ascii, --csv, --tsv --utf, --html and the live variants (--live-html, --live-ascii, --live-utf).
+Use these with the table output format --table (with --out-format csv, tsv, ascii, html or jira).
 
 [cols="2*", options="header"]
 |===
@@ -291,28 +291,28 @@ By default the same text that's input: just act as a filter not an aggregator or
 | Example
 | Format
 
-| --csv
-| --csv mti,nmic,count
-| Comma separated field values
+| --table
+| --table mti,nmic,count
+| Output just the specified field values. By default comma separated. Change the format using --out-format.
 
-| --tsv
-| --tsv mti,nmic,count
-| Tab separated field values
+| --out-format tsv
+| --table mti,nmic,count --out-format tsv
+| Tab separated field values. Abbreviated form -o tsv.
 
-| --html
-| --html time,summary,src
+| --out-format html
+| --table time,summary,src -o html
 | HTML table
 
-| --ascii
-| --ascii exception,count
+| --out-format ascii
+| -t exception,count-o ascii
 | ASCII 'art' table. Like mysql client.
 
-| --utf
-| --utf time,summary,src
-| Same as --ascii but uses characters that might not print on your terminal.
+| --plain
+| --t time,summary,src --plain
+| Avoid unicode characters that might not print on your terminal.
 
-| --jira-table
-| --jira-table exception,count
+| --out-format jira
+| -o jira --table exception,count
 | Table that can be pasted into jira
 
 | --digest
@@ -323,12 +323,12 @@ By default the same text that's input: just act as a filter not an aggregator or
 | No value required
 | A single line of JSON per input record.
 
-| --sqlIn
-| --sqlIn distinct(ipAddress)
+| --table -o sqlIn
+| --table distinct(ipAddress) -o sqlIn
 | A list of values that can be used in a SQL IN clause.
 |===
 
-There are also --live-html, --live-utf and --live-html versions that spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
+You can use --live with --table to spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
 
 == Others
 
