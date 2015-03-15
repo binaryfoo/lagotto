@@ -12,7 +12,7 @@ import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat.{Csv, Tsv}
 import io.github.binaryfoo.lagotto.shell.output._
 import scopt.Read
 
-class OptionsParser(val config: Config) {
+class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
 
   val dictionary = RootDataDictionary(config)
   val logTypes = LogTypes.load(config)
@@ -25,9 +25,7 @@ class OptionsParser(val config: Config) {
 
   def parse(args: Array[String]): Option[CmdLineOptions] = {
 
-    val canHandleAnsi = IsATty()
     val defaultMarkup = if (canHandleAnsi) AnsiMarkup else NotMarkedUp
-    val defaultOutput = if (canHandleAnsi) HighlightedText else FullText
     val parser = new scopt.OptionParser[CmdLineOptions]("lago") {
       head(s"lagotto", "0.0.1")
 
@@ -174,14 +172,18 @@ class OptionsParser(val config: Config) {
     }
 
     parser
-    .parse(args, CmdLineOptions(LogTypes.auto(config, logTypes), format = defaultOutput))
+    .parse(args, CmdLineOptions(LogTypes.auto(config, logTypes), format = null))
     .map { opts =>
       val format = opts.table match {
           // TODO: validate only 1 field when sqlIn
         case TableOptions(formatter, fields, contentType) if fields != "" =>
           val formatToUse = if (opts.incremental) formatter.liveVersion else formatter
           Tabular(parseFields(fields, contentType), formatToUse)
-        case _ => opts.format
+        case _ => opts.format match {
+          case null if opts.liveUi => FullText
+          case null => if (canHandleAnsi) HighlightedText else FullText
+          case f => f
+        }
       }
       opts.copy(format = format)
     }

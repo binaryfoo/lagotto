@@ -37,11 +37,15 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
   private val result = new FileInProgress(file, contentType = format.contentType)
   private val server = new SillyServer(result, browseOnStart = false)
   private var launched = false
+  private val launchFormat = format match {
+    case FullText => "named"
+    case _ => ""
+  }
 
   override def entry(e: LogEntry) = {
     delegate.entry(e)
     if (!launched) {
-      server.browseIndex()
+      server.browseIndex(launchFormat)
       launched = true
     }
   }
@@ -116,9 +120,9 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
     })
   }
 
-  def browseIndex() = {
-    val url = if (index.contentType == PlainText) {
-      s"http://localhost:$port?format=named"
+  def browseIndex(format: String = "") = {
+    val url = if (format != "") {
+      s"http://localhost:$port?format=$format"
     } else {
       s"http://localhost:$port"
     }
