@@ -1,7 +1,9 @@
 package io.github.binaryfoo.lagotto
 
-import java.io.File
+import java.io.{FileOutputStream, FileInputStream, File}
 import java.nio.file.Files
+
+import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.io.Source
 
@@ -29,6 +31,17 @@ trait TestInput {
     val file = File.createTempFile("lago-test", ".txt", new File("."))
     file.deleteOnExit()
     file
+  }
+
+  def copyFile(src: String, dest: String) = {
+    val in = new FileInputStream(src)
+    val out = new FileOutputStream(dest, true)
+    try {
+      FileIO.copy(in, out)
+    }
+    finally {
+      out.close()
+    }
   }
 
   def delete(f: String) = Files.deleteIfExists(new File(f).toPath)

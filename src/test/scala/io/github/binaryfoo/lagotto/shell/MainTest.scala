@@ -1,12 +1,14 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.ByteArrayOutputStream
+import java.io.{BufferedReader, InputStreamReader, PipedInputStream, ByteArrayOutputStream, PipedOutputStream}
+import java.util.concurrent.{TimeUnit, LinkedBlockingQueue, Executors}
 
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
-import io.github.binaryfoo.lagotto.LagoTest
+import io.github.binaryfoo.lagotto.{Debug, LagoTest}
 import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Future
 
 class MainTest extends LagoTest {
 
@@ -1080,6 +1082,32 @@ class MainTest extends LagoTest {
   it should "be disabled by --plain option" in {
     val output = run("-t", "summary", "--no-header", "--plain", testFile("one.xml"))
     output shouldBe "<- 0800 (Network Management Request)\n"
+  }
+
+  "-F" should "show table incrementally" in {
+    val tmp = tempFile().getAbsolutePath
+    copyFile(testFile("one.xml"), tmp)
+
+    val reader = new LineQueue()
+    val main = new Thread(new Runnable() {
+      override def run(): Unit = {
+        Console.withOut(reader) {
+          Main.main(Array("-F", tmp, "--table", "summary,11", "--out-format", "ascii"))
+        }
+      }
+    }, "main-runner")
+    main.start()
+
+    reader.next() shouldBe """================
+                             || summary | 11 |
+                             |================
+                             |""".stripMargin
+    reader.next() shouldBe "| ← 0800 (Network Management Request) | 28928 |\n"
+    copyFile(testFile("two.xml"), tmp)
+    reader.next() shouldBe "| ← 0800 (Network Management Request) | 28929 |\n"
+
+    main.interrupt()
+    main.join(1000)
   }
 
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
