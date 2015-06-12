@@ -1,7 +1,8 @@
 package io.github.binaryfoo.lagotto
 
 import io.github.binaryfoo.lagotto.JposTimestamp.DateTimeExtension
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone.UTC
 
 class JposTimestampTest extends LagoTest {
 
@@ -13,12 +14,12 @@ class JposTimestampTest extends LagoTest {
   }
 
   it should "be writable" in {
-    JposTimestamp.format(new DateTime(2014, 11, 24, 16, 59, 3, 292)) shouldEqual s"Mon Nov 24 16:59:03 $SYSTEM_TZ_ID 2014.292"
-    JposTimestamp.format(new DateTime(2014, 11, 25, 23, 0, 0, 2)) shouldEqual s"Tue Nov 25 23:00:00 $SYSTEM_TZ_ID 2014.2"
+    JposTimestamp.format(new DateTime(2014, 11, 24, 16, 59, 3, 292, UTC)) shouldEqual s"Mon Nov 24 16:59:03 UTC 2014.292"
+    JposTimestamp.format(new DateTime(2014, 11, 25, 23, 0, 0, 2, UTC)) shouldEqual s"Tue Nov 25 23:00:00 UTC 2014.2"
   }
 
   "DateTime implicit" should "format like 'at' attribute" in {
-    new DateTime(2014, 11, 25, 23, 0, 0, 2).asJposAt shouldEqual s"Tue Nov 25 23:00:00 $SYSTEM_TZ_ID 2014.2"
+    new DateTime(2014, 11, 25, 23, 0, 0, 2, UTC).asJposAt shouldEqual s"Tue Nov 25 23:00:00 UTC 2014.2"
   }
 
   "Parse" should "make a token effort with timezones" in {
