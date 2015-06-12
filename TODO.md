@@ -1,3 +1,28 @@
+* Run as an sbt app with tab completions
+* Configurable summarisers. List in application.conf with filter like dictionaries. tyro-lagotto
+ - 3120 status advices can show last message
+ - Use log-tools as basis
+* Detail for --ui should show names by default with links to raw (existing and digest)
+ - need to send text/html instead of text/plain and escape XML
+ - maybe syntax highlight
+* lock free Single writer, single reader structure for queue of futures - mechanical sympathy?
+  - http://psy-lob-saw.blogspot.com.au/2013/03/single-producerconsumer-lock-free-queue.html
+* log time for each file perf mode? 
+* --ui should serve .svg with right tz for mouse over, bar chart option
+* --in-format json
+* can options be made saner
+ - output formatting
+  - style: raw, named, digest, tabular (csv, tsv, html, jira, ascii, utf), json
+  - text: raw vs named
+  - digest: with and without names (different length of names)
+  - colour (ansi vs html)
+  - type of name
+  orthogonal
+  --names (only valid with text and digest? maybe json)
+  --color (automatically use ansi for console or html with --ui)
+  
+  -t time,message -o ascii
+* colour log4j and simple  
 * Time conversion operator. Eg parse(12,yyyyMMddHHmmss) for 20141218151240. Then allow use in convert() for math?
 * Hint about reading stdin if no input after 0.5 second?
 * Multi-project with spark and sbt-io examples as children?
@@ -20,7 +45,6 @@
 * Channel tagging: rewrite <log> with extra attribute based on data sent in handshake message
 * Remove fields vs subfields distinction from dictionaries
 * Dump dictionary as a table for sane MTI-NMIC combinations
-* Can --progress estimate end time with one large file?
 * URL schemes for file names. More interesting with -F
  - ssh://user@host/path
  - http(s)://
@@ -31,12 +55,12 @@
 * Support "receiver -> sender" display. Name system where logs are gathered from.
  - web sequence diagram output...
 * Full SQL like query: and, or - parser combinator
-* Handle log4j in --digest (just spit it out)
-* Handle jpos errors in --digest (again, spit it out)
-* Add --name to spit out jpos style with extra name="" attribute?
-* Output format for ipAddress/socket ready for socket in (x) in next query
- - better support nested subquery...
-* With a group show src for a particular record. Eg one with an exception
+* Warn if pivot on field is not sorted. Pivot assumes entries to be pivoted are consecutive
+
+group_trace() should bound number of files kept open to stay under ulimit. Reopen if required.
+dictionary should have 43.1 as "merchant name" for 0200,0100,0400
+
+window function? http://www.postgresql.org/docs/9.4/interactive/tutorial-window.html
 
 Politeness:
 * Warn if sorting lots of rows: gonna die due to GC
@@ -45,23 +69,22 @@ Politeness:
 * Show progress by default if output is batched (not incremental). Disable progress with --no-progress?
 
 * Deploy artifact to maven central with fat .jar attachment
-* Codeship.io free account
 * bintray/sonatype snapshots for artifact hosting?
 * List available fields in --help
- - mention regex for ~//
  - mention numeric comparison for >,< with fallback to string
- - rtt
- - delay
  - count - like uniq -c
- - count(condition) like count(rtt>100)
+ - count(condition) like count(rtt>100) 
  - concat like mysql's group_concat
  - min,max,sum (maybe useless)
  - time with format - Eg {HH:mm} plus HH:m0 and HH:mm:s0
  - regex mode is partial match by default (link to javadoc)
- - field(/regex/$1/)
  - can filter on calc() expressions like calc(max(time)-min(time))>N
  - Dictionary names can be used in queries too. Eg -f deviceId=42abcd where deviceId maps to 48.x or 48.y depending on (MTI,NMIC)
 * Document repeating groups in dictionary: Eg 48.{1..10} = "Blah"
+
+Add examples
+- Output expression field(/regex/$1/)
+- filter regex for ~//
 
 use cases:
 * fraction of auths as total messages calc(count(mti=0200)/count)
