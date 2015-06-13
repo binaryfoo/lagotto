@@ -6,7 +6,7 @@ import java.util.{GregorianCalendar, TimeZone}
 
 import com.typesafe.config.{ConfigValueFactory, ConfigFactory}
 import io.github.binaryfoo.lagotto.dictionary.RootDataDictionary
-import io.github.binaryfoo.lagotto.reader.ProgressInputStream
+import io.github.binaryfoo.lagotto.reader.{LineIterator, ProgressInputStream}
 import io.github.binaryfoo.lagotto.shell.IsATty
 import org.joda.time.DateTimeZone
 import org.scalatest.{FlatSpec, Matchers}
@@ -39,6 +39,8 @@ class LagoTest extends FlatSpec with Matchers with TestInput {
   def namedInputStreamFrom(s: String*)(sourceName: String = "") = new ProgressInputStream(new ByteArrayInputStream(s.mkString("\n").getBytes), NullProgressMeter, FileRef(new File(sourceName)))
 
   def inputStreamFrom(s: String*) = namedInputStreamFrom(s :_*)("")
+
+  def lineIteratorFrom(s: String*) = new LineIterator(inputStreamFrom(s :_*))
 
   def configWithTestDictionary = ConfigFactory.load().withValue("custom.dictionaries.dir", ConfigValueFactory.fromAnyRef("src/test/resources/"))
 

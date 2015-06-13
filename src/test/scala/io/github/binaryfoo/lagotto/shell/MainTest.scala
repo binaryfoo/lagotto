@@ -1110,6 +1110,15 @@ class MainTest extends LagoTest {
     main.join(1000)
   }
 
+  "--in-format jstack" should "parse a set of jvm stack traces" in {
+    val output = run("--in-format", "jstack", "--table", "state,count", testFile("jstack.txt"))
+    output shouldBe """state,count
+                      |WAITING,28
+                      |TIMED_WAITING,22
+                      |RUNNABLE,27
+                      |""".stripMargin
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
