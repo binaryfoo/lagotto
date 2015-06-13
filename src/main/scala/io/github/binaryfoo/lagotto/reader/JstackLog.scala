@@ -1,15 +1,14 @@
 package io.github.binaryfoo.lagotto.reader
 
-import io.github.binaryfoo.lagotto.SimpleLogEntry
+import io.github.binaryfoo.lagotto.JstackLogEntry
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.util.matching.Regex
 
 /**
  * Parse the output of the jstack tool from the JDK into a LogEntry per Thread.
  */
-object JstackLog extends LogType[SimpleLogEntry] {
+object JstackLog extends LogType[JstackLogEntry] {
 
   val FirstLine = """"([^"]+)".*""".r
   val SecondLine = """ *java.lang.Thread.State: (\w+).*""".r
@@ -35,12 +34,12 @@ object JstackLog extends LogType[SimpleLogEntry] {
       null
   }
 
-  override def parse(s: LineSet): SimpleLogEntry = {
+  override def parse(s: LineSet): JstackLogEntry = {
     val threadName = s.lines.head match {
       case FirstLine(name) => name
     }
     val contents = mutable.LinkedHashMap("name" -> threadName, "state" -> threadState(s))
-    SimpleLogEntry(contents, lines = s.fullText)
+    JstackLogEntry(contents, lines = s.fullText)
   }
 
   def threadState(s: LineSet): String = {

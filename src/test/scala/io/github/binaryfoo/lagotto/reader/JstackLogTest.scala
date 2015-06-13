@@ -19,6 +19,12 @@ class JstackLogTest extends LagoTest {
 
     log("state") shouldBe "WAITING"
     log("name") shouldBe "FocusManager timer"
+    log("depth") shouldBe "4"
+    log("frame(0)") shouldBe "java.lang.Object.wait(Native Method)"
+    log("frame(1)") shouldBe "java.lang.Object.wait(Object.java:485)"
+    log("frame(3)") shouldBe "java.util.TimerThread.run(Timer.java:462)"
+    log("frame(4)") shouldBe null
+    log("rubbish") shouldBe null
     log.lines shouldBe trace.trim
   }
 
