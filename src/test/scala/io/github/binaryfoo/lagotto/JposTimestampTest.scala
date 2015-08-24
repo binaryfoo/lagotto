@@ -25,4 +25,10 @@ class JposTimestampTest extends LagoTest {
   "Parse" should "make a token effort with timezones" in {
     JposTimestamp.parse("Thu Dec 18 15:12:40 UYST 2014") shouldEqual new DateTime(2014, 12, 18, 15, 12, 40, 0, UYST_TZ)
   }
+
+  "New style jpos timestamp" should "be parsed" in {
+    JposTimestamp.parse("Mon Aug 24 20:35:14.969 AEST 2015") shouldEqual new DateTime(2015, 8, 24, 20, 35, 14, 969, AEST_TZ)
+    JposTimestamp.parse("Mon Aug 24 20:35:14.96 AEST 2015") shouldEqual new DateTime(2015, 8, 24, 20, 35, 14, 96, AEST_TZ)
+    JposTimestamp.parse("Mon Aug 24 20:35:14.9 AEST 2015") shouldEqual new DateTime(2015, 8, 24, 20, 35, 14, 9, AEST_TZ)
+  }
 }

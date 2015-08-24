@@ -27,13 +27,25 @@ object JposTimestamp {
       val hour = parseInt(s.substring(start + 7, start + 7 + 2))
       val minute = parseInt(s.substring(start + 10, start + 10 + 2))
       val second = parseInt(s.substring(start + 13, start + 13 + 2))
-      val endOfZone = s.indexOf(' ', start + 16)
-      val zone = s.substring(start + 16, endOfZone)
-      val year = parseInt(s.substring(endOfZone + 1, endOfZone + 5))
-      val dot = s.lastIndexOf('.', endOfZone + 5)
-      val millis = if (dot == -1) 0 else parseInt(s.substring(dot + 1))
 
-      new DateTime(year, EnglishMonths.months(month), day, hour, minute, second, millis, juTimeZone(zone))
+      // Milliseconds moved with https://github.com/jpos/jPOS/commit/980c1a4
+      if (s(start + 15) == '.') {
+        val endOfMillis = s.indexOf(' ', start + 16)
+        val millis = parseInt(s.substring(start + 16, endOfMillis))
+        val endOfZone = s.indexOf(' ', endOfMillis + 1)
+        val zone = s.substring(endOfMillis + 1, endOfZone)
+        val year = parseInt(s.substring(endOfZone + 1, endOfZone + 5))
+
+        new DateTime(year, EnglishMonths.months(month), day, hour, minute, second, millis, juTimeZone(zone))
+      } else {
+        val endOfZone = s.indexOf(' ', start + 16)
+        val zone = s.substring(start + 16, endOfZone)
+        val year = parseInt(s.substring(endOfZone + 1, endOfZone + 5))
+        val dot = s.lastIndexOf('.', endOfZone + 5)
+        val millis = if (dot == -1) 0 else parseInt(s.substring(dot + 1))
+
+        new DateTime(year, EnglishMonths.months(month), day, hour, minute, second, millis, juTimeZone(zone))
+      }
     }
     catch {
       case e: Throwable => throw new IllegalArgumentException(s"Failed to parse time: $s", e)

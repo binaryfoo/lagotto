@@ -20,6 +20,7 @@ class LagoTest extends FlatSpec with Matchers with TestInput {
   val SYSTEM_TZ_ID = new SimpleDateFormat("zzz").format(new GregorianCalendar().getTime)
   // Unfortunately this will be Australian EST (AEST) or US EST (New_York) depending on the TZ of the machine running the build
   val EST_TZ = jodaTZFromJavaId("EST")
+  val AEST_TZ = jodaTZFromJavaId("AEST")
   // This ID seems to behave the same whether the current TZ is Australia or UTC
   val UYST_TZ = jodaTZFromJavaId("UYST")
 
