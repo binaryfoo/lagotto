@@ -114,6 +114,22 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry()) shouldBe null
   }
 
+  "(pause seconds as millis)" should "convert seconds to milliseconds" in {
+    val expr = expressionFor("(pause seconds as millis)")
+    expr(JposEntry("pause" -> "2.5")) shouldBe "2500"
+    expr(JposEntry("pause" -> "2")) shouldBe "2000"
+    expr(JposEntry("pause" -> "0.1")) shouldBe "100"
+    expr(JposEntry("pause" -> "0.001")) shouldBe "1"
+  }
+
+  "(pause s as ms)" should "convert seconds to milliseconds" in {
+    val expr = expressionFor("(pause s as ms)")
+    expr(JposEntry("pause" -> "2.5")) shouldBe "2500"
+    expr(JposEntry("pause" -> "2")) shouldBe "2000"
+    expr(JposEntry("pause" -> "0.1")) shouldBe "100"
+    expr(JposEntry("pause" -> "0.001")) shouldBe "1"
+  }
+
   "(lifespan millis as time(HH:mm))" should "convert millis to a time period with only hour and minute fields" in {
     val expr = expressionFor("(lifespan millis as time(HH:mm))")
     expr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00"

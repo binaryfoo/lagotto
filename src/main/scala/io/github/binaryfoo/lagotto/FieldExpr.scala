@@ -544,6 +544,8 @@ object ConvertExpr {
       case (_, "us", "ms") => microToMillis
       case (_, "millis", "seconds") => millisToSeconds
       case (_, "ms", "s") => millisToSeconds
+      case (_, "seconds", "millis") => secondsToMillis
+      case (_, "s", "ms") => secondsToMillis
       case (_, null, "int") => stripZeroes
       case (_, null, "href") => href
       case _ => throw new IAmSorryDave(s"Unknown conversion $field")
@@ -562,6 +564,7 @@ object ConvertExpr {
   val microToSeconds    = (v: String) => oneDpFormat.format(v.toDouble / 1000000)
   val microToMillis     = (v: String) => (v.toLong / 1000).toString
   val millisToSeconds   = (v: String) => oneDpFormat.format(v.toDouble / 1000)
+  val secondsToMillis   = (v: String) => (v.toDouble * 1000).toLong.toString
   val stripZeroes       = (v: String) => v.toInt.toString
   val href              = (v: String) => SourceHrefExpr.linkTo(v, v)
 }
