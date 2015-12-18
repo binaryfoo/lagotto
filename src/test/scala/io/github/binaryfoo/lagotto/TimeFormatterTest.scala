@@ -46,6 +46,12 @@ class TimeFormatterTest extends FlatSpec with Matchers {
     format.parseDateTime("61") shouldBe new DateTime(61000)
   }
 
+  "human time" should "bucket by hour" in {
+    val format = formatterFor("time(yyyy-MM-dd HH:00:00)")
+    println(format.print(new DateTime(2001, 3, 2, 13, 1, 2, 3)))
+    format.print(new DateTime(2001, 3, 2, 13, 1, 2, 3)) shouldBe "2001-03-02 13:00:00"
+  }
+
   "MsgPair item .time" should "match default time format" in {
     formatterFor("req.time") shouldBe DefaultTimeFormat
     formatterFor("request.time") shouldBe DefaultTimeFormat
