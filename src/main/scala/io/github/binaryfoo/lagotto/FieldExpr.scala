@@ -38,6 +38,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
     val If = """if\(([^,]+),([^,]*),([^,]*)\)""".r
     val Lines = """lines\((\d+)\)""".r
     val Distinct = """distinct\((.+)\)""".r
+    val Literal = """'([^']+)'""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
@@ -72,6 +73,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
         case LengthOf(FieldExpr(field)) => LengthExpr(expr, field)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
+        case Literal(value) => LiteralExpr(value)
         case s =>
           dictionary.flatMap(_.possibleFieldsForShortName(s))
             .map(PrimitiveWithDictionaryFallbackExpr(s, _))
@@ -862,6 +864,13 @@ case class IfExpr(field: String, condition: LogFilter, trueExpr: FieldExpr, fals
     else
       falseExpr(e)
   }
+
+  override def contains(other: FieldExpr): Boolean = {
+    condition match {
+      case FieldFilterOn(f) if f == other => true
+      case _ => trueExpr.contains(other) || falseExpr.contains(other)
+    }
+  }
 }
 
 case class MsgPartExpr(field: String, part: String, expr: FieldExpr) extends DirectExpr {
@@ -905,4 +914,8 @@ case class DistinctExpr(field: String, expr: FieldExpr) extends DirectExpr {
       null
     }
   }
+}
+
+case class LiteralExpr(field: String) extends DirectExpr {
+  override def apply(v1: LogEntry): String = field
 }

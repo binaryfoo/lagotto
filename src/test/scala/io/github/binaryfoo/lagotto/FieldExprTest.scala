@@ -517,6 +517,12 @@ class FieldExprTest extends LagoTest {
     exprs should have length 1
   }
 
+  "single quotes" should "become literal values if expression" in {
+    val expr = expressionFor("if(one=1,'a','b')")
+    expr(JposEntry("one" -> "1")) shouldBe "a"
+    expr(JposEntry("one" -> "0")) shouldBe "b"
+  }
+
   "lines(1)" should "show the first line" in {
     val expr = expressionFor("lines(1)")
     expr(JposEntry(lines = "line 1\nline 2")) shouldBe "line 1"

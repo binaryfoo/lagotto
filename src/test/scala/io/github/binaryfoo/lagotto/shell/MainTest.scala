@@ -1048,6 +1048,42 @@ class MainTest extends LagoTest {
     output should (include("2,0200") and include("0,0210"))
   }
 
+  "if(delay>,x,y)" should "calculate delay" in {
+    val output = run("--no-header", "--table", "48.1,if(delay>101,'a','b')", testFile("a-bunch.xml"))
+    output shouldBe """a-bunch.xml #1,b
+                      |a-bunch.xml #2,a
+                      |a-bunch.xml #3,a
+                      |a-bunch.xml #4,b
+                      |""".stripMargin
+  }
+
+  "if(delay>,delay,y)" should "calculate delay" in {
+    val output = run("--no-header", "--table", "48.1,if(delay>101,delay,'b')", testFile("a-bunch.xml"))
+    output shouldBe """a-bunch.xml #1,b
+                      |a-bunch.xml #2,1000
+                      |a-bunch.xml #3,600
+                      |a-bunch.xml #4,b
+                      |""".stripMargin
+  }
+
+  "if(foo=1,delay,y) field" should "calculate be delay" in {
+    val output = run("--no-header", "--table", "48.1,if(48.1~#2,delay,'b')", testFile("a-bunch.xml"))
+    output shouldBe """a-bunch.xml #1,b
+                      |a-bunch.xml #2,1000
+                      |a-bunch.xml #3,b
+                      |a-bunch.xml #4,b
+                      |""".stripMargin
+  }
+
+  "if(foo=1,y,delay) field" should "calculate be delay" in {
+    val output = run("--no-header", "--table", "48.1,if(48.1~#2,'b',delay)", testFile("a-bunch.xml"))
+    output shouldBe """a-bunch.xml #1,0
+                      |a-bunch.xml #2,b
+                      |a-bunch.xml #3,600
+                      |a-bunch.xml #4,100
+                      |""".stripMargin
+  }
+
   "distinct(field)" should "output each value only once" in {
     val output = run("--no-header", "--table", "distinct(mti)", testFile("a-bunch.xml"))
     output shouldBe
