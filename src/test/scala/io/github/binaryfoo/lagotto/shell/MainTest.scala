@@ -1156,6 +1156,14 @@ class MainTest extends LagoTest {
                       |""".stripMargin
   }
 
+  "--out-format influx" should "include measurement,tags,values and timestamp" in {
+    val output = run("--influx", "stuff", "--tags", "v1", "--fields", "v2", "--in-format", "csv", testFile("timestamped.csv"))
+    output shouldBe
+      """stuff,v1=a v2=b 946648861999000
+        |stuff,v1=c v2=d 946648862101000
+        |""".stripMargin
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {

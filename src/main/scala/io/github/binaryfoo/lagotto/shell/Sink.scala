@@ -1,9 +1,10 @@
 package io.github.binaryfoo.lagotto.shell
 
 import java.io.{File, FileOutputStream, FileWriter, PrintStream}
+import java.net.{HttpURLConnection, URL}
 
-import io.github.binaryfoo.lagotto.output.GnuplotScriptWriter
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.output.GnuplotScriptWriter
 import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
@@ -133,4 +134,45 @@ class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr)
     }
   }
 
+}
+
+case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
+
+  val buffer = mutable.ArrayBuffer[String]()
+
+  override def entry(e: LogEntry): Unit = {
+    buffer ++= format(e)
+    if (buffer.size == 5000) {
+      post()
+    }
+  }
+
+  override def finish(): Unit = {
+    if (buffer.nonEmpty) {
+      post()
+    }
+  }
+
+  private def post(): Unit = {
+    val payload = buffer.mkString("\n").getBytes()
+
+    val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+    connection.setRequestMethod("POST")
+    connection.setDoOutput(true)
+    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+    connection.setRequestProperty("Content-Length", payload.size.toString)
+    connection.connect()
+
+    val out = connection.getOutputStream
+    out.write(payload)
+    out.close()
+
+    val code = connection.getResponseCode
+    if (code != 204) {
+      stderr.println(s"Failed to POST to $url: $code ${connection.getResponseMessage}")
+    }
+    connection.disconnect()
+
+    buffer.clear()
+  }
 }

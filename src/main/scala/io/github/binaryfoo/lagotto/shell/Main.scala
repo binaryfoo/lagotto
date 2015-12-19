@@ -52,6 +52,8 @@ object Main extends App {
       new CompositeSink(sinks)
     } else if (opts.liveUi) {
       new LiveWebServerSink(format)
+    } else if (opts.influxDbUrl.isDefined) {
+      new InfluxDBSink(format, opts.influxDbUrl.get)
     } else {
       new IncrementalSink(format, opts.header)
     }

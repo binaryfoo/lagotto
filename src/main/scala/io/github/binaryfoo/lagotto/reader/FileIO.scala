@@ -1,7 +1,6 @@
 package io.github.binaryfoo.lagotto.reader
 
 import java.io._
-import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
 import scala.io.Source
@@ -20,6 +19,16 @@ object FileIO {
 
   def readToString(f: String): String = {
     val source = Source.fromFile(f)
+    try {
+      source.mkString
+    }
+    finally {
+      source.close()
+    }
+  }
+
+  def readToString(i: InputStream): String = {
+    val source = Source.fromInputStream(i)
     try {
       source.mkString
     }

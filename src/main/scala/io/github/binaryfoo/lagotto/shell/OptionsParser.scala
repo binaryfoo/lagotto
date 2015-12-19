@@ -99,6 +99,34 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(histogramFields = parseFields(fields))
       } text "Output a histogram"
 
+      opt[String]("influx") action { (measurement, c) =>
+        val format = c.format match {
+          case f@InfluxDBFormat(_, _, _) => f.copy(measurement = measurement)
+          case _ => InfluxDBFormat(measurement = measurement)
+        }
+        c.copy(format = format)
+      } text "Output influxdb points"
+
+      opt[String]("tags") action { (tags, c) =>
+        val format = c.format match {
+          case f@InfluxDBFormat(_, _, _) => f.copy(tags = parseFields(tags))
+          case _ => InfluxDBFormat(tags = parseFields(tags))
+        }
+        c.copy(format = format)
+      } text "Tags for influxdb points"
+
+      opt[String]("fields") action { (fields, c) =>
+        val format = c.format match {
+          case f@InfluxDBFormat(_, _, _) => f.copy(fields = parseFields(fields))
+          case _ => InfluxDBFormat(fields = parseFields(fields))
+        }
+        c.copy(format = format)
+      } text "Fields for influxdb points"
+
+      opt[String]("influx-url") action { (url, c) =>
+        c.copy(influxDbUrl = Some(url))
+      } text "URL to post influx points to"
+
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)
       } text "Match requests with responses"

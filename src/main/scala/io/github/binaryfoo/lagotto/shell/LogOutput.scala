@@ -122,3 +122,23 @@ object HtmlTableFormat extends TableFormatter {
   override val contentType: ContentType = Html
 }
 
+case class InfluxDBFormat(measurement: String = "", tags: Seq[FieldExpr] = Seq.empty, fields: Seq[FieldExpr] = Seq.empty) extends OutputFormat {
+  override def contentType: ContentType = PlainText
+  override def footer(): Option[String] = None
+  override def header(): Option[String] = None
+
+  def escape(s: String): String = {
+    if (s == null) {
+      s
+    } else {
+      s.replaceAll(" ", "\\\\ ")
+    }
+  }
+
+  override def apply(e: LogEntry): Option[String] = {
+    val tagsAndValues = tags.map(f => f.field + "=" + escape(f(e))).mkString(",")
+    val fieldsAndValues = fields.map(f => f.field + "=" + escape(f(e))).mkString(",")
+    val nanoTimestamp = e.timestamp.getMillis * 1000 * 1000
+    Some(s"$measurement,$tagsAndValues $fieldsAndValues $nanoTimestamp")
+  }
+}

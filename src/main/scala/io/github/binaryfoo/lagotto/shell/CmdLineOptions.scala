@@ -26,6 +26,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[FieldExpr] = Seq.empty,
                    gnuplotFileName: Option[String] = None,
+                   influxDbUrl: Option[String] = None,
                    incremental: Boolean = false,
                    liveUi: Boolean = false,
                    limit: Option[Int] = None,
@@ -67,7 +68,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
 }
 
 case class TableOptions(formatter: TableFormatter = Csv, fields: String = "", contentType: ContentType = RichText)
-  
+
 case class SortKey(expr: FieldExpr, ascending: Boolean, asNumber: Boolean = true) {
 
   def compare(x: LogEntry, y: LogEntry): Int = {
