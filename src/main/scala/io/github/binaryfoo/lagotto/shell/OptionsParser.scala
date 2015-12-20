@@ -161,7 +161,11 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
 
       opt[String]("gnuplot") action {(fileName,c) =>
         c.copy(gnuplotFileName = Some(fileName))
-      } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --tsv."
+      } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --table"
+
+      opt[Boolean]("multiplot") action {(multiplot,c) =>
+        c.copy(multiplot = multiplot)
+      } text "True => plot each series in a separate chart. False => multiple lines on one chart"
 
       opt[Unit]("strict") action {(_,c) =>
         c.copy(strict = true)

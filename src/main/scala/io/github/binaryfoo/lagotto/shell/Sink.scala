@@ -53,7 +53,7 @@ class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: Strin
 /**
  * Spit out two files: the data (.csv) and a script to plot the series in that file (.gp).
  */
-class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFileName: String, val baseName: String) extends Sink {
+class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFileName: String, val baseName: String, val multiplot: Boolean = true) extends Sink {
 
   var xRange = ("", "")
   
@@ -70,7 +70,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptWriter.write(fields.map(_.field), csvFileName, baseName, xRange))
+    writer.write(GnuplotScriptWriter.write(fields.map(_.field), csvFileName, baseName, xRange, multiplot))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)
