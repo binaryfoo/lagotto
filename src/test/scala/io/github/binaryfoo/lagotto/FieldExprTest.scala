@@ -130,6 +130,11 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("pause" -> "0.001")) shouldBe "1"
   }
 
+  "(duration time as s)" should "convert time to seconds of day" in {
+    val expr = expressionFor("(duration time as s)")
+    expr(JposEntry("duration" -> "00:01:01.000")) shouldBe "61"
+  }
+
   "(lifespan millis as time(HH:mm))" should "convert millis to a time period with only hour and minute fields" in {
     val expr = expressionFor("(lifespan millis as time(HH:mm))")
     expr(JposEntry("lifespan" -> "3600000")) shouldBe "01:00"
@@ -177,7 +182,7 @@ class FieldExprTest extends LagoTest {
   }
 
   "(calc(timestamp-lifespan) as millis)" should "convert the calc output to millis period" in {
-    val expr = expressionFor("(calc(timestamp-lifespan) time as millis)")
+    val expr = expressionFor("(calc(timestamp-lifespan) datetime as millis)")
     expr(JposEntry("at" -> new LocalTime(1, 0).toDateTimeToday.asJposAt, "lifespan" -> "60000")) shouldBe "3540000"
   }
 

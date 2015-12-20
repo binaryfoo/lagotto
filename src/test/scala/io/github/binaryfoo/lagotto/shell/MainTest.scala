@@ -290,6 +290,13 @@ class MainTest extends LagoTest {
                           |""".stripMargin
   }
 
+  "calc" should "handle aggregation, conversion and an alias" in {
+    val output = run("--no-header", "--table", "(calc(max(datetime)-min(datetime)) time as ms) as \"duration\"", testFile("a-bunch.xml"))
+    output shouldEqual
+      """1700
+        |""".stripMargin
+  }
+
   "Conversion (min(lifespan) as time(ss)" should "show minimum lifespan in seconds" in {
     val output = run("--table", "ipAddress,(min(lifespan) as time(s))", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,(min(lifespan) as time(s))
@@ -1157,8 +1164,8 @@ class MainTest extends LagoTest {
   "--out-format influx" should "include measurement,tags,values and timestamp" in {
     val output = run("--influx", "stuff", "--tags", "v1", "--fields", "v2", "--in-format", "csv", testFile("timestamped.csv"))
     output shouldBe
-      """stuff,v1=a v2=b 946648861999000
-        |stuff,v1=c v2=d 946648862101000
+      """stuff,v1=a v2=b 946648861999000000
+        |stuff,v1=c v2=d 946648862101000000
         |""".stripMargin
   }
 

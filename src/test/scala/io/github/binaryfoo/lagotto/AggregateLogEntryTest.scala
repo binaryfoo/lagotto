@@ -100,7 +100,7 @@ class AggregateLogEntryTest extends LagoTest {
 
   it should "support sum" in {
     val expectedSum = threeLifespans.map(_.timestamp.getMillisOfDay).sum - 6000
-    aggregateToCsv(threeLifespans, "sum((calc(timestamp-lifespan) time as millis))") shouldBe Seq(expectedSum.toString)
+    aggregateToCsv(threeLifespans, "sum((calc(timestamp-lifespan) datetime as millis))") shouldBe Seq(expectedSum.toString)
   }
 
   it should "support group_concat" in {

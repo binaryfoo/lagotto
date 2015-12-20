@@ -323,7 +323,7 @@ object HasAggregateExpressions {
 /**
  * Handle a function of one or more fields (calculation) where the fields are aggregates (a function of one or more rows).
  *
- * Marks an expression as dependencies on the output of aggregation. Such as expression can't be evaluated without
+ * Marks an expression as dependent on the output of aggregation. Such an expression can't be evaluated without
  * first calculating the dependencies.
  *
  * An aggregate of an aggregate is not currently a thing (not permitted).
@@ -538,9 +538,10 @@ object ConvertExpr {
       case (_, null, TimeFormatter(f)) => TimeConversion(millisToPeriod, null, f)
       case (TimeFormatter(inputFormat), null, "millis") => TimeConversion(timeToMillisOfDay, inputFormat, null)
       case (TimeFormatter(inputFormat), null, "ms") => TimeConversion(timeToMillisOfDay, inputFormat, null)
-      case (_, "time", TimeFormatter(outputFormat)) => TimeConversion(timeToPeriod, DefaultTimeFormat, outputFormat)
-      case (_, "time", "millis") => TimeConversion(timeToMillisOfDay, DefaultDateTimeFormat, null)
-      case (_, "time", "ms") => TimeConversion(timeToMillisOfDay, DefaultDateTimeFormat, null)
+      case (_, TimeFormatter(inputFormat), TimeFormatter(outputFormat)) => TimeConversion(timeToPeriod, inputFormat, outputFormat)
+      case (_, TimeFormatter(inputFormat), "millis") => TimeConversion(timeToMillisOfDay, inputFormat, null)
+      case (_, TimeFormatter(inputFormat), "ms") => TimeConversion(timeToMillisOfDay, inputFormat, null)
+      case (_, TimeFormatter(inputFormat), "s") => TimeConversion(timeToSecondsOfDay, inputFormat, null)
       case (_, "micro", "seconds") => microToSeconds
       case (_, "us", "s") => microToSeconds
       case (_, "micro", "millis") => microToMillis
@@ -555,21 +556,23 @@ object ConvertExpr {
     }
     expr match {
       case e: AggregateExpr => ConvertAggregateExpr(field, e, op)
+      case e: CalculationOverAggregates => ConvertCalculationOverAggregatesExpr(field, e, op)
       case e: DirectExpr => ConvertDirectExpr(field, e, op)
     }
   }
 
   private val oneDpFormat = new DecimalFormat("0.#")
 
-  val millisToPeriod    = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(new Period(v.toLong))
-  val timeToMillisOfDay = (v: String, input: TimeFormatter, output: TimeFormatter) => input.parseDateTime(v).getMillisOfDay.toString
-  val timeToPeriod      = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(input.parseDateTime(v))
-  val microToSeconds    = (v: String) => oneDpFormat.format(v.toDouble / 1000000)
-  val microToMillis     = (v: String) => (v.toLong / 1000).toString
-  val millisToSeconds   = (v: String) => oneDpFormat.format(v.toDouble / 1000)
-  val secondsToMillis   = (v: String) => (v.toDouble * 1000).toLong.toString
-  val stripZeroes       = (v: String) => v.toInt.toString
-  val href              = (v: String) => SourceHrefExpr.linkTo(v, v)
+  val millisToPeriod     = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(new Period(v.toLong))
+  val timeToMillisOfDay  = (v: String, input: TimeFormatter, output: TimeFormatter) => input.parseDateTime(v).getMillisOfDay.toString
+  val timeToSecondsOfDay = (v: String, input: TimeFormatter, output: TimeFormatter) => input.parseDateTime(v).getSecondOfDay.toString
+  val timeToPeriod       = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(input.parseDateTime(v))
+  val microToSeconds     = (v: String) => oneDpFormat.format(v.toDouble / 1000000)
+  val microToMillis      = (v: String) => (v.toLong / 1000).toString
+  val millisToSeconds    = (v: String) => oneDpFormat.format(v.toDouble / 1000)
+  val secondsToMillis    = (v: String) => (v.toDouble * 1000).toLong.toString
+  val stripZeroes        = (v: String) => v.toInt.toString
+  val href               = (v: String) => SourceHrefExpr.linkTo(v, v)
 }
 
 private case class TimeConversion(op: TimeConversionOp, in: TimeFormatter, out: TimeFormatter) extends ConvertExpr.ConversionOp {
@@ -579,6 +582,15 @@ private case class TimeConversion(op: TimeConversionOp, in: TimeFormatter, out: 
 case class ConvertAggregateExpr(field: String, expr: AggregateExpr, op: ConvertExpr.ConversionOp)
   extends ConvertExpr with CalculationOverAggregates {
   override def dependencies(): Seq[AggregateExpr] = Seq(expr)
+  override def contains(other: FieldExpr): Boolean = super[ConvertExpr].contains(other)
+}
+
+/**
+  * Debt: Not sure if this really needs to exist distinct from ConvertAggregateExpr
+  */
+case class ConvertCalculationOverAggregatesExpr(field: String, expr: CalculationOverAggregates, op: ConvertExpr.ConversionOp)
+  extends ConvertExpr with CalculationOverAggregates {
+  override def dependencies(): Seq[AggregateExpr] = expr.dependencies()
   override def contains(other: FieldExpr): Boolean = super[ConvertExpr].contains(other)
 }
 
