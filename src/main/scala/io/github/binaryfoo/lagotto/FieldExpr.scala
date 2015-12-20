@@ -138,6 +138,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case MaxOp(DirectExpr(field)) => new TryLongOpBuilder(field, maxLong, maxString)
         case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
         case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
+        case PercentileOp(percentile, DirectExpr(field)) => new PercentileBuilder(percentile.toInt, field)
         case GroupConcatDistinct(DirectExpr(field)) => new GroupConcatDistinctBuilder(field)
         case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
         case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)

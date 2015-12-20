@@ -27,6 +27,12 @@ trait TestInput {
     }
   }
 
+  def tempFileContaining(content: String): String = {
+    val temp = tempFile()
+    Files.write(temp.toPath, content.getBytes())
+    temp.getAbsolutePath
+  }
+
   def tempFile() = {
     val file = File.createTempFile("lago-test", ".txt", new File("."))
     file.deleteOnExit()

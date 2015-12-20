@@ -1,14 +1,12 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{BufferedReader, InputStreamReader, PipedInputStream, ByteArrayOutputStream, PipedOutputStream}
-import java.util.concurrent.{TimeUnit, LinkedBlockingQueue, Executors}
+import java.io._
 
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
-import io.github.binaryfoo.lagotto.{Debug, LagoTest}
+import io.github.binaryfoo.lagotto.LagoTest
 import io.github.binaryfoo.lagotto.reader.FileIO
 
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Future
 
 class MainTest extends LagoTest {
 
@@ -1128,7 +1126,7 @@ class MainTest extends LagoTest {
     val reader = new LineQueue()
     val main = new Thread(new Runnable() {
       override def run(): Unit = {
-        Console.withOut(reader) {
+        scala.Console.withOut(reader) {
           Main.main(Array("-F", tmp, "--table", "summary,11", "--out-format", "ascii"))
         }
       }
@@ -1164,17 +1162,35 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "percentile" should "calculate percentiles" in {
+    val input =
+      """number
+        |15
+        |20
+        |35
+        |40
+        |50
+        |""".stripMargin
+    val output = run("--in-format", "csv", "--table", "percentile(50,number)", tempFileContaining(input))
+    output shouldBe
+      """percentile(50,number)
+        |35.0
+        |""".stripMargin
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
     val out = new ByteArrayOutputStream()
-    Console.withOut(out)(thunk)
+    scala.Console.withOut(out)(thunk)
     out.toString
   }
 
   private def standardErrorFrom(thunk: => Unit): String = {
     val out = new ByteArrayOutputStream()
-    Console.withErr(out)(thunk)
+    scala.Console.withErr(out)(thunk)
     out.toString
   }
+
+  private def stdinOf(s: String): Reader = new StringReader(s)
 }

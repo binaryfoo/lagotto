@@ -31,6 +31,17 @@ class AggregateLogEntryTest extends LagoTest {
     aggregateToCsv(threeStans, "mti", "avg(11)") shouldBe List("0200,1", "0210,3")
   }
 
+  it should "support percentile(n,field)" in {
+    aggregateToCsv(threeStans, "percentile(33,11)") shouldBe List("1.0")
+    aggregateToCsv(threeStans, "percentile(50,11)") shouldBe List("2.0")
+    aggregateToCsv(threeStans, "percentile(66,11)") shouldBe List("2.64")
+    aggregateToCsv(threeStans, "percentile(75,11)") shouldBe List("3.0")
+    aggregateToCsv(threeStans, "percentile(100,11)") shouldBe List("3.0")
+
+    aggregateToCsv(iteratorOver(JposEntry("11" -> "1")), "percentile(0,11)") shouldBe List("1.0")
+    aggregateToCsv(iteratorOver(JposEntry("11" -> "1")), "percentile(100,11)") shouldBe List("1.0")
+  }
+
   it should "support min(field)" in {
     aggregate("min(lifespan)") shouldBe List("100")
     aggregateToCsv(threeStans, "mti", "min(11)") shouldBe List("0200,1", "0210,3")

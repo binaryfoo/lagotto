@@ -44,6 +44,7 @@ object AggregateOps {
   val MaxOp = """max\((.*)\)""".r
   val SumOp = """sum\((.*)\)""".r
   val AvgOp = """avg\((.*)\)""".r
+  val PercentileOp = """percentile\((.*),(.*)\)""".r
   val CountDistinct = """count\(distinct\((.*)\)\)""".r
   val CountIf = """count\((.*)\)""".r
   val GroupConcat = """group_concat\((.*)\)""".r
@@ -273,6 +274,37 @@ case class AverageBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   override def toString: String = s"avg($field){sum=$sum,count=$count}"
 
   override def copy() = new AverageBuilder(expr)
+}
+
+case class PercentileBuilder(percentile: Int, expr: DirectExpr) extends FieldBasedAggregateOp {
+
+  private var values = mutable.ArrayBuffer[Double]()
+
+  override def add(v: String) = {
+    values += v.toDouble
+  }
+
+  // follows (roughly) https://commons.apache.org/proper/commons-math/javadocs/api-3.0/org/apache/commons/math3/stat/descriptive/rank/Percentile.html
+  override def result(): String = {
+    val sorted = values.sorted
+    val pos = (percentile  * (sorted.size + 1) / 100.0) - 1
+    val offset = Math.floor(pos).toInt
+    val r = if (offset < 1) {
+      sorted(0)
+    } else if (offset >= sorted.size - 1) {
+      sorted(sorted.size - 1)
+    } else {
+      val d = pos - offset
+      val lower = sorted(offset)
+      val upper = sorted(offset + 1)
+      lower + (d * (upper - lower))
+    }
+    r.toString
+  }
+
+  override def toString: String = s"percentile($percentile,$field){values=${values.mkString(",")}"
+
+  override def copy() = new PercentileBuilder(percentile, expr)
 }
 
 /**
