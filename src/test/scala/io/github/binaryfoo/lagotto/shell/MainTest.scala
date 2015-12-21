@@ -840,8 +840,8 @@ class MainTest extends LagoTest {
   }
 
   "log4j log" should "be readable" in {
-    val output = run("--table", "timestamp,message", testFile("log4j.txt"))
-    output shouldBe """timestamp,message
+    val output = run("--table", "timestamp,payload", testFile("log4j.txt"))
+    output shouldBe """timestamp,payload
                       |2014-11-08 00:00:00.001,Did something useful
                       |2014-11-08 00:00:00.002,And again
                       |This time over two lines

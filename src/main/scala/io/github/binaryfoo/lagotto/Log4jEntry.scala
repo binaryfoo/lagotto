@@ -32,9 +32,19 @@ case class Log4jEntry(private val _fields: mutable.LinkedHashMap[String, String]
 
   def level = _fields("level")
   def realm = _fields("category")
-  def message = _fields("message")
+  def message = apply("message")
+  def payload = _fields("payload")
 
-  def apply(id: String) = fields(id)
+  def apply(id: String) = id match {
+    case "message" =>
+      val msg = _fields("payload")
+      val lines = msg.split('\n')
+      if (lines.nonEmpty)
+        lines(0)
+      else
+        msg
+    case _ => fields(id)
+  }
 
   override def exportAsSeq: Seq[(String, String)] = _fields.toSeq
 }
@@ -76,7 +86,7 @@ object Log4jEntry {
       "timestamp" -> s.substring(1, timeEnd),
       "level" -> s.substring(timeEnd + 2, levelEnd),
       "category" -> s.substring(levelEnd + 3, categoryEnd),
-      "message" -> s.substring(categoryEnd + 3)
+      "payload" -> s.substring(categoryEnd + 3)
     ), s, source)
   }
 

@@ -31,7 +31,7 @@ class Log4jEntryTest extends LagoTest {
     entry.exportAsSeq shouldBe Seq("timestamp" -> "2014-11-08 00:00:00.001",
       "level" -> "INFO",
       "category" -> "a.ClassName",
-      "message" -> "Did something useful")
+      "payload" -> "Did something useful")
   }
 
   it should "normalize the timestamp format" in {
@@ -44,14 +44,15 @@ class Log4jEntryTest extends LagoTest {
     val entry = Log4jEntry.fromString(twoLines)
 
     entry.timestamp shouldBe new DateTime(2014, 1, 11, 3, 2, 1, 999)
-    entry.message shouldBe "Did something not so useful\nWith some details..."
+    entry.payload shouldBe "Did something not so useful\nWith some details..."
+    entry.message shouldBe "Did something not so useful"
     entry.lines shouldBe "[11 Jan 2014 03:02:01,999] ERROR [a.ClassName]: Did something not so useful\nWith some details..."
   }
 
-  "message(/regex/replacement/)" should "apply regex to message" in {
+  "payload(/regex/replacement/)" should "apply regex to payload" in {
     import fieldParser.stringAsFieldAccessor
     val entry = Log4jEntry.fromString(twoLines)
-    entry.exprToSeq("message(/(^.*detail.*$)/$1/)") shouldBe Seq("With some details...")
+    entry.exprToSeq("payload(/(^.*detail.*$)/$1/)") shouldBe Seq("With some details...")
   }
 
   "An entry containing a jpos entry" should "expose the jpos entry" in {

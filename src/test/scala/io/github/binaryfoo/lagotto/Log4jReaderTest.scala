@@ -34,7 +34,7 @@ class Log4jReaderTest extends LagoTest {
         |Last line""".stripMargin
 
     val entries = LogReader(logType = Log4jLog).read(inputStreamFrom(input))
-    entries.next().message shouldBe """Did something useful
+    entries.next().payload shouldBe """Did something useful
                                       |And then some more
                                       |Last line""".stripMargin
   }
