@@ -1180,7 +1180,7 @@ class MainTest extends LagoTest {
         |""".stripMargin
     val output = run("--in-format", "csv", "--table", "percentile(50,number)", tempFileContaining(input))
     output shouldBe
-      """percentile(50,number)
+      """percentile(50 number)
         |35.0
         |""".stripMargin
   }

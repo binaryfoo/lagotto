@@ -91,7 +91,7 @@ trait TableFormatter {
 }
 
 case class DelimitedTableFormat(delimiter: String) extends TableFormatter {
-  override def header(fields: Seq[String]): Option[String] = Some(fields.mkString(delimiter))
+  override def header(fields: Seq[String]): Option[String] = Some(fields.map(_.replace(delimiter, " ")).mkString(delimiter))
   override def row(row: Seq[String]): Option[String] = Some(row.mkString(delimiter))
 }
 
