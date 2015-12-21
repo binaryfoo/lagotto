@@ -862,8 +862,8 @@ class MainTest extends LagoTest {
     val output = run("--table", "time,url", "--in-format", "apache", testFile("apache.txt"))
     output shouldBe
       """time,url
-        |00:00:55.000,GET /some/url
-        |13:01:55.000,GET /another/url
+        |00:00:55.000,/some/url
+        |13:01:55.000,/another/url
         |""".stripMargin
   }
 
