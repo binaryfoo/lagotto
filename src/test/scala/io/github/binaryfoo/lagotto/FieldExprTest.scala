@@ -235,7 +235,7 @@ class FieldExprTest extends LagoTest {
   }
 
   "calc(4/lifespan)" should "perform a rather useless division" in {
-    val expr = expressionFor("calc(4/lifespan)")
+    val expr = expressionFor("calc(f[4]/lifespan)")
     val percent = expr(JposEntry("4" -> "000000050", "lifespan" -> "200"))
     percent shouldBe "0.2500"
   }
@@ -526,6 +526,16 @@ class FieldExprTest extends LagoTest {
     val expr = expressionFor("if(one=1,'a','b')")
     expr(JposEntry("one" -> "1")) shouldBe "a"
     expr(JposEntry("one" -> "0")) shouldBe "b"
+  }
+
+  "numeric value in calc()" should "be interpreted as a literal" in {
+    val expr = expressionFor("calc(one/3)")
+    expr(JposEntry("one" -> "3")) shouldBe "1.0000"
+    expr(JposEntry("one" -> "1")) shouldBe "0.3333"
+
+    val inverseExpr = expressionFor("calc(3/one)")
+    inverseExpr(JposEntry("one" -> "3")) shouldBe "1.0000"
+    inverseExpr(JposEntry("one" -> "1")) shouldBe "3.0000"
   }
 
   "lines(1)" should "show the first line" in {

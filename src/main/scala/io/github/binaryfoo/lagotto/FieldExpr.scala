@@ -38,12 +38,16 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
     val If = """if\(([^,]+),([^,]*),([^,]*)\)""".r
     val Lines = """lines\((\d+)\)""".r
     val Distinct = """distinct\((.+)\)""".r
-    val Literal = """'([^']+)'""".r
+    val QuotedLiteral = """'([^']+)'""".r
+    val NumericLiteral = """(\d+)""".r
+    val FieldAccess = """f\[(\d+)\]""".r
 
     def unapply(expr: String): Option[FieldExpr] = {
       Some(expr match {
         case Alias(FieldExpr(target), alias) => AliasExpr(target, alias)
         case SubtractOp(FieldExpr(left), FieldExpr(right)) => SubtractExpr(expr, left, right)
+        case DivideOp(FieldExpr(left), NumericLiteral(right)) => DivideExpr(expr, left, LiteralExpr(right))
+        case DivideOp(NumericLiteral(left), FieldExpr(right)) => DivideExpr(expr, LiteralExpr(left), right)
         case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
         case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
         case "delay" => DelayExpr
@@ -73,12 +77,16 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
         case LengthOf(FieldExpr(field)) => LengthExpr(expr, field)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
-        case Literal(value) => LiteralExpr(value)
-        case s =>
-          dictionary.flatMap(_.possibleFieldsForShortName(s))
-            .map(PrimitiveWithDictionaryFallbackExpr(s, _))
-            .getOrElse(PrimitiveExpr(s))
+        case QuotedLiteral(value) => LiteralExpr(value)
+        case FieldAccess(field) => PrimitiveExpr(field)
+        case s => dictionaryOrPrimitive(s)
       })
+    }
+
+    private def dictionaryOrPrimitive(s: String): DirectExpr = {
+      dictionary.flatMap(_.possibleFieldsForShortName(s))
+        .map(PrimitiveWithDictionaryFallbackExpr(s, _))
+        .getOrElse(PrimitiveExpr(s))
     }
 
     /**
@@ -477,6 +485,8 @@ object DivideExpr {
   def apply(expr: String, l: FieldExpr, r: FieldExpr): FieldExpr = {
     (l, r) match {
       case (left: AggregateExpr, right: AggregateExpr) => DivideAggregatesExpr(expr, left, right)
+      case (left: LiteralExpr, right: AggregateExpr) => DivideAggregatesExpr(expr, left, right)
+      case (left: AggregateExpr, right: LiteralExpr) => DivideAggregatesExpr(expr, left, right)
       case (left: DirectExpr, right: DirectExpr) => DivideDirectExpr(expr, left, right)
       case (left, right) =>
         throw new IAmSorryDave(s"In calc(left/right) both sides must be aggregate or direct operations. Left: $left and Right: $right are not compatible.")
@@ -498,9 +508,11 @@ trait DivideExpr {
   }
 }
 
-case class DivideAggregatesExpr(field: String, left: AggregateExpr, right: AggregateExpr)
+case class DivideAggregatesExpr(field: String, left: FieldExpr, right: FieldExpr)
   extends DivideExpr with CalculationOverAggregates {
-  override def dependencies(): Seq[AggregateExpr] = Seq(left, right)
+  override def dependencies(): Seq[AggregateExpr] = Seq(left, right).collect {
+    case e: AggregateExpr => e
+  }
 }
 
 case class DivideDirectExpr(field: String, left: DirectExpr, right: DirectExpr)

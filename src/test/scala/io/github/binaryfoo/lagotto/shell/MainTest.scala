@@ -1185,6 +1185,23 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "rate" should "calculate count/window" in {
+    val input =
+      """time
+        |01:00:00.100
+        |01:00:00.200
+        |01:00:01.001
+        |01:00:01.900
+        |01:00:01.999
+        |""".stripMargin
+
+    val output = run("--no-header", "--in-format", "csv", "--table", "time(HH:mm:ss),calc(count/60)", tempFileContaining(input))
+    output shouldBe
+      """01:00:00,0.0333
+        |01:00:01,0.0500
+        |""".stripMargin
+  }
+
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
 
   private def standardOutFrom(thunk: => Unit): String = {
