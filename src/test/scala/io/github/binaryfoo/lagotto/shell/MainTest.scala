@@ -5,6 +5,7 @@ import java.io._
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.LagoTest
 import io.github.binaryfoo.lagotto.reader.FileIO
+import org.joda.time.DateTimeZone
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -1162,11 +1163,18 @@ class MainTest extends LagoTest {
   }
 
   "--out-format influx" should "include measurement,tags,values and timestamp" in {
-    val output = run("--influx", "stuff", "--tags", "v1", "--fields", "v2", "--in-format", "csv", testFile("timestamped.csv"))
-    output shouldBe
-      """stuff,v1=a v2=b 946648861999000000
-        |stuff,v1=c v2=d 946648862101000000
-        |""".stripMargin
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--influx", "stuff", "--tags", "v1", "--fields", "v2", "--in-format", "csv", testFile("timestamped.csv"))
+      output shouldBe
+        """stuff,v1=a v2=b 946688461999000000
+          |stuff,v1=c v2=d 946688462101000000
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
   }
 
   "percentile" should "calculate percentiles" in {
