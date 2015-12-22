@@ -21,6 +21,10 @@ object OutputFormat {
     }
   }
 
+  def makeSafeFileName(fields: Seq[FieldExpr]): String = {
+    fields.map(_.field.replaceAll("[^-_a-zA-Z0-9]", "_")).mkString("_")
+  }
+
   implicit class PipeToOutputFormatIterator(val it: Iterator[LogEntry]) extends AnyVal {
     def pipeTo(f: OutputFormat, out: PrintWriter) = {
       f.header().foreach(out.println)

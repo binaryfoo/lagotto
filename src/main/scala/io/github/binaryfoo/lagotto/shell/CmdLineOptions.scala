@@ -25,8 +25,7 @@ case class CmdLineOptions (inputFormat: LogType[LogEntry],
                    strict: Boolean = false,
                    progressMeter: ProgressMeter = NullProgressMeter,
                    histogramFields: Seq[FieldExpr] = Seq.empty,
-                   gnuplotFileName: Option[String] = None,
-                   multiplot: Boolean = true,
+                   gnuplot: GnuplotOptions = GnuplotOptions(),
                    influxDbUrl: Option[String] = None,
                    incremental: Boolean = false,
                    liveUi: Boolean = false,
@@ -97,3 +96,8 @@ class SortKeyOrdering(val keys: List[SortKey]) extends Ordering[LogEntry] {
     }
   }
 }
+
+/**
+  * Multiplot = separate plot for each series.
+  */
+case class GnuplotOptions(enabled: Boolean = false, scriptName: String = "", multiplot: Boolean = true)

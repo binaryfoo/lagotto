@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
+import java.io.File
+
 import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
@@ -38,13 +40,17 @@ object Main extends App {
     } else if (opts.histogramFields.size > 1) {
       val fields = opts.histogramFields.toList
       new MultipleHistogramSink(fields.dropRight(1), fields.last)
-    } else if (opts.gnuplotFileName.isDefined) {
-      val baseName = opts.gnuplotFileName.get
+    } else if (opts.gnuplot.enabled) {
+      val fields = OutputFormat.fieldsFor(format)
+      val baseName = opts.gnuplot.scriptName match {
+        case "" if opts.input.size == 1 => FileIO.dropSuffix(opts.input.head) + "-plot"
+        case "" => OutputFormat.makeSafeFileName(fields)
+        case x => x
+      }
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
-      val fields = OutputFormat.fieldsFor(format)
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
-      val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName, multiplot = opts.multiplot)
+      val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName, multiplot = opts.gnuplot.multiplot)
       val sinks = if (opts.liveUi)
         Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else

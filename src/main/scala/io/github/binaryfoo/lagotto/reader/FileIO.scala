@@ -107,4 +107,8 @@ object FileIO {
       case (None, None) => it
     }
   }
+
+  def dropSuffix(fileName: String): String = {
+    new File(fileName).getName.replaceFirst("\\.[^.]+$", "")
+  }
 }

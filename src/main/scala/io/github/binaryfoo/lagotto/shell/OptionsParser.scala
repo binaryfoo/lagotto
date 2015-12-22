@@ -160,11 +160,11 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
       } text "Show only paired rows (like SQL's default join)"
 
       opt[String]("gnuplot") action {(fileName,c) =>
-        c.copy(gnuplotFileName = Some(fileName))
+        c.copy(gnuplot = c.gnuplot.copy(enabled = true, scriptName = fileName))
       } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --table"
 
       opt[Boolean]("multiplot") action {(multiplot,c) =>
-        c.copy(multiplot = multiplot)
+        c.copy(gnuplot = c.gnuplot.copy(multiplot = multiplot))
       } text "True => plot each series in a separate chart. False => multiple lines on one chart"
 
       opt[Unit]("strict") action {(_,c) =>
