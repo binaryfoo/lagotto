@@ -13,9 +13,14 @@ case class HumanTimeFormatter(pattern: String) extends TimeFormatter {
   type TimestampPrinter = (DateTime, DateTimeFormatter) => String
 
   val (jodaPattern, printer): (String, TimestampPrinter) = pattern match {
-    case "HH:mm:s0" => ("HH:mm:ss", (timestamp, f) => f.print(timestamp).substring(0, 7) + "0")
-    case "HH:m0"    => ("HH:mm",    (timestamp, f) => f.print(timestamp).substring(0, 4) + "0")
-    case _          => (pattern,    (timestamp, f) => f.print(timestamp))
+    case "HH:mm:s0"            => ("HH:mm:ss",            (timestamp, f) => f.print(timestamp).substring(0, 7) + "0")
+    case "HH:m0"               => ("HH:mm",               (timestamp, f) => f.print(timestamp).substring(0, 4) + "0")
+    case "yyyy-MM-dd HH:mm:s0" => ("yyyy-MM-dd HH:mm:ss", (timestamp, f) => f.print(timestamp).substring(0, 18) + "0")
+    case "yyyy-MM-dd HH:m0:00" => ("yyyy-MM-dd HH:mm:ss", (timestamp, f) => f.print(timestamp).substring(0, 15) + "0:00")
+    case "yyyy-MM-dd HH:m0"    => ("yyyy-MM-dd HH:mm",    (timestamp, f) => f.print(timestamp).substring(0, 15) + "0")
+    case "yyyy-MM-dd H0:00"    => ("yyyy-MM-dd HH:mm",    (timestamp, f) => f.print(timestamp).substring(0, 12) + "0:00")
+    case "yyyy-MM-dd H0"       => ("yyyy-MM-dd HH",       (timestamp, f) => f.print(timestamp).substring(0, 12) + "0")
+    case _                     => (pattern,               (timestamp, f) => f.print(timestamp))
   }
   val jodaFormatter = DateTimeFormat.forPattern(jodaPattern)
   private lazy val periodFormatter = PeriodFormatTranslator.translate(jodaPattern)

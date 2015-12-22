@@ -570,6 +570,18 @@ class FieldExprTest extends LagoTest {
     expressionFor("delay")(entry) shouldBe "0"
   }
 
+  private val xmasEve = new DateTime(2015, 12, 24, 23, 59, 59)
+
+  "time()" should "create buckets" in {
+    expressionFor("time(yyyy-MM-dd HH:mm:s0)")(JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 23:59:50"
+    expressionFor("time(yyyy-MM-dd HH:mm:00)")(JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 23:59:00"
+    expressionFor("time(yyyy-MM-dd HH:m0:00)")(JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 23:50:00"
+    expressionFor("time(yyyy-MM-dd HH:m0)")   (JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 23:50"
+    expressionFor("time(yyyy-MM-dd HH:00)")   (JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 23:00"
+    expressionFor("time(yyyy-MM-dd H0:00)")   (JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 20:00"
+    expressionFor("time(yyyy-MM-dd H0)")      (JposEntry("at" -> xmasEve.asJposAt)) shouldBe "2015-12-24 20"
+  }
+
   "JoinedEntry request and response times" should "be accessible" in {
     val joined = JoinedEntry(JposEntry("at" -> new LocalTime(8, 10, 3, 101).toDateTimeToday.asJposAt), JposEntry("at" -> new LocalTime(8, 11, 4, 399).toDateTimeToday.asJposAt), null, ',')
     expressionFor("left.time")(joined) shouldBe "08:10:03.101"

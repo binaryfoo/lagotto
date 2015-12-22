@@ -4,8 +4,8 @@ object GnuplotScriptWriter {
 
   val ToSecondPrecision = """time\(HH:[m0]{2}:[s0]{2}\)""".r
   val ToMinutePrecision = """time\(HH:[m0]{2}\)""".r
-  val DateTimeToSomePrecision = """time\(yyyy-MM-dd HH:[m0]{2}:[s0]{2}\)""".r
-
+  val DateTimeToSecondPrecision = """time\(yyyy-MM-dd HH:[m0]{2}:[s0]{2}\)""".r
+  val DateTimeToMinutePrecision = """time\(yyyy-MM-dd HH:[m0]{2}\)""".r
 
   def write(fields: Seq[String], csvFileName: String, plotFileName: String, xRange: (String, String), multiplot: Boolean): String = {
     val timeFormat = fields.head match {
@@ -14,7 +14,8 @@ object GnuplotScriptWriter {
       case ToMinutePrecision() => "%H:%M"
       case "date" => "%Y-%m-%d"
       case "datetime" => "%Y-%m-%d %H:%M:%S"
-      case DateTimeToSomePrecision() => "%Y-%m-%d %H:%M:%S"
+      case DateTimeToSecondPrecision() => "%Y-%m-%d %H:%M:%S"
+      case DateTimeToMinutePrecision() => "%Y-%m-%d %H:%M"
     }
     val columns = fields.tail
     val (firstTime, lastTime) = xRange
