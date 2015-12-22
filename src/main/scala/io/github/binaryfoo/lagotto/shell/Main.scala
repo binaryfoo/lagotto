@@ -70,6 +70,11 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
     val filters = partitionFilters()
 
+    if (Debug.enabled) {
+      Console.err.println(s"Sort: pre - $preAggregationSortKey, post $postAggregationSortKey")
+      Console.err.println(s"Filters: $filters")
+    }
+
     val paired = if (opts.pair) read(JposLog).pair() else read(opts.inputFormat)
     val joined = join(paired, opts.joinOn, opts.inputFormat)
     val firstFilter = filter(joined, filters.paired)
