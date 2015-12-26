@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.output
 
+import io.github.binaryfoo.lagotto.MsgPairFieldAccess
+
 object GnuplotScriptWriter {
 
   val ToSecondPrecision = """time\(HH:[m0]{2}:[s0]{2}\)""".r
@@ -8,15 +10,7 @@ object GnuplotScriptWriter {
   val DateTimeToMinutePrecision = """time\(yyyy-MM-dd HH:[m0]{2}\)""".r
 
   def write(fields: Seq[String], csvFileName: String, plotFileName: String, xRange: (String, String), multiplot: Boolean): String = {
-    val timeFormat = fields.head match {
-      case "time" => "%H:%M:%S"
-      case ToSecondPrecision() => "%H:%M:%S"
-      case ToMinutePrecision() => "%H:%M"
-      case "date" => "%Y-%m-%d"
-      case "datetime" => "%Y-%m-%d %H:%M:%S"
-      case DateTimeToSecondPrecision() => "%Y-%m-%d %H:%M:%S"
-      case DateTimeToMinutePrecision() => "%Y-%m-%d %H:%M"
-    }
+    val timeFormat = toGnuplotTimeFormat(fields.head)
     val columns = fields.tail
     val (firstTime, lastTime) = xRange
 
@@ -51,5 +45,18 @@ object GnuplotScriptWriter {
     }
 
     header + body
+  }
+
+  private def toGnuplotTimeFormat(field: String): String = {
+    field match {
+      case "time" => "%H:%M:%S"
+      case ToSecondPrecision() => "%H:%M:%S"
+      case ToMinutePrecision() => "%H:%M"
+      case "date" => "%Y-%m-%d"
+      case "datetime" => "%Y-%m-%d %H:%M:%S"
+      case DateTimeToSecondPrecision() => "%Y-%m-%d %H:%M:%S"
+      case DateTimeToMinutePrecision() => "%Y-%m-%d %H:%M"
+      case MsgPairFieldAccess(_, expr) => toGnuplotTimeFormat(expr)
+    }
   }
 }

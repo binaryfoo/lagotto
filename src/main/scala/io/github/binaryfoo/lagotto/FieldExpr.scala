@@ -915,6 +915,7 @@ case class MsgPartExpr(field: String, part: String, expr: FieldExpr) extends Dir
         } else {
           expr(right)
         }
+      case e: SimpleLogEntry => e(field)
     }
   }
 }
