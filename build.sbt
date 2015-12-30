@@ -6,6 +6,8 @@ version := "0.0.1-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 
+libraryDependencies += "io.github.binaryfoo" % "gclog-parser" % "0.0.1-SNAPSHOT" % "compile"
+
 libraryDependencies += "joda-time" % "joda-time" % "2.9.1" % "compile"
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.2.0"
@@ -36,6 +38,8 @@ artifact in (Compile, assembly) := {
   val art = (artifact in (Compile, assembly)).value
   art.copy(`classifier` = Some("assembly"))
 }
+
+resolvers += Resolver.mavenLocal
 
 // ignore tests
 //test in assembly := {}

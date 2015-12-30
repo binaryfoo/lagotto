@@ -135,6 +135,11 @@
             <version>1.11</version>
         </dependency>
         <dependency>
+            <groupId>io.github.binaryfoo</groupId>
+            <artifactId>gclog-parser</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.asciidoctor</groupId>
             <artifactId>asciidoctorj</artifactId>
             <version>1.5.2</version>

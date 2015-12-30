@@ -42,6 +42,8 @@ case class TextAndSource(text: String, source: SourceRef) extends Sourced
 
 case class LineSet(lines: Seq[String], fullText: String, source: SourceRef) extends Sourced
 
+case class PreParsed[E](entry: E, source: SourceRef) extends Sourced
+
 /**
  * Load the set of log types from a configuration file.
  */
