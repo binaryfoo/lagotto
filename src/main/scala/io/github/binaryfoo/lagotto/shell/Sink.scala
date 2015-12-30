@@ -4,7 +4,7 @@ import java.io.{File, FileOutputStream, FileWriter, PrintStream}
 import java.net.{HttpURLConnection, URL}
 
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.output.GnuplotScriptWriter
+import io.github.binaryfoo.lagotto.output.{PlotStyle, GnuplotScriptWriter}
 import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
@@ -53,7 +53,7 @@ class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: Strin
 /**
  * Spit out two files: the data (.csv) and a script to plot the series in that file (.gp).
  */
-class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFileName: String, val baseName: String, val multiplot: Boolean) extends Sink {
+class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFileName: String, val baseName: String, val plotStyle: PlotStyle) extends Sink {
 
   var xRange = ("", "")
   
@@ -70,7 +70,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptWriter.write(fields.map(_.toString()), csvFileName, baseName, xRange, multiplot))
+    writer.write(GnuplotScriptWriter.write(fields.map(_.toString()), csvFileName, baseName, xRange, plotStyle))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)

@@ -50,7 +50,7 @@ object Main extends App {
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
       val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
-      val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName, multiplot = opts.gnuplot.multiplot)
+      val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName, plotStyle = opts.gnuplot.style)
       val sinks = if (opts.liveUi)
         Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else

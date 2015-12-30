@@ -7,6 +7,7 @@ import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
 import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, NotMarkedUp}
+import io.github.binaryfoo.lagotto.output.{ChartPerCluster, SingleChart, ChartPerColumn, PlotStyle}
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat.{Csv, Tsv}
 import io.github.binaryfoo.lagotto.shell.output._
@@ -163,9 +164,9 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(gnuplot = c.gnuplot.copy(enabled = true, scriptName = fileName))
       } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --table"
 
-      opt[Boolean]("multiplot") action {(multiplot,c) =>
-        c.copy(gnuplot = c.gnuplot.copy(multiplot = multiplot))
-      } text "True => plot each series in a separate chart. False => multiple lines on one chart"
+      opt[PlotStyle]("plot") action {(style,c) =>
+        c.copy(gnuplot = c.gnuplot.copy(style = style))
+      } text "Number of plots"
 
       opt[Unit]("strict") action {(_,c) =>
         c.copy(strict = true)
@@ -277,6 +278,20 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
       case "sqlIn" => new SqlInClauseOutputFormat()
       case s =>
         throw new IllegalArgumentException(s"Unknown output format '$s'. Known formats are ${tableFormats.mkString(", ")}")
+    }
+  }
+
+  implicit def plotStyleRead: Read[PlotStyle] = new Read[PlotStyle] {
+    val Cluster = """\(([0-9,]+)\)""".r
+    override def arity: Int = 1
+    override def reads = {
+      case "per-column" => ChartPerColumn
+      case "single" => SingleChart
+      case cluster =>
+        val clusters = Cluster.findAllMatchIn(cluster).map { m =>
+          m.group(1).split(",").map(_.toInt).toSeq
+        }.toList
+        ChartPerCluster(clusters)
     }
   }
 }
