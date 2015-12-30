@@ -6,7 +6,7 @@ version := "0.0.1-SNAPSHOT"
 
 scalaVersion := "2.11.4"
 
-libraryDependencies += "io.github.binaryfoo" % "gclog-parser" % "0.0.1-SNAPSHOT" % "compile"
+libraryDependencies += "io.github.binaryfoo" % "gclog-parser" % "0.0.2" % "compile"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.9.1" % "compile"
 
@@ -39,7 +39,9 @@ artifact in (Compile, assembly) := {
   art.copy(`classifier` = Some("assembly"))
 }
 
-resolvers += Resolver.mavenLocal
+//resolvers += Resolver.mavenLocal
+
+resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
 
 // ignore tests
 //test in assembly := {}
