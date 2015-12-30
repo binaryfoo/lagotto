@@ -70,7 +70,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptWriter.write(fields.map(_.field), csvFileName, baseName, xRange, multiplot))
+    writer.write(GnuplotScriptWriter.write(fields.map(_.toString()), csvFileName, baseName, xRange, multiplot))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)
