@@ -1141,13 +1141,13 @@ class MainTest extends LagoTest {
     }, "main-runner")
     main.start()
 
-    reader.next() shouldBe """================
-                             || summary | 11 |
-                             |================
+    reader.next() shouldBe """===============================================
+                             || summary                             | 11    |
+                             |===============================================
                              |""".stripMargin
-    reader.next() shouldBe "| ← 0800 (Network Management Request) | 28928 |\n"
+    reader.next() shouldBe  "| ← 0800 (Network Management Request) | 28928 |\n"
     copyFile(testFile("two.xml"), tmp)
-    reader.next() shouldBe "| ← 0800 (Network Management Request) | 28929 |\n"
+    reader.next() shouldBe  "| ← 0800 (Network Management Request) | 28929 |\n"
 
     main.interrupt()
     main.join(1000)
@@ -1207,6 +1207,16 @@ class MainTest extends LagoTest {
     output shouldBe
       """01:00:00,0.0333
         |01:00:01,0.0500
+        |""".stripMargin
+  }
+
+  "--table *" should "build field list from first output row" in {
+    val output = run("--table", "*", "--in-format", "gc-v2", testFile("gc.log"))
+    output shouldBe
+      """datetime,age,type,pause,heapBefore,heapAfter,heapMax,PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax,ParOldGenBefore,ParOldGenAfter,ParOldGenMax,PSPermGenBefore,PSPermGenAfter,PSPermGenMax
+        |2015-01-08 10:18:13.300,237468.441,Full GC,2.421151,2871497728,1489845248,4270260224,18934784,0,1406926848,2852561920,1489845248,2863333376,63901696,63813632,139329536
+        |2015-01-08 15:16:55.969,255391.11,Full GC,2.36814,2865509376,1199139840,4266786816,18200576,0,1403453440,2847308800,1199139840,2863333376,63875072,63849472,132513792
+        |2015-06-12 19:28:18.722,809846.37,GC--,0.425189,4224466944,4253652992,4253679616,1390322688,1390322688,1390346240,,,,,,
         |""".stripMargin
   }
 

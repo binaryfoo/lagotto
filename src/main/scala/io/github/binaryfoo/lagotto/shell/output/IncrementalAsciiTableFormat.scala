@@ -13,12 +13,12 @@ class IncrementalAsciiTableFormat extends TableFormatter {
   var columnWidths: Seq[Int] = null
 
   override def header(fields: Seq[String]): Option[String] = {
-    columnWidths = reviseColumnWidths(fields, Seq.fill(fields.length)(0))
+    updateColumnWidths(fields)
     Some(new AsciiTable(columnWidths).addHeader(fields).toIncrementalString)
   }
 
   override def row(row: Seq[String]): Option[String] = {
-    columnWidths = reviseColumnWidths(row, columnWidths)
+    updateColumnWidths(row)
     Some(new AsciiTable(columnWidths).addRow(row).toIncrementalString)
   }
 
@@ -30,4 +30,8 @@ class IncrementalAsciiTableFormat extends TableFormatter {
     }
   }
 
+  private def updateColumnWidths(input: Seq[String]): Unit = {
+    val currentWidths = if (columnWidths == null) Seq.fill(input.length)(0) else columnWidths
+    columnWidths = reviseColumnWidths(input, currentWidths)
+  }
 }

@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto.shell
 import java.io.PrintWriter
 
 import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, XmlHighlighter}
-import io.github.binaryfoo.lagotto.{JposEntry, FieldExpr, LogEntry}
+import io.github.binaryfoo.lagotto._
 
 trait OutputFormat {
   def contentType: ContentType
@@ -19,10 +19,6 @@ object OutputFormat {
       case Tabular(fields, _) => fields
       case _ => Seq()
     }
-  }
-
-  def makeSafeFileName(fields: Seq[FieldExpr]): String = {
-    fields.map(_.field.replaceAll("[^-_a-zA-Z0-9]", "_")).mkString("_")
   }
 
   implicit class PipeToOutputFormatIterator(val it: Iterator[LogEntry]) extends AnyVal {
@@ -72,7 +68,12 @@ object HighlightedText extends OutputFormat {
   override val contentType: ContentType = PlainText
 }
 
-case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat {
+trait FieldList {
+  def fieldNames: Seq[String]
+}
+
+case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat with FieldList {
+  override def fieldNames: Seq[String] = fields.map(_.toString())
   override def header(): Option[String] = tableFormatter.header(fields.map(_.toString()))
   override def apply(e: LogEntry): Option[String] = {
     val row = e.exprToSeq(fields)
@@ -81,6 +82,29 @@ case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = Deli
     } else {
       None
     }
+  }
+  override def footer(): Option[String] = tableFormatter.footer()
+  override def contentType: ContentType = tableFormatter.contentType
+}
+
+case class WildcardTable(tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat with FieldList {
+  private var fields: Seq[FieldExpr] = null
+  override def fieldNames: Seq[String] = fields.map(_.toString())
+  override def header(): Option[String] = {
+    if (fields == null) {
+      throw new IAmSorryDave("Need at least one output row before printing header")
+    }
+    tableFormatter.header(fieldNames)
+  }
+  override def apply(e: LogEntry): Option[String] = {
+    val row = if (fields == null) {
+      val (names: Seq[String], values: Seq[String]) = e.exportAsSeq.unzip(p => (p._1, p._2))
+      fields = names.map(PrimitiveExpr)
+      values
+    } else {
+      e.exprToSeq(fields)
+    }
+    tableFormatter.row(row)
   }
   override def footer(): Option[String] = tableFormatter.footer()
   override def contentType: ContentType = tableFormatter.contentType

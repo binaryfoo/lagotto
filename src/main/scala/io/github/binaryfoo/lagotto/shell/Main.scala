@@ -1,5 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
+import java.io.File
+
 import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
@@ -39,16 +41,19 @@ object Main extends App {
       val fields = opts.histogramFields.toList
       new MultipleHistogramSink(fields.dropRight(1), fields.last)
     } else if (opts.gnuplot.enabled) {
-      val fields = OutputFormat.fieldsFor(format)
       val baseName = opts.gnuplot.scriptName match {
         case "" if opts.input.size == 1 => FileIO.dropSuffix(opts.input.head) + "-plot"
-        case "" => OutputFormat.makeSafeFileName(fields)
+        case "" => File.createTempFile("plot", "", new File(".")).getName
         case x => x
       }
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
-      val dataFile = new FileSink(new Tabular(fields, DelimitedTableFormat(",")), true, csvFileName)
-      val gnuplotScript = new GnuplotSink(fields, csvFileName, gpFileName, baseName, plotStyle = opts.gnuplot.style)
+      val table = format match {
+        case t: Tabular => t.copy(tableFormatter = DelimitedTableFormat(","))
+        case t: WildcardTable => t.copy(tableFormatter = DelimitedTableFormat(","))
+      }
+      val dataFile = new FileSink(table, true, csvFileName)
+      val gnuplotScript = new GnuplotSink(table, csvFileName, gpFileName, baseName, plotStyle = opts.gnuplot.style)
       val sinks = if (opts.liveUi)
         Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else

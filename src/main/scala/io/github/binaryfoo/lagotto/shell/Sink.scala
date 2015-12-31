@@ -6,6 +6,7 @@ import java.net.{HttpURLConnection, URL}
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.output.{PlotStyle, GnuplotScriptWriter}
 import org.HdrHistogram.Histogram
+import org.joda.time.DateTime
 
 import scala.collection.mutable
 import scala.language.postfixOps
@@ -24,13 +25,14 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean, val 
   private var headerWritten = false
 
   override def entry(e: LogEntry) = {
+    val output = format(e)
     if (!headerWritten) {
       if (includeHeader) {
         format.header().foreach(out.println)
       }
       headerWritten = true
     }
-    format(e).foreach(out.println)
+    output.foreach(out.println)
   }
 
   override def finish() = format.footer().foreach(out.println)
@@ -53,15 +55,15 @@ class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: Strin
 /**
  * Spit out two files: the data (.csv) and a script to plot the series in that file (.gp).
  */
-class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFileName: String, val baseName: String, val plotStyle: PlotStyle) extends Sink {
+class GnuplotSink(val fieldList: FieldList, val csvFileName: String, val gpFileName: String, val baseName: String, val plotStyle: PlotStyle) extends Sink {
 
-  var xRange = ("", "")
-  
+  var xRange: (DateTime, DateTime) = (null, null)
+
   override def entry(e: LogEntry) = {
-    val time = fields.head(e)
+    val time = e.timestamp
     if (time != null) {
       xRange = xRange match {
-        case ("", _) => (time, time)
+        case (null, _) => (time, time)
         case (start, _) => (start, time)
       }
     }
@@ -70,7 +72,7 @@ class GnuplotSink(val fields: Seq[FieldExpr], val csvFileName: String, val gpFil
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptWriter.write(fields.map(_.toString()), csvFileName, baseName, xRange, plotStyle))
+    writer.write(GnuplotScriptWriter.write(fieldList.fieldNames, csvFileName, baseName, xRange, plotStyle))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)

@@ -209,6 +209,9 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
     .map { opts =>
       val format = opts.table match {
           // TODO: validate only 1 field when sqlIn
+        case TableOptions(formatter, "*", contentType) =>
+          val formatToUse = if (opts.incremental) formatter.liveVersion else formatter
+          WildcardTable(formatToUse)
         case TableOptions(formatter, fields, contentType) if fields != "" =>
           val formatToUse = if (opts.incremental) formatter.liveVersion else formatter
           Tabular(parseFields(fields, contentType), formatToUse)
