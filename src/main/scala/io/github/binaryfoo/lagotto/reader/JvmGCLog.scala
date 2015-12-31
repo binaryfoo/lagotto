@@ -26,7 +26,7 @@ object JvmGCLog extends LogType[GcLogEntry] {
           buffer.remove(buffer.size - 1)
         case GcEventParsed(event) =>
           val sourceRef = lines.sourceRef.at(firstLine)
-          return PreParsed(GcLogEntry(event.time, mutable.LinkedHashMap(event.toSeq.sorted :_*), attemptedLines, sourceRef), sourceRef)
+          return PreParsed(GcLogEntry(event.time, mutable.LinkedHashMap(event.toSeq :_*), attemptedLines, sourceRef), sourceRef)
         case NeedAnotherLine =>
       }
     }
