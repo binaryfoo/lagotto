@@ -98,7 +98,4 @@ class SortKeyOrdering(val keys: List[SortKey]) extends Ordering[LogEntry] {
   }
 }
 
-/**
-  * Multiplot = separate plot for each series.
-  */
-case class GnuplotOptions(enabled: Boolean = false, scriptName: String = "", style: PlotStyle = ChartPerColumn)
+case class GnuplotOptions(enabled: Boolean = false, scriptName: String = "", style: PlotStyle = ChartPerColumn, timeFormat: Option[String] = None)

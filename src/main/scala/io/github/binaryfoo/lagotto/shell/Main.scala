@@ -53,7 +53,7 @@ object Main extends App {
         case t: WildcardTable => t.copy(tableFormatter = DelimitedTableFormat(","))
       }
       val dataFile = new FileSink(table, true, csvFileName)
-      val gnuplotScript = new GnuplotSink(table, csvFileName, gpFileName, baseName, plotStyle = opts.gnuplot.style)
+      val gnuplotScript = new GnuplotSink(table, csvFileName, gpFileName, baseName, opts.gnuplot.style, opts.gnuplot.timeFormat)
       val sinks = if (opts.liveUi)
         Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else

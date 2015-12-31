@@ -168,6 +168,10 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(gnuplot = c.gnuplot.copy(style = style))
       } text "Number of plots"
 
+      opt[String]("plot-time-format") action {(timeFormat,c) =>
+        c.copy(gnuplot = c.gnuplot.copy(timeFormat = Some(timeFormat)))
+      } text "Time format for gnuplot"
+
       opt[Unit]("strict") action {(_,c) =>
         c.copy(strict = true)
       } text "Fail on rubbish input instead the default of continuing to read"
