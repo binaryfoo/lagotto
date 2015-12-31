@@ -13,21 +13,23 @@ object JvmGCLog extends LogType[GcLogEntry] {
   type P = PreParsed[GcLogEntry]
 
   override def readLinesForNextRecord(lines: LineIterator): PreParsed[GcLogEntry] = {
-    val buffer = mutable.ArrayBuffer[String]()
+    var lastAttempt: String = null
     var firstLine = -1
     while (lines.hasNext) {
       val line = lines.next()
-      if (buffer.isEmpty)
+      val attempt = if (lastAttempt == null) {
         firstLine = lines.lineNumber
-      buffer.append(line)
-      val attemptedLines = buffer.mkString("\n")
-      Parser.incrementalParse(attemptedLines) match {
+        line
+      } else {
+        lastAttempt + "\n" + line
+      }
+      Parser.incrementalParse(attempt) match {
         case SkipLine =>
-          buffer.remove(buffer.size - 1)
         case GcEventParsed(event) =>
           val sourceRef = lines.sourceRef.at(firstLine)
-          return PreParsed(GcLogEntry(event.time, mutable.LinkedHashMap(event.toSeq :_*), attemptedLines, sourceRef), sourceRef)
+          return PreParsed(GcLogEntry(event.time, mutable.LinkedHashMap(event.toSeq :_*), attempt, sourceRef), sourceRef)
         case NeedAnotherLine =>
+          lastAttempt = attempt
       }
     }
     null
