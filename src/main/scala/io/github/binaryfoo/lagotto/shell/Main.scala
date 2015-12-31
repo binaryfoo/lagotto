@@ -1,7 +1,5 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.File
-
 import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto.MsgPair.RichEntryIterable
