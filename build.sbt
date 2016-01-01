@@ -39,8 +39,13 @@ artifact in (Compile, assembly) := {
   art.copy(`classifier` = Some("assembly"))
 }
 
-resolvers += Resolver.mavenLocal
+// when developing locally
+//resolvers += Resolver.mavenLocal
 
+// when building against gclog-parser published snapshot
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+// when building against gclog-parser release not yet synced to central
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
 
 // ignore tests
