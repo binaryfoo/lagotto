@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.File
+import java.io.{InputStream, File}
 
 import com.typesafe.config.{Config, ConfigFactory}
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
@@ -14,13 +14,13 @@ object Main extends App {
 
   runWith(args, ConfigFactory.load())
 
-  def runWith(args: Array[String], config: Config) = {
+  def runWith(args: Array[String], config: Config, stdin: InputStream = System.in) = {
     new OptionsParser(config).parse(args).foreach { opts =>
       try {
         if (Debug.enabled)
           Console.err.println(opts)
 
-        val (pipeline, format) = (new Pipeline(opts, config))()
+        val (pipeline, format) = (new Pipeline(opts, config, stdin))()
         val sink = sinkFor(opts, format)
 
         pipeline.foreach(sink.entry)
@@ -73,7 +73,7 @@ case class SortOrder(afterGrouping: Seq[SortKey] = Seq.empty, beforeGrouping: Se
 
 case class Filters(aggregate: Seq[LogFilter] = Seq(), delay: Seq[LogFilter] = Seq(), paired: Seq[LogFilter] = Seq())
 
-class Pipeline(val opts: CmdLineOptions, val config: Config) {
+class Pipeline(val opts: CmdLineOptions, val config: Config, val stdin: InputStream = System.in) {
 
   def apply(): (Iterator[LogEntry], OutputFormat) = {
     val SortOrder(postAggregationSortKey, preAggregationSortKey) = partitionSortKey()
@@ -84,7 +84,7 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
       Console.err.println(s"Filters: $filters")
     }
 
-    val paired = if (opts.pair) read(JposLog).pair() else read(opts.inputFormat)
+    val paired = if (opts.pair) read(JposLog, stdin).pair() else read(opts.inputFormat, stdin)
     val joined = join(paired, opts.joinOn, opts.inputFormat)
     val firstFilter = filter(joined, filters.paired)
     val sorted = sort(firstFilter, preAggregationSortKey)
@@ -119,13 +119,13 @@ class Pipeline(val opts: CmdLineOptions, val config: Config) {
     Filters(aggregate, delay, paired)
   }
 
-  private def read[T <: LogEntry](logType: LogType[T]): Iterator[T] = {
+  private def read[T <: LogEntry](logType: LogType[T], stdin: InputStream): Iterator[T] = {
     val reader = if (System.getProperty("single.thread") == "true") {
       SingleThreadLogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
     } else {
       LogReader(strict = opts.strict, progressMeter = opts.progressMeter, logType = logType)
     }
-    val raw = reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber), opts.follow)
+    val raw = reader.readFilesOrStdIn(opts.input.sortBy(LogFiles.sequenceNumber), opts.follow, stdin)
     if (opts.merge) raw.filter(new DeDuplicator) else raw
   }
 

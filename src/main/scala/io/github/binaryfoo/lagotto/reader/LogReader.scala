@@ -17,9 +17,9 @@ trait SkeletonLogReader[T <: LogEntry] {
 
   def progressMeter: ProgressMeter
 
-  def readFilesOrStdIn(args: Iterable[String], follow: Boolean = false): Iterator[T] = {
+  def readFilesOrStdIn(args: Iterable[String], follow: Boolean = false, stdin: InputStream = System.in): Iterator[T] = {
     if (args.isEmpty)
-      read(System.in, StdInRef())
+      read(stdin, StdInRef())
     else
       read(args.map(new File(_)), follow)
   }
