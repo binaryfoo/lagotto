@@ -1,7 +1,6 @@
 package io.github.binaryfoo.lagotto.output
 
 import io.github.binaryfoo.lagotto.MsgPairFieldAccess
-import org.joda.time.DateTime
 
 import scala.annotation.tailrec
 
@@ -12,11 +11,11 @@ object GnuplotScriptWriter {
   val DateTimeToSecondPrecision = """time\(yyyy-MM-dd HH:[m0]{2}:[s0]{2}\)""".r
   val DateTimeToMinutePrecision = """time\(yyyy-MM-dd HH:[m0]{2}\)""".r
 
-  def write(fields: Seq[String], csvFileName: String, plotFileName: String, xRange: (DateTime, DateTime), plotStyle: PlotStyle, timeFormat: Option[String]): String = {
-    val (gnuplotTimeFormat, jodaTimeFormat) = toTimeFormats(fields.head)
-    val displayTimeFormat = timeFormat.map(toTimeFormats).map(_._1).getOrElse(gnuplotTimeFormat)
+  def write(fields: Seq[String], csvFileName: String, plotFileName: String, xRange: (String, String), plotStyle: PlotStyle, timeFormat: Option[String]): String = {
+    val gnuplotTimeFormat = toGnuPlotTimeFormat(fields.head)
+    val displayTimeFormat = timeFormat.map(toGnuPlotTimeFormat).getOrElse(gnuplotTimeFormat)
     val columns = fields.tail
-    val (firstTime, lastTime) = (xRange._1.toString(jodaTimeFormat), xRange._2.toString(jodaTimeFormat))
+    val (firstTime, lastTime) = xRange
 
     // using tab delimited data fails on empty cells: \t\t gets merged
     // line types cheat sheet: http://kunak.phsx.ku.edu/~sergei/Gnuplot/line_point_types.html
@@ -57,14 +56,14 @@ object GnuplotScriptWriter {
   }
 
   @tailrec
-  private def toTimeFormats(field: String): (String, String) = {
+  private def toGnuPlotTimeFormat(field: String): String = {
     field match {
-      case "time" | ToSecondPrecision() => ("%H:%M:%S", "HH:mm:ss")
-      case ToMinutePrecision() => ("%H:%M", "HH:mm")
-      case "date" => ("%Y-%m-%d", "yyyy-MM-dd")
-      case "datetime" | DateTimeToSecondPrecision() => ("%Y-%m-%d %H:%M:%S", "yyyy-MM-dd HH:mm:ss")
-      case DateTimeToMinutePrecision() => ("%Y-%m-%d %H:%M", "yyyy-MM-dd HH:mm")
-      case MsgPairFieldAccess(_, expr) => toTimeFormats(expr)
+      case "time" | ToSecondPrecision() => "%H:%M:%S"
+      case ToMinutePrecision() => "%H:%M"
+      case "date" => "%Y-%m-%d"
+      case "datetime" | DateTimeToSecondPrecision() => "%Y-%m-%d %H:%M:%S"
+      case DateTimeToMinutePrecision() => "%Y-%m-%d %H:%M"
+      case MsgPairFieldAccess(_, expr) => toGnuPlotTimeFormat(expr)
     }
   }
 }

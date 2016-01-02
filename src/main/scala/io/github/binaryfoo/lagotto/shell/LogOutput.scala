@@ -69,11 +69,11 @@ object HighlightedText extends OutputFormat {
 }
 
 trait FieldList {
-  def fieldNames: Seq[String]
+  def fields: Seq[FieldExpr]
+  def fieldNames: Seq[String] = fields.map(_.toString())
 }
 
 case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat with FieldList {
-  override def fieldNames: Seq[String] = fields.map(_.toString())
   override def header(): Option[String] = tableFormatter.header(fields.map(_.toString()))
   override def apply(e: LogEntry): Option[String] = {
     val row = e.exprToSeq(fields)
@@ -88,8 +88,7 @@ case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = Deli
 }
 
 case class WildcardTable(tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat with FieldList {
-  private var fields: Seq[FieldExpr] = null
-  override def fieldNames: Seq[String] = fields.map(_.toString())
+  var fields: Seq[FieldExpr] = null
   override def header(): Option[String] = {
     if (fields == null) {
       throw new IAmSorryDave("Need at least one output row before printing header")

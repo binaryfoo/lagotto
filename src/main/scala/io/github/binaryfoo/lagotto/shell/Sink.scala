@@ -57,13 +57,13 @@ class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: Strin
  */
 class GnuplotSink(val fieldList: FieldList, val csvFileName: String, val gpFileName: String, val baseName: String, val plotStyle: PlotStyle, val timeFormat: Option[String]) extends Sink {
 
-  var xRange: (DateTime, DateTime) = (null, null)
+  var xRange = ("", "")
 
   override def entry(e: LogEntry) = {
-    val time = e.timestamp
+    val time = fieldList.fields.head(e)
     if (time != null) {
       xRange = xRange match {
-        case (null, _) => (time, time)
+        case ("", _) => (time, time)
         case (start, _) => (start, time)
       }
     }
