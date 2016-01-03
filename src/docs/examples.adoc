@@ -1,3 +1,5 @@
+:imagesdirs: .
+
 == Examples
 
 These examples all all based on some https://github.com/binaryfoo/lagotto/blob/master/log_samples/q2.log[sample data] kindly provided by https://twitter.com/apr[@apr].
@@ -33,7 +35,7 @@ To show log events that took more than 300ms to receive or send use >. The follo
 
 You can also use --grep to just search the log entries as text.
 
-    LAGO log_samples/q2.log --grep suspicious -o ascii -t time,63,src
+    LAGO: log_samples/q2.log --grep suspicious -o ascii -t time,63,src
 
 === Aggregation
 
@@ -139,12 +141,17 @@ Output a slightly less wordy output. Supports translation of field paths to name
 
     LAGO: log_samples/q2.log --pair --table time,rtt --gnuplot rtts
 
+Produces a .csv file to be plotted
 ----
 include::rtts.csv[]
 ----
+A gnuplot script to plot the .csv data
 ----
 include::rtts.gp[]
 ----
+Executes the gnuplot script to produce a chart
+
+image::rtts.svg[Example plot]
 
 === When you need more
 

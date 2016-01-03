@@ -585,7 +585,22 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>LAGO log_samples/q2.log --grep suspicious -o ascii -t time,63,src</pre>
+<pre>lago log_samples/q2.log --grep suspicious -o ascii -t time,63,src</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>================================================
+| time         | 63              | src         |
+================================================
+| 15:12:40.537 | Card suspicious | q2.log:1020 |
+| 15:12:40.538 | Card suspicious | q2.log:1056 |
+| 15:12:40.539 | Card suspicious | q2.log:1092 |
+| 15:12:40.760 | Card suspicious | q2.log:1626 |
+| 15:12:40.761 | Card suspicious | q2.log:1661 |
+| 15:12:40.763 | Card suspicious | q2.log:1696 |
+| 15:12:40.767 | Card suspicious | q2.log:1812 |
+================================================</pre>
 </div>
 </div>
 </div>
@@ -1150,6 +1165,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 Wrote rtts.gp</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Produces a .csv file to be plotted</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre>time,rtt
@@ -1183,6 +1201,9 @@ Wrote rtts.gp</pre>
 15:12:40.917,8</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>A gnuplot script to plot the .csv data</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre>#!/usr/bin/env gnuplot
@@ -1201,6 +1222,14 @@ set multiplot layout 1,1 title 'rtts.csv'
 do for [i=2:2] {
     plot 'rtts.csv' using 1:i w lines lt 3 t column(i)
 }</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Executes the gnuplot script to produce a chart</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="rtts.svg" alt="Example plot">
 </div>
 </div>
 </div>
