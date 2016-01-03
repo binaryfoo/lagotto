@@ -32,13 +32,11 @@ object RunExamples {
     asciiDoctor.unregisterAllExtensions()
     asciiDoctor.shutdown()
 
-    if (args.nonEmpty) {
-      val siteDir = new File(args(0))
-      siteDir.mkdirs()
-      for (f <- new File("docs").listFiles()) {
-        println(s"Copying $f to $siteDir")
-        Files.copy(f.toPath, new File(siteDir, f.getName).toPath, StandardCopyOption.REPLACE_EXISTING)
-      }
+    val siteDir = new File(if (args.isEmpty) "target/site" else args(0))
+    siteDir.mkdirs()
+    for (f <- new File("docs").listFiles()) {
+      println(s"Copying $f to $siteDir")
+      Files.copy(f.toPath, new File(siteDir, f.getName).toPath, StandardCopyOption.REPLACE_EXISTING)
     }
   }
 
