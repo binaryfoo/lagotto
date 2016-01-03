@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.3">
+<title>Lago log tool</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<style>
+/* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
+/* Remove comment around @import statement below when using as a custom stylesheet */
+/*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";*/
+article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
+audio,canvas,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+[hidden],template{display:none}
+script{display:none!important}
+html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
+body{margin:0}
+a{background:transparent}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+abbr[title]{border-bottom:1px dotted}
+b,strong{font-weight:bold}
+dfn{font-style:italic}
+hr{-moz-box-sizing:content-box;box-sizing:content-box;height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type="checkbox"],input[type="radio"]{box-sizing:border-box;padding:0}
+input[type="search"]{-webkit-appearance:textfield;-moz-box-sizing:content-box;-webkit-box-sizing:content-box;box-sizing:content-box}
+input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,*:before,*:after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+body{-webkit-font-smoothing:antialiased}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.center{margin-left:auto;margin-right:auto}
+.spread{width:100%}
+p.lead,.paragraph.lead>p,#preamble>.sectionbody>.paragraph:first-of-type p{font-size:1.21875em;line-height:1.6}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0;direction:ltr}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:none}
+p{font-family:inherit;font-weight:400;font-size:1em;line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #ddddd8;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em;height:0}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
+ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
+ul.square{list-style-type:square}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ul.no-bullet{list-style:none}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+abbr,acronym{text-transform:uppercase;font-size:90%;color:rgba(0,0,0,.8);border-bottom:1px dotted #ddd;cursor:help}
+abbr{text-transform:none}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote cite{display:block;font-size:.9375em;color:rgba(0,0,0,.6)}
+blockquote cite:before{content:"\2014 \0020"}
+blockquote cite a,blockquote cite a:visited{color:rgba(0,0,0,.6)}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media only screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:solid 1px #dedede}
+table thead,table tfoot{background:#f7f8f7;font-weight:bold}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt,table tr:nth-of-type(even){background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{display:table-cell;line-height:1.6}
+body{tab-size:4}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.clearfix:before,.clearfix:after,.float-group:before,.float-group:after{content:" ";display:table}
+.clearfix:after,.float-group:after{clear:both}
+*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeSpeed}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menu{color:rgba(0,0,0,.8)}
+b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
+b.button:before{content:"[";padding:0 3px 0 2px}
+b.button:after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin-left:auto;margin-right:auto;margin-top:0;margin-bottom:0;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header:before,#header:after,#content:before,#content:after,#footnotes:before,#footnotes:after,#footer:before,#footer:after{content:" ";display:table}
+#header:after,#content:after,#footnotes:after,#footer:after{clear:both}
+#content{margin-top:1.25em}
+#content:before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #ddddd8}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #ddddd8;padding-bottom:8px}
+#header .details{border-bottom:1px solid #ddddd8;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:-ms-flexbox;display:-webkit-flex;display:flex;-ms-flex-flow:row wrap;-webkit-flex-flow:row wrap;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span:before{content:"\00a0\2013\00a0"}
+#header .details br+span.author:before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark:before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber:after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #ddddd8;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #efefed;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media only screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+#toc.toc2{margin-top:0!important;background-color:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #efefed;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #efefed;left:auto;right:0}}
+@media only screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border-style:solid;border-width:1px;border-color:#e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;-webkit-border-radius:4px;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:100%;background-color:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:rgba(255,255,255,.8);line-height:1.44}
+.sect1{padding-bottom:.625em}
+@media only screen and (min-width:768px){.sect1{padding-bottom:1.25em}}
+.sect1+.sect1{border-top:1px solid #efefed}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor:before,h2>a.anchor:before,h3>a.anchor:before,#toctitle>a.anchor:before,.sidebarblock>.content>.title>a.anchor:before,h4>a.anchor:before,h5>a.anchor:before,h6>a.anchor:before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
+.paragraph.lead>p,#preamble>.sectionbody>.paragraph:first-of-type p{color:rgba(0,0,0,.85)}
+table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border-style:solid;border-width:1px;border-color:#e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;-webkit-border-radius:4px;border-radius:4px}
+.exampleblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child{margin-bottom:0}
+.sidebarblock{border-style:solid;border-width:1px;border-color:#e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;-webkit-border-radius:4px;border-radius:4px}
+.sidebarblock>:first-child{margin-top:0}
+.sidebarblock>:last-child{margin-bottom:0}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock pre:not(.highlight),.listingblock pre[class="highlight"],.listingblock pre[class^="highlight "],.listingblock pre.CodeRay,.listingblock pre.prettyprint{background:#f7f7f8}
+.sidebarblock .literalblock pre,.sidebarblock .listingblock pre:not(.highlight),.sidebarblock .listingblock pre[class="highlight"],.sidebarblock .listingblock pre[class^="highlight "],.sidebarblock .listingblock pre.CodeRay,.sidebarblock .listingblock pre.prettyprint{background:#f2f1f1}
+.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{-webkit-border-radius:4px;border-radius:4px;word-wrap:break-word;padding:1em;font-size:.8125em}
+.literalblock pre.nowrap,.literalblock pre[class].nowrap,.listingblock pre.nowrap,.listingblock pre[class].nowrap{overflow-x:auto;white-space:pre;word-wrap:normal}
+@media only screen and (min-width:768px){.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{font-size:.90625em}}
+@media only screen and (min-width:1280px){.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{font-size:1em}}
+.literalblock.output pre{color:#f7f7f8;background-color:rgba(0,0,0,.9)}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;-webkit-border-radius:4px;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]:before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:#999}
+.listingblock:hover code[data-lang]:before{display:block}
+.listingblock.terminal pre .command:before{content:attr(data-prompt);padding-right:.5em;color:#999}
+.listingblock.terminal pre .command:not([data-prompt]):before{content:"$"}
+table.pyhltable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.pyhltable td{vertical-align:top;padding-top:0;padding-bottom:0;line-height:1.45}
+table.pyhltable td.code{padding-left:.75em;padding-right:0}
+pre.pygments .lineno,table.pyhltable td:not(.code){color:#999;padding-left:0;padding-right:.5em;border-right:1px solid #ddddd8}
+pre.pygments .lineno{display:inline-block;margin-right:.25em}
+table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock blockquote p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote:before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.5em;margin-right:.5ex;text-align:right}
+.quoteblock .quoteblock{margin-left:0;margin-right:0;padding:.5em 0;border-left:3px solid rgba(0,0,0,.6)}
+.quoteblock .quoteblock blockquote{padding:0 0 0 .75em}
+.quoteblock .quoteblock blockquote:before{display:none}
+.verseblock{margin:0 1em 1.25em 1em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract{margin:0 0 1.25em 0;display:block}
+.quoteblock.abstract blockquote,.quoteblock.abstract blockquote p{text-align:left;word-spacing:0}
+.quoteblock.abstract blockquote:before,.quoteblock.abstract blockquote p:first-of-type:before{display:none}
+table.tableblock{max-width:100%;border-collapse:separate}
+table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
+table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
+table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
+table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
+table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
+table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
+table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.frame-all{border-width:1px}
+table.frame-sides{border-width:0 1px}
+table.frame-topbot{border-width:1px 0}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{display:table-cell;line-height:1.6;background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+td>div.verse{white-space:pre}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
+ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
+ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
+ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
+ul.inline>li>*{display:block}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
+.colist>table tr>td:last-of-type{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
+.imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
+.imageblock.right,.imageblock[style*="float: right"]{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em 0;border-width:1px 0 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;text-indent:-1.05em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+.gist .file-data>table{border:0;background:#fff;width:100%;margin-bottom:0}
+.gist .file-data>table td.line-data{width:99%}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background-color:#00fafa}
+.black{color:#000}
+.black-background{background-color:#000}
+.blue{color:#0000bf}
+.blue-background{background-color:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background-color:#fa00fa}
+.gray{color:#606060}
+.gray-background{background-color:#7d7d7d}
+.green{color:#006000}
+.green-background{background-color:#007d00}
+.lime{color:#00bf00}
+.lime-background{background-color:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background-color:#7d0000}
+.navy{color:#000060}
+.navy-background{background-color:#00007d}
+.olive{color:#606000}
+.olive-background{background-color:#7d7d00}
+.purple{color:#600060}
+.purple-background{background-color:#7d007d}
+.red{color:#bf0000}
+.red-background{background-color:#fa0000}
+.silver{color:#909090}
+.silver-background{background-color:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background-color:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background-color:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background-color:#fafa00}
+span.icon>.fa{cursor:default}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning:before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution:before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important:before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background-color:rgba(0,0,0,.8);-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]:after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,span.alt{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background-color:#fffef7;border-color:#e0e0dc;-webkit-box-shadow:0 1px 4px #e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@media print{@page{margin:1.25cm .75cm}
+*{-webkit-box-shadow:none!important;box-shadow:none!important;text-shadow:none!important}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare):after,a[href^="https:"]:not(.bare):after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]:after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #ddddd8!important;padding-bottom:0!important}
+.sect1{padding-bottom:0!important}
+.sect1+.sect1{border:0!important}
+#header>h1:first-child{margin-top:1.25rem}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em 0}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span:before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]:before{display:block}
+#footer{background:none!important;padding:0 .9375em}
+#footer-text{color:rgba(0,0,0,.6)!important;font-size:.9em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+</style>
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Lago log tool</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_examples">Examples</a>
+<ul class="sectlevel2">
+<li><a href="#_filtering">Filtering</a></li>
+<li><a href="#_aggregation">Aggregation</a></li>
+<li><a href="#_pairing_requests_responses">Pairing Requests &amp; Responses</a></li>
+<li><a href="#_cleaning_data">Cleaning Data</a></li>
+<li><a href="#_sorting">Sorting</a></li>
+<li><a href="#_more_filtering">More Filtering</a></li>
+<li><a href="#_dictionaries">Dictionaries</a></li>
+<li><a href="#_histograms">Histograms</a></li>
+<li><a href="#_json_export">JSON export</a></li>
+<li><a href="#_digest_format">Digest format</a></li>
+<li><a href="#_gnuplot_script_generation">Gnuplot script generation</a></li>
+<li><a href="#_when_you_need_more">When you need more</a></li>
+<li><a href="#_log4j">log4j</a></li>
+</ul>
+</li>
+<li><a href="#_reference">Reference</a>
+<ul class="sectlevel2">
+<li><a href="#_filters">Filters</a></li>
+<li><a href="#_field_expressions">Field Expressions</a></li>
+<li><a href="#_aggregation_2">Aggregation</a></li>
+<li><a href="#_pairing">Pairing</a></li>
+<li><a href="#_input_formats">Input Formats</a></li>
+<li><a href="#_output_formats">Output Formats</a></li>
+<li><a href="#_others">Others</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_examples">Examples</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These examples all all based on some <a href="https://github.com/binaryfoo/lagotto/blob/master/log_samples/q2.log">sample data</a> kindly provided by <a href="https://twitter.com/apr">@apr</a>.</p>
+</div>
+<div class="paragraph">
+<p>If you want to try them out:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>git clone <a href="https://github.com/binaryfoo/lagotto.git" class="bare">https://github.com/binaryfoo/lagotto.git</a></p>
+</li>
+<li>
+<p>cd lagotto</p>
+</li>
+<li>
+<p>mvn package -DskipTests</p>
+</li>
+<li>
+<p>./lago &lt;&#8230;&#8203; example &#8230;&#8203;&gt;</p>
+</li>
+</ol>
+</div>
+<div class="sect2">
+<h3 id="_filtering">Filtering</h3>
+<div class="paragraph">
+<p>Only output entries with an MTI (field 0) of 2100 using --field.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --field mti=2100 -n 1</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>[33m&lt;log[0m realm=[32m"channel/127.0.0.1:9001"[0m at=[32m"Thu Dec 18 15:12:40 UYST 2014.330"[0m lifespan=[32m"1ms"[0m[33m&gt;[0m
+  [33m&lt;send[0m[33m&gt;[0m
+    [33m&lt;isomsg[0m direction=[32m"outgoing"[0m[33m&gt;[0m
+      &lt;!-- org.jpos.iso.packager.GenericPackager[cfg/jcard.xml] --&gt;
+      [33m&lt;field[0m id=[32m"0"[0m value=[32m"2100"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"2"[0m value=[32m"6009330000000021"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"3"[0m value=[32m"300000"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"4"[0m value=[32m"8582000000000000"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"7"[0m value=[32m"1218151240"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"11"[0m value=[32m"000000000002"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"12"[0m value=[32m"20141218151240"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"14"[0m value=[32m"1001"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"15"[0m value=[32m"20141218"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"17"[0m value=[32m"1218"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"22"[0m value=[32m"10000000080000000004000001000000"[0m type=[32m"binary"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"32"[0m value=[32m"000001"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"37"[0m value=[32m"180312760317"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"41"[0m value=[32m"29110001"[0m[33m/&gt;[0m
+      [33m&lt;field[0m id=[32m"42"[0m value=[32m"001001"[0m[33m/&gt;[0m
+      [33m&lt;isomsg[0m id=[32m"43"[0m[33m&gt;[0m
+        [33m&lt;field[0m id=[32m"2"[0m value=[32m"jCard Selftest system"[0m[33m/&gt;[0m
+        [33m&lt;field[0m id=[32m"4"[0m value=[32m"Montevideo"[0m[33m/&gt;[0m
+        [33m&lt;field[0m id=[32m"5"[0m value=[32m"MV"[0m[33m/&gt;[0m
+        [33m&lt;field[0m id=[32m"7"[0m value=[32m"UY"[0m[33m/&gt;[0m
+      [33m&lt;/isomsg&gt;[0m
+      [33m&lt;isomsg[0m id=[32m"113"[0m[33m&gt;[0m
+        [33m&lt;field[0m id=[32m"2"[0m value=[32m"106"[0m[33m/&gt;[0m
+      [33m&lt;/isomsg&gt;[0m
+    [33m&lt;/isomsg&gt;[0m
+  [33m&lt;/send&gt;[0m
+[33m&lt;/log&gt;[0m</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.</p>
+</div>
+<div class="paragraph">
+<p>To make the remaining example output shorter let&#8217;s introduce the idea tabular output (--table). List out just the fields you&#8217;re interested in.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --table time,2,11 -f mti=2100 -n 1</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>time,2,11
+15:12:40.330,6009330000000021,000000000002</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Whilst comma and tab separated data might be good for import into Excel/Google Docs/Libre Office/MySQL an ASCII table like mysql&#8217;s command line client is a bit easier for humans to parse on the command line.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii --table time,2,11 -f mti=2100 -n 1</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==================================================
+| time         | 2                | 11           |
+==================================================
+| 15:12:40.330 | 6009330000000021 | 000000000002 |
+==================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Back to filtering, you can filter using somewhat familiar operators: &lt;, &gt;, !=, ~, and ~/regex/. The last two are contains and <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regex</a>.</p>
+</div>
+<div class="paragraph">
+<p>To show log events that took more than 300ms to receive or send use &gt;. The following two receives aren&#8217;t really interesting. A send with a non zero lifespan usually means a GC pause or TCP back pressure.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii --table time,msgType,lifespan,src -f 'lifespan&gt;300'</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>===========================================================
+| time         | msgType         | lifespan | src         |
+===========================================================
+| 15:12:41.281 | peer-disconnect | 362      | q2.log:5544 |
+| 15:12:41.281 | receive         | 356      | q2.log:5549 |
+===========================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can also use --grep to just search the log entries as text.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>LAGO log_samples/q2.log --grep suspicious -o ascii -t time,63,src</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_aggregation">Aggregation</h3>
+<div class="paragraph">
+<p>Some rather basic SQL like group by and aggregation operators are supported.</p>
+</div>
+<div class="paragraph">
+<p>Show a table of message type and count.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t mti,count</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>================
+| mti  | count |
+================
+|      | 92    |
+| 2800 | 2     |
+| 2810 | 2     |
+| 2100 | 35    |
+| 2110 | 33    |
+| 2420 | 3     |
+| 2430 | 3     |
+================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Count rows matching a condition (like approved).</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t 'mti,count,count(39=0000)'</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>=================================
+| mti  | count | count(39=0000) |
+=================================
+|      | 92    | 0              |
+| 2800 | 2     | 0              |
+| 2810 | 2     | 2              |
+| 2100 | 35    | 0              |
+| 2110 | 33    | 0              |
+| 2420 | 3     | 0              |
+| 2430 | 3     | 0              |
+=================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Combine with filtering to get the spread of response codes for auths.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t '39,count' --field '39!=0000' --field mti=2110</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>================
+| 39   | count |
+================
+| 1011 | 2     |
+| 1015 | 3     |
+| 1002 | 5     |
+| 1014 | 2     |
+| 1803 | 21    |
+================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Bucketing results by time. You can use a joda time <a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html">format</a> or a few extras to aggregate by 10 minute (HH:m0) or 10 second (HH:mm:s0) buckets.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t 'time(HH:mm:s0),count'</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==========================
+| time(HH:mm:s0) | count |
+==========================
+| 15:12:30       | 18    |
+| 15:12:40       | 152   |
+==========================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The results aren&#8217;t that interesting with such a small data set.</p>
+</div>
+<div class="paragraph">
+<p>TODO group_concat</p>
+</div>
+<div class="paragraph">
+<p>TODO group_sample</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pairing_requests_responses">Pairing Requests &amp; Responses</h3>
+<div class="paragraph">
+<p>Match responses to requests using --pair. Show one line per pair including the round trip time (rtt): response - request time</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t time,mti,11,rtt --pair</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>============================================
+| time         | mti  | 11           | rtt |
+============================================
+| 15:12:40.288 | 2800 | 000000000001 | 4   |
+| 15:12:40.287 | 2800 | 000000000001 | 6   |
+| 15:12:40.331 | 2100 | 000000000002 | 141 |
+| 15:12:40.330 | 2100 | 000000000002 | 143 |
+| 15:12:40.496 | 2100 | 000000000003 | 6   |
+| 15:12:40.496 | 2100 | 000000000003 | 7   |
+| 15:12:40.515 | 2100 | 000000000004 | 22  |
+| 15:12:40.515 | 2100 | 000000000004 | 23  |
+| 15:12:40.548 | 2100 | 000000000005 | 149 |
+| 15:12:40.547 | 2100 | 000000000005 | 150 |
+| 15:12:40.711 | 2100 | 000000000006 | 49  |
+| 15:12:40.710 | 2100 | 000000000006 | 51  |
+| 15:12:40.775 | 2100 | 000000000007 | 6   |
+| 15:12:40.774 | 2100 | 000000000007 | 8   |
+| 15:12:40.794 | 2100 | 000000000008 | 10  |
+| 15:12:40.793 | 2100 | 000000000008 | 12  |
+| 15:12:40.817 | 2100 | 000000000009 | 8   |
+| 15:12:40.817 | 2100 | 000000000009 | 8   |
+| 15:12:40.837 | 2100 | 000000000010 | 9   |
+| 15:12:40.836 | 2100 | 000000000010 | 11  |
+| 15:12:40.862 | 2100 | 000000000011 | 5   |
+| 15:12:40.861 | 2100 | 000000000011 | 7   |
+| 15:12:40.878 | 2100 | 000000000012 | 6   |
+| 15:12:40.877 | 2100 | 000000000012 | 8   |
+| 15:12:40.896 | 2100 | 000000000013 | 6   |
+| 15:12:40.896 | 2100 | 000000000013 | 7   |
+| 15:12:40.918 | 2420 | 000000000014 | 6   |
+| 15:12:40.917 | 2420 | 000000000014 | 8   |
+============================================</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cleaning_data">Cleaning Data</h3>
+<div class="paragraph">
+<p>Tidy up a field a little using a regex replacement. This feature is probably somewhat gratuitous.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t 'time(HH:mm),mti,11(/^0+//),rtt' --pair</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>=========================================
+| time(HH:mm) | mti  | 11(/^0+//) | rtt |
+=========================================
+| 15:12       | 2800 | 1          | 4   |
+| 15:12       | 2800 | 1          | 6   |
+| 15:12       | 2100 | 2          | 141 |
+| 15:12       | 2100 | 2          | 143 |
+| 15:12       | 2100 | 3          | 6   |
+| 15:12       | 2100 | 3          | 7   |
+| 15:12       | 2100 | 4          | 22  |
+| 15:12       | 2100 | 4          | 23  |
+| 15:12       | 2100 | 5          | 149 |
+| 15:12       | 2100 | 5          | 150 |
+| 15:12       | 2100 | 6          | 49  |
+| 15:12       | 2100 | 6          | 51  |
+| 15:12       | 2100 | 7          | 6   |
+| 15:12       | 2100 | 7          | 8   |
+| 15:12       | 2100 | 8          | 10  |
+| 15:12       | 2100 | 8          | 12  |
+| 15:12       | 2100 | 9          | 8   |
+| 15:12       | 2100 | 9          | 8   |
+| 15:12       | 2100 | 10         | 9   |
+| 15:12       | 2100 | 10         | 11  |
+| 15:12       | 2100 | 11         | 5   |
+| 15:12       | 2100 | 11         | 7   |
+| 15:12       | 2100 | 12         | 6   |
+| 15:12       | 2100 | 12         | 8   |
+| 15:12       | 2100 | 13         | 6   |
+| 15:12       | 2100 | 13         | 7   |
+| 15:12       | 2420 | 14         | 6   |
+| 15:12       | 2420 | 14         | 8   |
+=========================================</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sorting">Sorting</h3>
+<div class="paragraph">
+<p>Sort using a field with --sort rtt</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort rtt</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==========================================
+| time         | mti  | 11(/^0+//) | rtt |
+==========================================
+| 15:12:40.288 | 2800 | 1          | 4   |
+| 15:12:40.862 | 2100 | 11         | 5   |
+| 15:12:40.287 | 2800 | 1          | 6   |
+| 15:12:40.496 | 2100 | 3          | 6   |
+| 15:12:40.775 | 2100 | 7          | 6   |
+| 15:12:40.878 | 2100 | 12         | 6   |
+| 15:12:40.896 | 2100 | 13         | 6   |
+| 15:12:40.918 | 2420 | 14         | 6   |
+| 15:12:40.496 | 2100 | 3          | 7   |
+| 15:12:40.861 | 2100 | 11         | 7   |
+| 15:12:40.896 | 2100 | 13         | 7   |
+| 15:12:40.774 | 2100 | 7          | 8   |
+| 15:12:40.817 | 2100 | 9          | 8   |
+| 15:12:40.817 | 2100 | 9          | 8   |
+| 15:12:40.877 | 2100 | 12         | 8   |
+| 15:12:40.917 | 2420 | 14         | 8   |
+| 15:12:40.837 | 2100 | 10         | 9   |
+| 15:12:40.794 | 2100 | 8          | 10  |
+| 15:12:40.836 | 2100 | 10         | 11  |
+| 15:12:40.793 | 2100 | 8          | 12  |
+| 15:12:40.515 | 2100 | 4          | 22  |
+| 15:12:40.515 | 2100 | 4          | 23  |
+| 15:12:40.711 | 2100 | 6          | 49  |
+| 15:12:40.710 | 2100 | 6          | 51  |
+| 15:12:40.331 | 2100 | 2          | 141 |
+| 15:12:40.330 | 2100 | 2          | 143 |
+| 15:12:40.548 | 2100 | 5          | 149 |
+| 15:12:40.547 | 2100 | 5          | 150 |
+==========================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or sort descending using --sort rtt desc</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t 'time,mti,11(/^0+//),rtt' --pair --sort 'rtt desc'</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==========================================
+| time         | mti  | 11(/^0+//) | rtt |
+==========================================
+| 15:12:40.547 | 2100 | 5          | 150 |
+| 15:12:40.548 | 2100 | 5          | 149 |
+| 15:12:40.330 | 2100 | 2          | 143 |
+| 15:12:40.331 | 2100 | 2          | 141 |
+| 15:12:40.710 | 2100 | 6          | 51  |
+| 15:12:40.711 | 2100 | 6          | 49  |
+| 15:12:40.515 | 2100 | 4          | 23  |
+| 15:12:40.515 | 2100 | 4          | 22  |
+| 15:12:40.793 | 2100 | 8          | 12  |
+| 15:12:40.836 | 2100 | 10         | 11  |
+| 15:12:40.794 | 2100 | 8          | 10  |
+| 15:12:40.837 | 2100 | 10         | 9   |
+| 15:12:40.774 | 2100 | 7          | 8   |
+| 15:12:40.817 | 2100 | 9          | 8   |
+| 15:12:40.817 | 2100 | 9          | 8   |
+| 15:12:40.877 | 2100 | 12         | 8   |
+| 15:12:40.917 | 2420 | 14         | 8   |
+| 15:12:40.496 | 2100 | 3          | 7   |
+| 15:12:40.861 | 2100 | 11         | 7   |
+| 15:12:40.896 | 2100 | 13         | 7   |
+| 15:12:40.287 | 2800 | 1          | 6   |
+| 15:12:40.496 | 2100 | 3          | 6   |
+| 15:12:40.775 | 2100 | 7          | 6   |
+| 15:12:40.878 | 2100 | 12         | 6   |
+| 15:12:40.896 | 2100 | 13         | 6   |
+| 15:12:40.918 | 2420 | 14         | 6   |
+| 15:12:40.862 | 2100 | 11         | 5   |
+| 15:12:40.288 | 2800 | 1          | 4   |
+==========================================</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_more_filtering">More Filtering</h3>
+<div class="paragraph">
+<p>Show only pairs where the response took more than 100ms using --field</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t time,mti,11,rtt --pair --field rtt&gt;100</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>============================================
+| time         | mti  | 11           | rtt |
+============================================
+| 15:12:40.331 | 2100 | 000000000002 | 141 |
+| 15:12:40.330 | 2100 | 000000000002 | 143 |
+| 15:12:40.548 | 2100 | 000000000005 | 149 |
+| 15:12:40.547 | 2100 | 000000000005 | 150 |
+============================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Remember you&#8217;ll need to use quotes 'rtt&gt;100' or a slash rtt\&gt;100 to escape the '&gt;' when using bash.</p>
+</div>
+<div class="paragraph">
+<p>Add the file name and line number to get more detail (or check lago is not lying)</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t time,mti,11,rtt,src --pair --field rtt&gt;100</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==========================================================
+| time         | mti  | 11           | rtt | src         |
+==========================================================
+| 15:12:40.331 | 2100 | 000000000002 | 141 | q2.log:378  |
+| 15:12:40.330 | 2100 | 000000000002 | 143 | q2.log:347  |
+| 15:12:40.548 | 2100 | 000000000005 | 149 | q2.log:1285 |
+| 15:12:40.547 | 2100 | 000000000005 | 150 | q2.log:1254 |
+==========================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use some aggregate operators min(), max() and avg() to get basic stats about the round trip times</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t mti,min(rtt),max(rtt),avg(rtt),count --pair</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>=================================================
+| mti  | min(rtt) | max(rtt) | avg(rtt) | count |
+=================================================
+| 2800 | 4        | 6        | 5        | 2     |
+| 2100 | 5        | 150      | 35       | 24    |
+| 2420 | 6        | 8        | 7        | 2     |
+=================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Find delays of more than 100ms in a message sequence</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t time,delay,src --field delay&gt;100</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>======================================
+| time         | delay | src         |
+======================================
+| 15:12:37.626 | 113   | q2.log:55   |
+| 15:12:37.792 | 126   | q2.log:105  |
+| 15:12:40.014 | 2218  | q2.log:120  |
+| 15:12:40.272 | 227   | q2.log:268  |
+| 15:12:40.472 | 141   | q2.log:411  |
+| 15:12:40.697 | 149   | q2.log:1318 |
+| 15:12:41.279 | 342   | q2.log:5519 |
+======================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Show a table of exceptions. Not very interesting with only one exception but useful when there are many</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t exception,src --field exception!=</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>==================================================================================
+| exception                                                        | src         |
+==================================================================================
+| Sourced file: inline evaluation of: ``DATE=new Date();      MTI= | q2.log:5479 |
+==================================================================================</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Show a breakdown of message types</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t msgType,count</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>=============================
+| msgType           | count |
+=============================
+| info              | 39    |
+| jce-provider      | 1     |
+| local-master-keys | 1     |
+| iso-server        | 2     |
+| connect           | 1     |
+| session-start     | 1     |
+| trace             | 30    |
+| send              | 28    |
+| receive           | 29    |
+| abort             | 12    |
+| debug             | 13    |
+| commit            | 1     |
+| error             | 10    |
+| peer-disconnect   | 1     |
+| session-end       | 1     |
+=============================</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dictionaries">Dictionaries</h3>
+<div class="paragraph">
+<p>TODO Convert a <a href="https://github.com/jpos/jPOS-CMF/blob/master/src/docx/result_codes.xml">snippet</a> of jPOS' CMF into a dictionary to show how translation works</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log -o ascii -t 'translate(39),39,count' --field mti=2110</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>================================
+| translate(39) | 39   | count |
+================================
+|               | 1011 | 2     |
+|               | 1015 | 3     |
+|               | 1002 | 5     |
+|               | 1014 | 2     |
+|               | 1803 | 21    |
+================================</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_histograms">Histograms</h3>
+<div class="paragraph">
+<p>You can output an <a href="http://hdrhistogram.org/">HDR Histogram</a> using --histogram. Has some use for <a href="http://hdrhistogram.github.io/HdrHistogram/plotFiles.html">plotting</a> response times (rtt).</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --pair --histogram rtt</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Value     Percentile TotalCount 1/(1-Percentile)</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>       4.000 0.000000000000          1           1.00
+       6.000 0.100000000000          8           1.11
+       6.000 0.200000000000          8           1.25
+       7.000 0.300000000000         11           1.43
+       8.000 0.400000000000         16           1.67
+       8.000 0.500000000000         16           2.00
+       8.000 0.550000000000         16           2.22
+       9.000 0.600000000000         17           2.50
+      11.000 0.650000000000         19           2.86
+      12.000 0.700000000000         20           3.33
+      22.000 0.750000000000         21           4.00
+      23.000 0.775000000000         22           4.44
+      49.000 0.800000000000         23           5.00
+      51.000 0.825000000000         24           5.71
+      51.000 0.850000000000         24           6.67
+     141.000 0.875000000000         25           8.00
+     141.000 0.887500000000         25           8.89
+     143.000 0.900000000000         26          10.00
+     143.000 0.912500000000         26          11.43
+     143.000 0.925000000000         26          13.33
+     149.000 0.937500000000         27          16.00
+     149.000 0.943750000000         27          17.78
+     149.000 0.950000000000         27          20.00
+     149.000 0.956250000000         27          22.86
+     149.000 0.962500000000         27          26.67
+     150.000 0.968750000000         28          32.00
+     150.000 1.000000000000         28
+#[Mean    =       31.286, StdDeviation   =       48.111]
+#[Max     =      150.000, Total count    =           28]
+#[Buckets =           32, SubBuckets     =         2048]</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_json_export">JSON export</h3>
+<div class="paragraph">
+<p>Export each log entry as a single line of JSON. The driver idea here was to allow import into Apache Spark for query using <a href="https://spark.apache.org/sql/">Spark SQL</a>.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --field mti=2100 -n 1 --json</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>{"at":"2014-12-18T15:12:40.330-0200","lifespan":1,"realm":"channel/127.0.0.1:9001","mti":"2100","pan":"6009330000000021","processing_code":"300000","transaction_amount":8582000000000000,"transmission_date_and_time":"1218151240","stan":2,"local_transaction_time":"20141218151240","expiration_date":"1001","settlement_date":"20141218","capture_date":"1218","point_of_service_entry_mode":"10000000080000000004000001000000","acquiring_institution_identification_code":"000001","rrn":"180312760317","card_acceptor_terminal_identification":"29110001","card_acceptor_identification_code":"001001","city":"jCard Selftest system","country":"Montevideo","f_43_5":"MV","f_43_7":"UY","f_113_2":"106","msgType":"send"}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_digest_format">Digest format</h3>
+<div class="paragraph">
+<p>Output a slightly less wordy output. Supports translation of field paths to names using a dictionary (TODO explain&#8230;&#8203;).</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --field mti=2100 -n 1 --digest</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>[33m&lt;log[0m realm=[32m"channel/127.0.0.1:9001"[0m at=[32m"2014-12-18 15:12:40.330"[0m type=[32m"send"[0m lifespan=[32m"1"[0m[33m&gt;[0m
+  0: [32m2100[0m [mti]
+  2: [32m6009330000000021[0m [Primary account number]
+  3: [32m300000[0m [Processing code]
+  4: [32m8582000000000000[0m [Transaction amount]
+  7: [32m1218151240[0m [Transmission date and time]
+  11: [32m000000000002[0m [System trace audit number]
+  12: [32m20141218151240[0m [Local transaction time]
+  14: [32m1001[0m [Expiration date]
+  15: [32m20141218[0m [Settlement date]
+  17: [32m1218[0m [Capture date]
+  22: [32m10000000080000000004000001000000[0m [Point of service entry mode]
+  32: [32m000001[0m [Acquiring institution identification code]
+  37: [32m180312760317[0m [Retrieval reference number]
+  41: [32m29110001[0m [Card acceptor terminal identification]
+  42: [32m001001[0m [Card acceptor identification code]
+  43.2: [32mjCard Selftest system[0m [City]
+  43.4: [32mMontevideo[0m [Country]
+  43.5: [32mMV[0m
+  43.7: [32mUY[0m
+  113.2: [32m106[0m
+[33m&lt;/log&gt;[0m</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_gnuplot_script_generation">Gnuplot script generation</h3>
+<div class="literalblock">
+<div class="content">
+<pre>lago log_samples/q2.log --pair --table time,rtt --gnuplot rtts</pre>
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Wrote rtts.csv
+Wrote rtts.gp</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>time,rtt
+15:12:40.288,4
+15:12:40.287,6
+15:12:40.331,141
+15:12:40.330,143
+15:12:40.496,6
+15:12:40.496,7
+15:12:40.515,22
+15:12:40.515,23
+15:12:40.548,149
+15:12:40.547,150
+15:12:40.711,49
+15:12:40.710,51
+15:12:40.775,6
+15:12:40.774,8
+15:12:40.794,10
+15:12:40.793,12
+15:12:40.817,8
+15:12:40.817,8
+15:12:40.837,9
+15:12:40.836,11
+15:12:40.862,5
+15:12:40.861,7
+15:12:40.878,6
+15:12:40.877,8
+15:12:40.896,6
+15:12:40.896,7
+15:12:40.918,6
+15:12:40.917,8</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>#!/usr/bin/env gnuplot
+set datafile separator ','
+set terminal svg enhanced mouse standalone size 1280,960
+set output 'rtts.svg'
+#set terminal pngcairo size 1280,960
+#set output 'rtts.png'
+set xdata time
+set timefmt '%H:%M:%S'
+set format x '%H:%M:%S'
+set format y '%.1s %c'
+set lmargin 10
+set xrange ['15:12:40.288':'15:12:40.917']
+set multiplot layout 1,1 title 'rtts.csv'
+do for [i=2:2] {
+    plot 'rtts.csv' using 1:i w lines lt 3 t column(i)
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_when_you_need_more">When you need more</h3>
+<div class="paragraph">
+<p>See <a href="https://github.com/binaryfoo/lagotto/tree/master/src/main/scala/io/github/binaryfoo/lagotto/examples">examples</a> or the sbt shell script <a href="https://github.com/binaryfoo/lagotto-examples/tree/master/src/main/script">examples</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_log4j">log4j</h3>
+<div class="paragraph">
+<p>TODO: Might be a can of worms given the variety of possible input formats&#8230;&#8203;</p>
+</div>
+<div class="paragraph">
+<p><span class="small">The output for all examples is generated by <a href="https://github.com/binaryfoo/lagotto/blob/master/src/test/scala/io/github/binaryfoo/lagotto/RunExamples.scala">RunExamples.scala</a>.</span></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reference">Reference</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_filters">Filters</h3>
+<div class="paragraph">
+<p>Use these with the filters: -f and --field.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti=0200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) is 0200</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti!=0200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) is anything other than 0200</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39!=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 39 is not empty</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">rtt&gt;500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Round trip time (available with --pair) is greater than or equal to 500ms</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11&lt;123456</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">STAN is less than or equal to 123456</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48~magic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 48 contains magic (case sensitive)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti~/08[0-3]0/</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) matches the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regular expression</a> 08[0-3]0.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If you specify multiple filters only records that match all filters will be returned.</p>
+</div>
+<div class="paragraph">
+<p>To match one thing or another you can use a regex like 48~/(one thing)|(or another)/. A little contrived but it works for now.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_field_expressions">Field Expressions</h3>
+<div class="paragraph">
+<p>Use these with the table output format --table (with --out-format csv, tsv, ascii, html or jira).</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (the MTI) from a jPOS &lt;log&gt; entry. Aliased by mti.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48.3.2.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A quite deeply nested subfield</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">field(/regex/$1/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apply the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regular expression</a> to the value of field. Ouput the replacement. A bit like sed but with Java&#8217;s regex flavour.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_jpos">jPOS</h4>
+<div class="paragraph">
+<p>In a jPOS log entry a bunch of fields are exposed. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>&lt;log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 01:31:59 EST 2014.292" lifespan="10005ms"&gt;
+  &lt;receive&gt;
+    &lt;isomsg direction="incoming"&gt;
+      &lt;!-- org.jpos.iso.packager.XMLPackager --&gt;
+      &lt;field id="0" value="0800"/&gt;
+      &lt;field id="7" value="1124000003"/&gt;
+      &lt;field id="11" value="28928"/&gt;
+      &lt;isomsg id="48"&gt;
+        &lt;field id="1" value="nested subfield"/&gt;
+      &lt;/isomsg&gt;
+    &lt;/isomsg&gt;
+  &lt;/receive&gt;
+&lt;/log&gt;</pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">realm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel/10.0.0.1:4321</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ipAddress</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10.0.0.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">socket</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10.0.0.1:4321</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:31:59.292</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lifespan</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10005</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0800</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0800</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nested subfield</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">msgType</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Some extra derived fields are available too.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">icon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8592;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">summary</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8592; 0800 (Network Management Request)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">length(48.1)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_log4j_2">log4j</h4>
+<div class="paragraph">
+<p>In a log record like <code>[08 Nov 2014 13:54:59,001] INFO  [a.ClassName]: Did something useful</code> the following fields are available.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 13:54:59.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">level</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INFO</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">category</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a.ClassName</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Did something useful</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If the log4j record contains a jPOS message, like the following example, all the usual jPOS fields are available.
+If there is a name collision, the value from the jPOS entry is available with the prefix <code>jpos.</code>. For example <code>timestamp</code> and <code>jpos.timestamp</code> in the following example.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>[08 Nov 2014 01:00:20,529] ERROR [some.package]: &lt;log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 01:00:21 EST 2014.001" lifespan="290ms"&gt;
+    &lt;receive&gt;
+      &lt;exception name="Oops"&gt;
+      Oops
+      &lt;/exception&gt;
+    &lt;/receive&gt;
+  &lt;/log&gt;</pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:00:20.529</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">jpos.timestmap</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:00:21.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exception</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Oops</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">realm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel/172.0.1.7:4779</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_more_fields_available_on_all_log_types">More fields available on all log types</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delay</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Milliseconds elapsed between two consecutive messages</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">src</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File name and line number output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">file</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File name output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">line</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Line number output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">field(/regex/replacement/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regex</a> replacement</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">elapsed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time since the first log entry</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">elapsedSince(filter)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time since the last log entry matching filter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if(filter,trueExpr,falseExpr)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If filter is true, show trueExpr, otherwise falseExpr. Either expression can be blank.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">distinct(field)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only one row per unique value of field.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_aggregation_2">Aggregation</h3>
+<div class="paragraph">
+<p>Use count, sum, min, max, avg, group_concat, group_sample, count(condition)</p>
+</div>
+<div class="paragraph">
+<p>Can also use distinct(). Eg group_concat(distinct(2))</p>
+</div>
+<div class="paragraph">
+<p>group_sample(src 3) picks 3 random src values from the N values in a group</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pairing">Pairing</h3>
+<div class="paragraph">
+<p>--pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.</p>
+</div>
+<div class="paragraph">
+<p>The following additional fields will be available to filter, aggregate and display.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">request.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Value of &lt;field&gt; on the request. Eg request.timestamp or request.2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">req.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as above</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">response.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Value of &lt;field&gt; on the response. Eg response.timestamp or resp.39</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">resp.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as above</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">rtt</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Round trip time in milliseconds: response.timestamp - request.timestamp.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>By default fields are looked up on the request. If not found then on the response.
+Eg timestamp is the same as req.timestamp whilst 39 would typically fall through to resp.39 as 39 is typically a response field.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_input_formats">Input Formats</h3>
+<div class="paragraph">
+<p>By default the input type is sniffed (automagically detected) by looking at the start of each line. jPOS and log4j entries are detected.</p>
+</div>
+<div class="paragraph">
+<p>Other formats can be explicitly specified with --in-format.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Format</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">csv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated values. The field names are taken from the first row: the header.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">icsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated values without a header row. Fields are numbered starting at zero rather than named.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tab separated values. The field names are taken from the first row: the header.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">gc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Java Garbage Collection log output. Quite brittle depending on the JVM and version.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">apache</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache access logs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_output_formats">Output Formats</h3>
+<div class="paragraph">
+<p>By default the same text that&#8217;s input: just act as a filter not an aggregator or formatter.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 33%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Flag</th>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table mti,nmic,count</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Output just the specified field values. By default comma separated. Change the format using --out-format.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table mti,nmic,count --out-format tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tab separated field values. Abbreviated form -o tsv.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format html</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table time,summary,src -o html</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTML table</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format ascii</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-t exception,count-o ascii</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ASCII 'art' table. Like mysql client.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--plain</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--t time,summary,src --plain</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Avoid unicode characters that might not print on your terminal.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format jira</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-o jira --table exception,count</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table that can be pasted into jira</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--digest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slightly shorter. Nesting compacted to one line.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--json</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A single line of JSON per input record.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table -o sqlIn</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table distinct(ipAddress) -o sqlIn</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of values that can be used in a SQL IN clause.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>You can use --live with --table to spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_others">Others</h3>
+<div class="paragraph">
+<p>--names to add a name attribute to each &lt;field&gt; element</p>
+</div>
+<div class="paragraph">
+<p>--ui to open the results in a browser</p>
+</div>
+<div class="paragraph">
+<p>--merge to remove duplicates when reading partially overlapping files</p>
+</div>
+<div class="paragraph">
+<p>--highlight for ANSI colour codes</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2016-01-03 17:52:48 AEDT
+</div>
+</div>
+</body>
+</html>

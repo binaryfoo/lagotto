@@ -1,0 +1,343 @@
+== Reference
+
+=== Filters
+
+Use these with the filters: -f and --field.
+
+[cols="2*", options="header"]
+|===
+|Example
+|Description
+
+|mti=0200
+|Field 0 (MTI) is 0200
+
+|mti!=0200
+|Field 0 (MTI) is anything other than 0200
+
+|39!=
+|Field 39 is not empty
+
+|rtt>500
+|Round trip time (available with --pair) is greater than or equal to 500ms
+
+|11<123456
+|STAN is less than or equal to 123456
+
+|48~magic
+|Field 48 contains magic (case sensitive)
+
+|mti~/08[0-3]0/
+|Field 0 (MTI) matches the http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regular expression] 08[0-3]0.
+|===
+
+If you specify multiple filters only records that match all filters will be returned.
+
+To match one thing or another you can use a regex like 48~/(one thing)|(or another)/. A little contrived but it works for now.
+
+=== Field Expressions
+
+Use these with the table output format --table (with --out-format csv, tsv, ascii, html or jira).
+
+[cols="2*", options="header"]
+|===
+|Example
+|Description
+
+|0
+|Field 0 (the MTI) from a jPOS <log> entry. Aliased by mti.
+
+|48.3.2.1
+|A quite deeply nested subfield
+
+|field(/regex/$1/)
+|Apply the http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regular expression] to the value of field. Ouput the replacement. A bit like sed but with Java's regex flavour.
+|===
+
+==== jPOS
+
+In a jPOS log entry a bunch of fields are exposed. For example:
+
+    <log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 01:31:59 EST 2014.292" lifespan="10005ms">
+      <receive>
+        <isomsg direction="incoming">
+          <!-- org.jpos.iso.packager.XMLPackager -->
+          <field id="0" value="0800"/>
+          <field id="7" value="1124000003"/>
+          <field id="11" value="28928"/>
+          <isomsg id="48">
+            <field id="1" value="nested subfield"/>
+          </isomsg>
+        </isomsg>
+      </receive>
+    </log>
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|realm
+|some.channel/10.0.0.1:4321
+
+|ipAddress
+|10.0.0.1
+
+|socket
+|10.0.0.1:4321
+
+|link
+|some.channel
+
+|timestamp
+|2014-11-08 01:31:59.292
+
+|lifespan
+|10005
+
+|0
+|0800
+
+|mti
+|0800
+
+|48.1
+|nested subfield
+
+|msgType
+|receive
+
+|===
+
+Some extra derived fields are available too.
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|icon
+|<-
+
+|summary
+|<- 0800 (Network Management Request)
+
+|length(48.1)
+|15
+
+|===
+
+==== log4j
+
+In a log record like `[08 Nov 2014 13:54:59,001] INFO  [a.ClassName]: Did something useful` the following fields are available.
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|timestamp
+|2014-11-08 13:54:59.001
+
+|level
+|INFO
+
+|category
+|a.ClassName
+
+|message
+|Did something useful
+
+|===
+
+If the log4j record contains a jPOS message, like the following example, all the usual jPOS fields are available.
+If there is a name collision, the value from the jPOS entry is available with the prefix `jpos.`. For example `timestamp` and `jpos.timestamp` in the following example.
+
+    [08 Nov 2014 01:00:20,529] ERROR [some.package]: <log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 01:00:21 EST 2014.001" lifespan="290ms">
+        <receive>
+          <exception name="Oops">
+          Oops
+          </exception>
+        </receive>
+      </log>
+
+[cols="2*", options="header"]
+|===
+|Name
+|Value in example
+
+|timestamp
+|2014-11-08 01:00:20.529
+
+|jpos.timestmap
+|2014-11-08 01:00:21.001
+
+|exception
+|Oops
+
+|realm
+|some.channel/172.0.1.7:4779
+
+|===
+
+==== More fields available on all log types
+
+[cols="2*", options="header"]
+|===
+|Name
+|Description
+
+|delay
+|Milliseconds elapsed between two consecutive messages
+
+|src
+|File name and line number output row is derived from
+
+|file
+|File name output row is derived from
+
+|line
+|Line number output row is derived from
+
+|field(/regex/replacement/)
+|http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[Regex] replacement
+
+|elapsed
+|Time since the first log entry
+
+|elapsedSince(filter)
+|Time since the last log entry matching filter
+
+|if(filter,trueExpr,falseExpr)
+|If filter is true, show trueExpr, otherwise falseExpr. Either expression can be blank.
+
+|distinct(field)
+|Only one row per unique value of field.
+
+|===
+
+=== Aggregation
+
+Use count, sum, min, max, avg, group_concat, group_sample, count(condition)
+
+Can also use distinct(). Eg group_concat(distinct(2))
+
+group_sample(src 3) picks 3 random src values from the N values in a group
+
+=== Pairing
+
+--pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.
+
+The following additional fields will be available to filter, aggregate and display.
+
+[cols="2*", options="header"]
+|===
+|Name
+|Description
+
+|request.<field>
+|Value of <field> on the request. Eg request.timestamp or request.2
+
+|req.<field>
+|Same as above
+
+|response.<field>
+|Value of <field> on the response. Eg response.timestamp or resp.39
+
+|resp.<field>
+|Same as above
+
+|rtt
+|Round trip time in milliseconds: response.timestamp - request.timestamp.
+
+|===
+
+By default fields are looked up on the request. If not found then on the response.
+Eg timestamp is the same as req.timestamp whilst 39 would typically fall through to resp.39 as 39 is typically a response field.
+
+=== Input Formats
+
+By default the input type is sniffed (automagically detected) by looking at the start of each line. jPOS and log4j entries are detected.
+
+Other formats can be explicitly specified with --in-format.
+
+[cols="2*", options="header"]
+|===
+|Format
+|Description
+
+|csv
+|Comma separated values. The field names are taken from the first row: the header.
+
+|icsv
+|Comma separated values without a header row. Fields are numbered starting at zero rather than named.
+
+|tsv
+|Tab separated values. The field names are taken from the first row: the header.
+
+|gc
+|Java Garbage Collection log output. Quite brittle depending on the JVM and version.
+
+|apache
+|Apache access logs.
+
+|===
+
+=== Output Formats
+
+By default the same text that's input: just act as a filter not an aggregator or formatter.
+
+[cols="3*", options="header"]
+|===
+| Flag
+| Example
+| Format
+
+| --table
+| --table mti,nmic,count
+| Output just the specified field values. By default comma separated. Change the format using --out-format.
+
+| --out-format tsv
+| --table mti,nmic,count --out-format tsv
+| Tab separated field values. Abbreviated form -o tsv.
+
+| --out-format html
+| --table time,summary,src -o html
+| HTML table
+
+| --out-format ascii
+| -t exception,count-o ascii
+| ASCII 'art' table. Like mysql client.
+
+| --plain
+| --t time,summary,src --plain
+| Avoid unicode characters that might not print on your terminal.
+
+| --out-format jira
+| -o jira --table exception,count
+| Table that can be pasted into jira
+
+| --digest
+| No value required
+| Slightly shorter. Nesting compacted to one line.
+
+| --json
+| No value required
+| A single line of JSON per input record.
+
+| --table -o sqlIn
+| --table distinct(ipAddress) -o sqlIn
+| A list of values that can be used in a SQL IN clause.
+|===
+
+You can use --live with --table to spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
+
+=== Others
+
+--names to add a name attribute to each <field> element
+
+--ui to open the results in a browser
+
+--merge to remove duplicates when reading partially overlapping files
+
+--highlight for ANSI colour codes
