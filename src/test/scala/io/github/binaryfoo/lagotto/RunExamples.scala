@@ -3,7 +3,7 @@ package io.github.binaryfoo.lagotto
 import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
 import java.nio.file.{Files, StandardCopyOption}
 
-import io.github.binaryfoo.lagotto.shell.Main
+import io.github.binaryfoo.lagotto.shell.{IsATty, Main}
 import org.asciidoctor.internal.JRubyAsciidoctor
 import org.asciidoctor.{AsciiDocDirectoryWalker, OptionsBuilder, SafeMode}
 
@@ -69,6 +69,7 @@ object RunExamples {
     println(s"Running ${args.mkString(" ")}")
     try {
       System.setProperty("single.thread", "true")
+      IsATty.enabled = false
       val out = new ByteArrayOutputStream()
       Console.withOut(out) {
         Main.main(args.toArray)
