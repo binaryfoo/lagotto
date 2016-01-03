@@ -1,0 +1,6 @@
+= Lago log tool
+:toc: left
+
+include::examples.adoc[]
+
+include::reference.adoc[]

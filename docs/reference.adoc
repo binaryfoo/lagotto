@@ -1,4 +1,6 @@
-== Filters
+== Reference
+
+=== Filters
 
 Use these with the filters: -f and --field.
 
@@ -33,7 +35,7 @@ If you specify multiple filters only records that match all filters will be retu
 
 To match one thing or another you can use a regex like 48~/(one thing)|(or another)/. A little contrived but it works for now.
 
-== Field Expressions
+=== Field Expressions
 
 Use these with the table output format --table (with --out-format csv, tsv, ascii, html or jira).
 
@@ -52,7 +54,7 @@ Use these with the table output format --table (with --out-format csv, tsv, asci
 |Apply the http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html[regular expression] to the value of field. Ouput the replacement. A bit like sed but with Java's regex flavour.
 |===
 
-=== jPOS
+==== jPOS
 
 In a jPOS log entry a bunch of fields are exposed. For example:
 
@@ -125,7 +127,7 @@ Some extra derived fields are available too.
 
 |===
 
-=== log4j
+==== log4j
 
 In a log record like `[08 Nov 2014 13:54:59,001] INFO  [a.ClassName]: Did something useful` the following fields are available.
 
@@ -178,7 +180,7 @@ If there is a name collision, the value from the jPOS entry is available with th
 
 |===
 
-=== More fields available on all log types
+==== More fields available on all log types
 
 [cols="2*", options="header"]
 |===
@@ -214,7 +216,7 @@ If there is a name collision, the value from the jPOS entry is available with th
 
 |===
 
-== Aggregation
+=== Aggregation
 
 Use count, sum, min, max, avg, group_concat, group_sample, count(condition)
 
@@ -222,7 +224,7 @@ Can also use distinct(). Eg group_concat(distinct(2))
 
 group_sample(src 3) picks 3 random src values from the N values in a group
 
-== Pairing
+=== Pairing
 
 --pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.
 
@@ -253,7 +255,7 @@ The following additional fields will be available to filter, aggregate and displ
 By default fields are looked up on the request. If not found then on the response.
 Eg timestamp is the same as req.timestamp whilst 39 would typically fall through to resp.39 as 39 is typically a response field.
 
-== Input Formats
+=== Input Formats
 
 By default the input type is sniffed (automagically detected) by looking at the start of each line. jPOS and log4j entries are detected.
 
@@ -281,7 +283,7 @@ Other formats can be explicitly specified with --in-format.
 
 |===
 
-== Output Formats
+=== Output Formats
 
 By default the same text that's input: just act as a filter not an aggregator or formatter.
 
@@ -330,7 +332,7 @@ By default the same text that's input: just act as a filter not an aggregator or
 
 You can use --live with --table to spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.
 
-== Others
+=== Others
 
 --names to add a name attribute to each <field> element
 

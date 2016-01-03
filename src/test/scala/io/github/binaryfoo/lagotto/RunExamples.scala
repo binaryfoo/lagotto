@@ -5,7 +5,7 @@ import java.nio.file.{Files, StandardCopyOption}
 
 import io.github.binaryfoo.lagotto.shell.Main
 import org.asciidoctor.internal.JRubyAsciidoctor
-import org.asciidoctor.{OptionsBuilder, SafeMode}
+import org.asciidoctor.{AsciiDocDirectoryWalker, OptionsBuilder, SafeMode}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -28,8 +28,18 @@ object RunExamples {
     move("rtts.csv")
     move("rtts.gp")
     val asciiDoctor = JRubyAsciidoctor.create()
-    asciiDoctor.renderFile(outputFile, OptionsBuilder.options().safe(SafeMode.UNSAFE))
-    asciiDoctor.renderFile(new File("docs/reference.adoc"), OptionsBuilder.options().safe(SafeMode.UNSAFE))
+    asciiDoctor.renderDirectory(new AsciiDocDirectoryWalker("docs"), OptionsBuilder.options().safe(SafeMode.UNSAFE))
+    asciiDoctor.unregisterAllExtensions()
+    asciiDoctor.shutdown()
+
+    if (args.nonEmpty) {
+      val siteDir = new File(args(0))
+      siteDir.mkdirs()
+      for (f <- new File("docs").listFiles()) {
+        println(s"Copying $f to $siteDir")
+        Files.copy(f.toPath, new File(siteDir, f.getName).toPath, StandardCopyOption.REPLACE_EXISTING)
+      }
+    }
   }
 
   def move(file: String): Unit = {
@@ -57,11 +67,16 @@ object RunExamples {
 
   def lagoOutputFrom(args: Array[String]): String = {
     println(s"Running ${args.mkString(" ")}")
-    val out = new ByteArrayOutputStream()
-    Console.withOut(out) {
-      Main.main(args.toArray)
+    try {
+      System.setProperty("single.thread", "true")
+      val out = new ByteArrayOutputStream()
+      Console.withOut(out) {
+        Main.main(args.toArray)
+      }
+      out.toString
+    } finally {
+      System.clearProperty("single.thread")
     }
-    out.toString
   }
 
   def indent(s: String): String = {
