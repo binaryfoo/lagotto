@@ -6,7 +6,7 @@ If you want to try them out:
 
 . git clone https://github.com/binaryfoo/lagotto.git
 . cd lagotto
-. sbt assembly
+. mvn package -DskipTests
 . ./lago <... example ...>
 
 === Filtering
@@ -15,37 +15,37 @@ Only output entries with an MTI (field 0) of 2100 using --field.
 
     lago log_samples/q2.log --field mti=2100 -n 1
 
-    <log realm="channel/127.0.0.1:9001" at="Thu Dec 18 15:12:40 UYST 2014.330" lifespan="1ms">
-      <send>
-        <isomsg direction="outgoing">
+    [33m<log[0m realm=[32m"channel/127.0.0.1:9001"[0m at=[32m"Thu Dec 18 15:12:40 UYST 2014.330"[0m lifespan=[32m"1ms"[0m[33m>[0m
+      [33m<send[0m[33m>[0m
+        [33m<isomsg[0m direction=[32m"outgoing"[0m[33m>[0m
           <!-- org.jpos.iso.packager.GenericPackager[cfg/jcard.xml] -->
-          <field id="0" value="2100"/>
-          <field id="2" value="6009330000000021"/>
-          <field id="3" value="300000"/>
-          <field id="4" value="8582000000000000"/>
-          <field id="7" value="1218151240"/>
-          <field id="11" value="000000000002"/>
-          <field id="12" value="20141218151240"/>
-          <field id="14" value="1001"/>
-          <field id="15" value="20141218"/>
-          <field id="17" value="1218"/>
-          <field id="22" value="10000000080000000004000001000000" type="binary"/>
-          <field id="32" value="000001"/>
-          <field id="37" value="180312760317"/>
-          <field id="41" value="29110001"/>
-          <field id="42" value="001001"/>
-          <isomsg id="43">
-            <field id="2" value="jCard Selftest system"/>
-            <field id="4" value="Montevideo"/>
-            <field id="5" value="MV"/>
-            <field id="7" value="UY"/>
-          </isomsg>
-          <isomsg id="113">
-            <field id="2" value="106"/>
-          </isomsg>
-        </isomsg>
-      </send>
-    </log>
+          [33m<field[0m id=[32m"0"[0m value=[32m"2100"[0m[33m/>[0m
+          [33m<field[0m id=[32m"2"[0m value=[32m"6009330000000021"[0m[33m/>[0m
+          [33m<field[0m id=[32m"3"[0m value=[32m"300000"[0m[33m/>[0m
+          [33m<field[0m id=[32m"4"[0m value=[32m"8582000000000000"[0m[33m/>[0m
+          [33m<field[0m id=[32m"7"[0m value=[32m"1218151240"[0m[33m/>[0m
+          [33m<field[0m id=[32m"11"[0m value=[32m"000000000002"[0m[33m/>[0m
+          [33m<field[0m id=[32m"12"[0m value=[32m"20141218151240"[0m[33m/>[0m
+          [33m<field[0m id=[32m"14"[0m value=[32m"1001"[0m[33m/>[0m
+          [33m<field[0m id=[32m"15"[0m value=[32m"20141218"[0m[33m/>[0m
+          [33m<field[0m id=[32m"17"[0m value=[32m"1218"[0m[33m/>[0m
+          [33m<field[0m id=[32m"22"[0m value=[32m"10000000080000000004000001000000"[0m type=[32m"binary"[0m[33m/>[0m
+          [33m<field[0m id=[32m"32"[0m value=[32m"000001"[0m[33m/>[0m
+          [33m<field[0m id=[32m"37"[0m value=[32m"180312760317"[0m[33m/>[0m
+          [33m<field[0m id=[32m"41"[0m value=[32m"29110001"[0m[33m/>[0m
+          [33m<field[0m id=[32m"42"[0m value=[32m"001001"[0m[33m/>[0m
+          [33m<isomsg[0m id=[32m"43"[0m[33m>[0m
+            [33m<field[0m id=[32m"2"[0m value=[32m"jCard Selftest system"[0m[33m/>[0m
+            [33m<field[0m id=[32m"4"[0m value=[32m"Montevideo"[0m[33m/>[0m
+            [33m<field[0m id=[32m"5"[0m value=[32m"MV"[0m[33m/>[0m
+            [33m<field[0m id=[32m"7"[0m value=[32m"UY"[0m[33m/>[0m
+          [33m</isomsg>[0m
+          [33m<isomsg[0m id=[32m"113"[0m[33m>[0m
+            [33m<field[0m id=[32m"2"[0m value=[32m"106"[0m[33m/>[0m
+          [33m</isomsg>[0m
+        [33m</isomsg>[0m
+      [33m</send>[0m
+    [33m</log>[0m
 
 The --field option take an argument of the form path=value. Path can be dot delimited like 48.1.1. The -n limits the number of entries output. Like in 'nix head and tail.
 
@@ -482,28 +482,28 @@ Output a slightly less wordy output. Supports translation of field paths to name
 
     lago log_samples/q2.log --field mti=2100 -n 1 --digest
 
-    <log realm="channel/127.0.0.1:9001" at="2014-12-18 15:12:40.330" type="send" lifespan="1">
-      0: 2100 [mti]
-      2: 6009330000000021 [Primary account number]
-      3: 300000 [Processing code]
-      4: 8582000000000000 [Transaction amount]
-      7: 1218151240 [Transmission date and time]
-      11: 000000000002 [System trace audit number]
-      12: 20141218151240 [Local transaction time]
-      14: 1001 [Expiration date]
-      15: 20141218 [Settlement date]
-      17: 1218 [Capture date]
-      22: 10000000080000000004000001000000 [Point of service entry mode]
-      32: 000001 [Acquiring institution identification code]
-      37: 180312760317 [Retrieval reference number]
-      41: 29110001 [Card acceptor terminal identification]
-      42: 001001 [Card acceptor identification code]
-      43.2: jCard Selftest system [City]
-      43.4: Montevideo [Country]
-      43.5: MV
-      43.7: UY
-      113.2: 106
-    </log>
+    [33m<log[0m realm=[32m"channel/127.0.0.1:9001"[0m at=[32m"2014-12-18 15:12:40.330"[0m type=[32m"send"[0m lifespan=[32m"1"[0m[33m>[0m
+      0: [32m2100[0m [mti]
+      2: [32m6009330000000021[0m [Primary account number]
+      3: [32m300000[0m [Processing code]
+      4: [32m8582000000000000[0m [Transaction amount]
+      7: [32m1218151240[0m [Transmission date and time]
+      11: [32m000000000002[0m [System trace audit number]
+      12: [32m20141218151240[0m [Local transaction time]
+      14: [32m1001[0m [Expiration date]
+      15: [32m20141218[0m [Settlement date]
+      17: [32m1218[0m [Capture date]
+      22: [32m10000000080000000004000001000000[0m [Point of service entry mode]
+      32: [32m000001[0m [Acquiring institution identification code]
+      37: [32m180312760317[0m [Retrieval reference number]
+      41: [32m29110001[0m [Card acceptor terminal identification]
+      42: [32m001001[0m [Card acceptor identification code]
+      43.2: [32mjCard Selftest system[0m [City]
+      43.4: [32mMontevideo[0m [Country]
+      43.5: [32mMV[0m
+      43.7: [32mUY[0m
+      113.2: [32m106[0m
+    [33m</log>[0m
     
 
 === Gnuplot script generation

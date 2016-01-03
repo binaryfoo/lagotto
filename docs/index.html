@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.3">
-<title>Examples</title>
+<title>Lago log tool</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -417,8 +417,42 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 </head>
-<body class="article">
+<body class="article toc2 toc-left">
 <div id="header">
+<h1>Lago log tool</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_examples">Examples</a>
+<ul class="sectlevel2">
+<li><a href="#_filtering">Filtering</a></li>
+<li><a href="#_aggregation">Aggregation</a></li>
+<li><a href="#_pairing_requests_responses">Pairing Requests &amp; Responses</a></li>
+<li><a href="#_cleaning_data">Cleaning Data</a></li>
+<li><a href="#_sorting">Sorting</a></li>
+<li><a href="#_more_filtering">More Filtering</a></li>
+<li><a href="#_dictionaries">Dictionaries</a></li>
+<li><a href="#_histograms">Histograms</a></li>
+<li><a href="#_json_export">JSON export</a></li>
+<li><a href="#_digest_format">Digest format</a></li>
+<li><a href="#_gnuplot_script_generation">Gnuplot script generation</a></li>
+<li><a href="#_when_you_need_more">When you need more</a></li>
+<li><a href="#_log4j">log4j</a></li>
+</ul>
+</li>
+<li><a href="#_reference">Reference</a>
+<ul class="sectlevel2">
+<li><a href="#_filters">Filters</a></li>
+<li><a href="#_field_expressions">Field Expressions</a></li>
+<li><a href="#_aggregation_2">Aggregation</a></li>
+<li><a href="#_pairing">Pairing</a></li>
+<li><a href="#_input_formats">Input Formats</a></li>
+<li><a href="#_output_formats">Output Formats</a></li>
+<li><a href="#_others">Others</a></li>
+</ul>
+</li>
+</ul>
+</div>
 </div>
 <div id="content">
 <div class="sect1">
@@ -1187,10 +1221,528 @@ do for [i=2:2] {
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_reference">Reference</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_filters">Filters</h3>
+<div class="paragraph">
+<p>Use these with the filters: -f and --field.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti=0200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) is 0200</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti!=0200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) is anything other than 0200</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39!=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 39 is not empty</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">rtt&gt;500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Round trip time (available with --pair) is greater than or equal to 500ms</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11&lt;123456</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">STAN is less than or equal to 123456</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48~magic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 48 contains magic (case sensitive)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti~/08[0-3]0/</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (MTI) matches the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regular expression</a> 08[0-3]0.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If you specify multiple filters only records that match all filters will be returned.</p>
+</div>
+<div class="paragraph">
+<p>To match one thing or another you can use a regex like 48~/(one thing)|(or another)/. A little contrived but it works for now.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_field_expressions">Field Expressions</h3>
+<div class="paragraph">
+<p>Use these with the table output format --table (with --out-format csv, tsv, ascii, html or jira).</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Field 0 (the MTI) from a jPOS &lt;log&gt; entry. Aliased by mti.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48.3.2.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A quite deeply nested subfield</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">field(/regex/$1/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apply the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">regular expression</a> to the value of field. Ouput the replacement. A bit like sed but with Java&#8217;s regex flavour.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_jpos">jPOS</h4>
+<div class="paragraph">
+<p>In a jPOS log entry a bunch of fields are exposed. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>&lt;log realm="some.channel/10.0.0.1:4321" at="Mon Nov 24 01:31:59 EST 2014.292" lifespan="10005ms"&gt;
+  &lt;receive&gt;
+    &lt;isomsg direction="incoming"&gt;
+      &lt;!-- org.jpos.iso.packager.XMLPackager --&gt;
+      &lt;field id="0" value="0800"/&gt;
+      &lt;field id="7" value="1124000003"/&gt;
+      &lt;field id="11" value="28928"/&gt;
+      &lt;isomsg id="48"&gt;
+        &lt;field id="1" value="nested subfield"/&gt;
+      &lt;/isomsg&gt;
+    &lt;/isomsg&gt;
+  &lt;/receive&gt;
+&lt;/log&gt;</pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">realm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel/10.0.0.1:4321</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ipAddress</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10.0.0.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">socket</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10.0.0.1:4321</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">link</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:31:59.292</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lifespan</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10005</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0800</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mti</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0800</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nested subfield</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">msgType</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Some extra derived fields are available too.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">icon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8592;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">summary</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8592; 0800 (Network Management Request)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">length(48.1)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_log4j_2">log4j</h4>
+<div class="paragraph">
+<p>In a log record like <code>[08 Nov 2014 13:54:59,001] INFO  [a.ClassName]: Did something useful</code> the following fields are available.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 13:54:59.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">level</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INFO</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">category</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">a.ClassName</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Did something useful</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If the log4j record contains a jPOS message, like the following example, all the usual jPOS fields are available.
+If there is a name collision, the value from the jPOS entry is available with the prefix <code>jpos.</code>. For example <code>timestamp</code> and <code>jpos.timestamp</code> in the following example.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>[08 Nov 2014 01:00:20,529] ERROR [some.package]: &lt;log realm="some.channel/172.0.1.7:4779" at="Sat Nov 08 01:00:21 EST 2014.001" lifespan="290ms"&gt;
+    &lt;receive&gt;
+      &lt;exception name="Oops"&gt;
+      Oops
+      &lt;/exception&gt;
+    &lt;/receive&gt;
+  &lt;/log&gt;</pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Value in example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:00:20.529</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">jpos.timestmap</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2014-11-08 01:00:21.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exception</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Oops</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">realm</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some.channel/172.0.1.7:4779</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_more_fields_available_on_all_log_types">More fields available on all log types</h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delay</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Milliseconds elapsed between two consecutive messages</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">src</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File name and line number output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">file</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File name output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">line</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Line number output row is derived from</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">field(/regex/replacement/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regex</a> replacement</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">elapsed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time since the first log entry</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">elapsedSince(filter)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time since the last log entry matching filter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if(filter,trueExpr,falseExpr)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If filter is true, show trueExpr, otherwise falseExpr. Either expression can be blank.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">distinct(field)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only one row per unique value of field.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_aggregation_2">Aggregation</h3>
+<div class="paragraph">
+<p>Use count, sum, min, max, avg, group_concat, group_sample, count(condition)</p>
+</div>
+<div class="paragraph">
+<p>Can also use distinct(). Eg group_concat(distinct(2))</p>
+</div>
+<div class="paragraph">
+<p>group_sample(src 3) picks 3 random src values from the N values in a group</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pairing">Pairing</h3>
+<div class="paragraph">
+<p>--pair option will match responses to requests based on MTI, STAN and realm. Only works for jPOS entries.</p>
+</div>
+<div class="paragraph">
+<p>The following additional fields will be available to filter, aggregate and display.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">request.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Value of &lt;field&gt; on the request. Eg request.timestamp or request.2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">req.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as above</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">response.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Value of &lt;field&gt; on the response. Eg response.timestamp or resp.39</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">resp.&lt;field&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same as above</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">rtt</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Round trip time in milliseconds: response.timestamp - request.timestamp.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>By default fields are looked up on the request. If not found then on the response.
+Eg timestamp is the same as req.timestamp whilst 39 would typically fall through to resp.39 as 39 is typically a response field.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_input_formats">Input Formats</h3>
+<div class="paragraph">
+<p>By default the input type is sniffed (automagically detected) by looking at the start of each line. jPOS and log4j entries are detected.</p>
+</div>
+<div class="paragraph">
+<p>Other formats can be explicitly specified with --in-format.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Format</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">csv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated values. The field names are taken from the first row: the header.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">icsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Comma separated values without a header row. Fields are numbered starting at zero rather than named.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tab separated values. The field names are taken from the first row: the header.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">gc</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Java Garbage Collection log output. Quite brittle depending on the JVM and version.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">apache</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache access logs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_output_formats">Output Formats</h3>
+<div class="paragraph">
+<p>By default the same text that&#8217;s input: just act as a filter not an aggregator or formatter.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 33%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Flag</th>
+<th class="tableblock halign-left valign-top">Example</th>
+<th class="tableblock halign-left valign-top">Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table mti,nmic,count</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Output just the specified field values. By default comma separated. Change the format using --out-format.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table mti,nmic,count --out-format tsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tab separated field values. Abbreviated form -o tsv.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format html</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table time,summary,src -o html</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTML table</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format ascii</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-t exception,count-o ascii</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ASCII 'art' table. Like mysql client.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--plain</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--t time,summary,src --plain</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Avoid unicode characters that might not print on your terminal.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--out-format jira</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-o jira --table exception,count</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Table that can be pasted into jira</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--digest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slightly shorter. Nesting compacted to one line.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--json</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No value required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A single line of JSON per input record.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table -o sqlIn</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">--table distinct(ipAddress) -o sqlIn</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of values that can be used in a SQL IN clause.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>You can use --live with --table to spit out the results incrementally (as they are discovered) rather than waiting until all field widths are known.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_others">Others</h3>
+<div class="paragraph">
+<p>--names to add a name attribute to each &lt;field&gt; element</p>
+</div>
+<div class="paragraph">
+<p>--ui to open the results in a browser</p>
+</div>
+<div class="paragraph">
+<p>--merge to remove duplicates when reading partially overlapping files</p>
+</div>
+<div class="paragraph">
+<p>--highlight for ANSI colour codes</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-01-03 18:03:25 AEDT
+Last updated 2016-01-03 17:52:48 AEDT
 </div>
 </div>
 </body>
