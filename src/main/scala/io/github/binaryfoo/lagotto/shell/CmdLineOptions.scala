@@ -2,7 +2,7 @@ package io.github.binaryfoo.lagotto.shell
 
 import io.github.binaryfoo.lagotto.JoinMode.JoinMode
 import io.github.binaryfoo.lagotto._
-import io.github.binaryfoo.lagotto.output.{ChartPerColumn, PlotStyle}
+import io.github.binaryfoo.lagotto.output.GnuplotOptions
 import io.github.binaryfoo.lagotto.reader.LogType
 import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat._
 
@@ -97,5 +97,3 @@ class SortKeyOrdering(val keys: List[SortKey]) extends Ordering[LogEntry] {
     }
   }
 }
-
-case class GnuplotOptions(enabled: Boolean = false, scriptName: String = "", style: PlotStyle = ChartPerColumn, timeFormat: Option[String] = None)

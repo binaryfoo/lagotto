@@ -11,16 +11,16 @@ object GnuplotScriptWriter {
   val DateTimeToSecondPrecision = """time\(yyyy-MM-dd HH:[m0]{2}:[s0]{2}\)""".r
   val DateTimeToMinutePrecision = """time\(yyyy-MM-dd HH:[m0]{2}\)""".r
 
-  def write(fields: Seq[String], csvFileName: String, plotFileName: String, xRange: (String, String), plotStyle: PlotStyle, timeFormat: Option[String]): String = {
+  def write(fields: Seq[String], csvFileName: String, xRange: (String, String), plotOptions: GnuplotOptions): String = {
     val gnuplotTimeFormat = toGnuPlotTimeFormat(fields.head)
-    val displayTimeFormat = timeFormat.map(toGnuPlotTimeFormat).getOrElse(gnuplotTimeFormat)
+    val displayTimeFormat = plotOptions.timeFormat.map(toGnuPlotTimeFormat).getOrElse(gnuplotTimeFormat)
     val columns = fields.tail
     val (firstTime, lastTime) = xRange
 
     // using tab delimited data fails on empty cells: \t\t gets merged
     // line types cheat sheet: http://kunak.phsx.ku.edu/~sergei/Gnuplot/line_point_types.html
 
-    val (body, plotCount) = plotStyle match {
+    val (body, plotCount) = plotOptions.style match {
       case ChartPerColumn =>
         (s"""|set multiplot layout ${columns.size},1 title '$csvFileName'
              |do for [i=2:${fields.size}] {
@@ -37,6 +37,7 @@ object GnuplotScriptWriter {
     }
 
     val height = 960 * math.max(1, plotCount / 6)
+    val plotFileName = plotOptions.scriptName
 
     val header = s"""#!/usr/bin/env gnuplot
                      |set datafile separator ','
@@ -67,6 +68,8 @@ object GnuplotScriptWriter {
     }
   }
 }
+
+case class GnuplotOptions(enabled: Boolean = false, scriptName: String = "", style: PlotStyle = ChartPerColumn, timeFormat: Option[String] = None)
 
 sealed trait PlotStyle
 object ChartPerColumn extends PlotStyle

@@ -46,6 +46,7 @@ object Main extends App {
         case "" => File.createTempFile("plot", "", new File(".")).getName
         case x => x
       }
+      val gnuplot = opts.gnuplot.copy(scriptName = baseName)
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
       val table = format match {
@@ -53,7 +54,7 @@ object Main extends App {
         case t: WildcardTable => t.copy(tableFormatter = DelimitedTableFormat(","))
       }
       val dataFile = new FileSink(table, true, csvFileName)
-      val gnuplotScript = new GnuplotSink(table, csvFileName, gpFileName, baseName, opts.gnuplot.style, opts.gnuplot.timeFormat)
+      val gnuplotScript = new GnuplotSink(table, csvFileName, gpFileName, gnuplot)
       val sinks = if (opts.liveUi)
         Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else
