@@ -38,6 +38,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
     val If = """if\(([^,]+),([^,]*),([^,]*)\)""".r
     val Lines = """lines\((\d+)\)""".r
     val Distinct = """distinct\((.+)\)""".r
+    val Ordinal = """ordinal\((.+)\)""".r
     val QuotedLiteral = """'([^']+)'""".r
     val NumericLiteral = """(\d+)""".r
     val FieldAccess = """f\[(\d+)\]""".r
@@ -59,6 +60,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case PivotOp(p@DirectExpr(pivot)) => PivotExpr(p, pivot)
         case ResultOfPivotOp(p@FieldExpr(field)) => PivotResultExpr(expr, p)
         case Distinct(FieldExpr(field)) => DistinctExpr(expr, field)
+        case Ordinal(FieldExpr(field)) => OrdinalExpr(expr, field)
         case XPathAccess(xpath) => XPathExpr(expr, xpath)
         case MsgPairFieldAccess(part, DirectExpr(field)) => MsgPartExpr(expr, part, field)
         case JoinedEntryFieldAccess(part, DirectExpr(field)) => MsgPartExpr(expr, part, field)
@@ -939,6 +941,22 @@ case class DistinctExpr(field: String, expr: FieldExpr) extends DirectExpr {
     } else {
       null
     }
+  }
+}
+case class OrdinalExpr(field: String, expr: FieldExpr) extends DirectExpr {
+
+  private val seen = mutable.HashMap[String, String]()
+  private var next = 1
+
+  override def apply(e: LogEntry): String = {
+    val v = expr(e)
+    seen.getOrElseUpdate(v, {
+      try {
+        next.toString
+      } finally {
+        next += 1
+      }
+    })
   }
 }
 

@@ -596,4 +596,13 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("11" -> "2")) shouldBe "2"
     expr(JposEntry("11" -> "1")) shouldBe null
   }
+
+  "ordinal(x)" should "number distinct values starting from 1" in {
+    val expr = expressionFor("ordinal(x)")
+    expr(JposEntry("x" -> "foo")) shouldBe "1"
+    expr(JposEntry("x" -> "bar")) shouldBe "2"
+    expr(JposEntry("x" -> "bar")) shouldBe "2"
+    expr(JposEntry("x" -> "foo")) shouldBe "1"
+    expr(JposEntry("x" -> "baz")) shouldBe "3"
+  }
 }

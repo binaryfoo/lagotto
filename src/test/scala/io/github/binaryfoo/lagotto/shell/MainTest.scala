@@ -1054,6 +1054,11 @@ class MainTest extends LagoTest {
     output should (include("2,0200") and include("0,0210"))
   }
 
+  "ordinal(mti)" should "number distinct values starting from 1" in {
+    val output = run("--table", "ordinal(mti),mti,count", testFile("a-bunch.xml"))
+    output should (include("1,0200,2") and include("2,0210,2"))
+  }
+
   "if(delay>,x,y)" should "calculate delay" in {
     val output = run("--no-header", "--table", "48.1,if(delay>101,'a','b')", testFile("a-bunch.xml"))
     output shouldBe """a-bunch.xml #1,b
