@@ -54,12 +54,12 @@ class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: Strin
 /**
  * Spit out two files: the data (.csv) and a script to plot the series in that file (.gp).
  */
-class GnuplotSink(val fieldList: FieldList, val csvFileName: String, val gpFileName: String, val plotOptions: GnuplotOptions) extends Sink {
+class GnuplotSink(val csvFileName: String, val gpFileName: String, val plotOptions: GnuplotOptions) extends Sink {
 
   var xRange = ("", "")
 
   override def entry(e: LogEntry) = {
-    val time = fieldList.fields.head(e)
+    val time = plotOptions.timeField(e)
     if (time != null) {
       xRange = xRange match {
         case ("", _) => (time, time)
@@ -71,7 +71,7 @@ class GnuplotSink(val fieldList: FieldList, val csvFileName: String, val gpFileN
   override def finish() = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
-    writer.write(GnuplotScriptWriter.write(fieldList.fieldNames, csvFileName, xRange, plotOptions))
+    writer.write(GnuplotScriptWriter.write(csvFileName, xRange, plotOptions))
     writer.close()
     println(s"Wrote $gpFileName")
     file.setExecutable(true)

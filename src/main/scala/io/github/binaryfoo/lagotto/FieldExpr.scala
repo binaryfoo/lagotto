@@ -958,6 +958,8 @@ case class OrdinalExpr(field: String, expr: FieldExpr) extends DirectExpr {
       }
     })
   }
+
+  def pairs: Seq[(String, String)] = seen.toSeq
 }
 
 case class LiteralExpr(field: String) extends DirectExpr {

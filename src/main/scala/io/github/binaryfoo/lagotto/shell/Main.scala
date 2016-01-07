@@ -49,12 +49,8 @@ object Main extends App {
       val gnuplot = opts.gnuplot.copy(scriptName = baseName)
       val csvFileName = baseName + ".csv"
       val gpFileName = baseName + ".gp"
-      val table = format match {
-        case t: Tabular => t.copy(tableFormatter = DelimitedTableFormat(","))
-        case t: WildcardTable => t.copy(tableFormatter = DelimitedTableFormat(","))
-      }
-      val dataFile = new FileSink(table, true, csvFileName)
-      val gnuplotScript = new GnuplotSink(table, csvFileName, gpFileName, gnuplot)
+      val dataFile = new FileSink(format, true, csvFileName)
+      val gnuplotScript = new GnuplotSink(csvFileName, gpFileName, gnuplot)
       val sinks = if (opts.liveUi)
         Seq(dataFile, gnuplotScript, new OnFinishWebServerSink(baseName + ".svg", Svg))
       else

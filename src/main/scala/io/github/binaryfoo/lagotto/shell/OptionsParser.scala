@@ -7,7 +7,6 @@ import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
 import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, NotMarkedUp}
-import io.github.binaryfoo.lagotto.output.{ChartPerCluster, SingleChart, ChartPerColumn, PlotStyle}
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat.{Csv, Tsv}
 import io.github.binaryfoo.lagotto.shell.output._
@@ -164,8 +163,9 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(gnuplot = c.gnuplot.copy(enabled = true, scriptName = fileName))
       } text "Write a gnuplot script <name>.gp. Write the output to <name>.csv. Only makes sense with --table"
 
-      opt[PlotStyle]("plot") action {(style,c) =>
-        c.copy(gnuplot = c.gnuplot.copy(style = style))
+      opt[String]("plot") action { (style, c) =>
+        val (time, charts) = new PlotStatementParser(fieldParser).parse(style)
+        c.copy(gnuplot = c.gnuplot.copy(timeField = time, charts = charts))
       } text "Number of plots"
 
       opt[String]("plot-time-format") action {(timeFormat,c) =>
@@ -219,6 +219,8 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         case TableOptions(formatter, fields, contentType) if fields != "" =>
           val formatToUse = if (opts.incremental) formatter.liveVersion else formatter
           Tabular(parseFields(fields, contentType), formatToUse)
+        case _ if opts.gnuplot.enabled =>
+          Tabular(opts.gnuplot.fields)
         case _ => opts.format match {
           case null if opts.liveUi => FullText
           case null => if (canHandleAnsi) HighlightedText else FullText
@@ -288,17 +290,4 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
     }
   }
 
-  implicit def plotStyleRead: Read[PlotStyle] = new Read[PlotStyle] {
-    val Cluster = """\(([0-9,]+)\)""".r
-    override def arity: Int = 1
-    override def reads = {
-      case "per-column" => ChartPerColumn
-      case "single" => SingleChart
-      case cluster =>
-        val clusters = Cluster.findAllMatchIn(cluster).map { m =>
-          m.group(1).split(",").map(_.toInt).toSeq
-        }.toList
-        ChartPerCluster(clusters)
-    }
-  }
 }

@@ -315,6 +315,11 @@
             <version>0.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>fastparse_2.11</artifactId>
+            <version>0.3.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.asciidoctor</groupId>
             <artifactId>asciidoctorj</artifactId>
             <version>1.5.3.2</version>
