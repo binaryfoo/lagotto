@@ -360,7 +360,7 @@ onclick="gnuplot_svg.toggleCoordBox(evt)"  onmousemove="gnuplot_svg.moveCoordBox
 </defs>
 <g fill="none" color="white" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
 	<g transform="translate(640.0,22.5)" stroke="none" fill="black" font-family="Arial" font-size="12.00"  text-anchor="middle">
-		<text><tspan font-family="Arial" >rtts.csv</tspan></text>
+		<text><tspan font-family="Arial" >rtts</tspan></text>
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
@@ -459,13 +459,13 @@ onclick="gnuplot_svg.toggleCoordBox(evt)"  onmousemove="gnuplot_svg.moveCoordBox
 	</g>
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="1.00" stroke-linecap="butt" stroke-linejoin="miter">
-	<path stroke='rgb( 86, 180, 233)'  d='M1196.2,52.7 L1238.4,52.7  '/>	</g>
-	<path stroke='rgb( 86, 180, 233)'  d='M83.0,901.8 M83.0,873.6 L163.1,140.3 L161.3,129.2 L470.6,890.7 L470.6,885.1 L506.0,801.7 L506.0,796.2
+	<path stroke='rgb(  0, 158, 115)'  d='M1196.2,52.7 L1238.4,52.7  '/>	</g>
+	<path stroke='rgb(  0, 158, 115)'  d='M83.0,901.8 M83.0,873.6 L163.1,140.3 L161.3,129.2 L470.6,890.7 L470.6,885.1 L506.0,801.7 L506.0,796.2
 		L567.5,95.8 L565.6,90.3 L871.2,651.7 L869.3,640.5 L990.4,890.7 L988.6,879.5 L1025.8,868.4 L1024.0,857.3
 		L1068.7,879.5 L1105.9,874.0 L1104.1,862.9 L1152.5,896.2 L1150.7,885.1 L1182.3,890.7 L1180.5,879.5 L1215.9,890.7
 		L1215.9,885.1 L1255.0,890.4 M1255.0,879.5  '/></g>
 	</g>
-<g fill="none" color="white" stroke="rgb( 86, 180, 233)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
+<g fill="none" color="white" stroke="rgb(  0, 158, 115)" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
 <g fill="none" color="black" stroke="currentColor" stroke-width="2.00" stroke-linecap="butt" stroke-linejoin="miter">
 </g>
