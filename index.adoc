@@ -1,6 +1,14 @@
 = Lago log tool
 :toc: left
 
+Another log parsing/data munging tool.
+
+Input jPOS, csv, log4j or JVM garbage collection logs.
+
+Output csv, gnuplot charts, HdrHistograms.
+
+https://oss.sonatype.org/service/local/artifact/maven/content?r=snapshots&g=io.github.binaryfoo&a=lagotto&c=assembly&v=LATEST[Download] the latest build
+
 include::examples.adoc[]
 
 include::reference.adoc[]
