@@ -28,6 +28,7 @@ object RunExamples {
     move("rtts.csv")
     move("rtts.gp")
     move("rtts.svg")
+    move("gc-example-chart.svg")
     val asciiDoctor = JRubyAsciidoctor.create()
     asciiDoctor.renderDirectory(new AsciiDocDirectoryWalker("docs"), OptionsBuilder.options().safe(SafeMode.UNSAFE))
     asciiDoctor.unregisterAllExtensions()
