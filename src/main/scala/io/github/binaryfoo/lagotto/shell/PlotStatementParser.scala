@@ -61,7 +61,10 @@ class PlotStatementParser(val fieldExprParser: FieldExprParser) {
 
   private def toChart(fields: Seq[String], columnNumbers: mutable.Map[FieldExpr, Int], plotType: PlotType): Chart = {
     val numberedPlotType = plotType match {
-      case d: DiscriminatedPoints => d.copy(columnNumber = columnNumbers.numberFor(d.field))
+      case d: DiscriminatedPoints =>
+        val columnNumber = columnNumbers.numberFor(d.field)
+        val valueCollector = (for (f <- columnNumbers.keys if f == d.field) yield f.asInstanceOf[OrdinalExpr]).head
+        d.copy(columnNumber = columnNumber, field = valueCollector)
       case t => t
     }
     val series = for {

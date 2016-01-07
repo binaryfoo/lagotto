@@ -60,10 +60,11 @@ object GnuplotScriptWriter {
     val plotFileName = plotOptions.scriptName
 
     val header = s"""#!/usr/bin/env gnuplot
-                     |csv = '$plotFileName.csv'
+                     |name = '$plotFileName'
+                     |csv = name.'.csv'
                      |set datafile separator ','
-                     |set terminal svg enhanced mouse standalone size 1280,$height; set output csv.'.svg'
-                     |#set terminal pngcairo size 1280,$height; set output csv.'.png'
+                     |set terminal svg enhanced mouse standalone size 1280,$height; set output name.'.svg'
+                     |#set terminal pngcairo size 1280,$height; set output name.'.png'
                      |set xdata time
                      |set timefmt '$gnuplotTimeFormat'
                      |set format x '$displayTimeFormat'
