@@ -115,7 +115,7 @@
                                     <goal>java</goal>
                                 </goals>
                                 <configuration>
-                                    <mainClass>io.github.binaryfoo.lagotto.RunExamples</mainClass>
+                                    <mainClass>io.github.binaryfoo.lagotto.doc.RunExamples</mainClass>
                                     <arguments>
                                         <arg>${project.reporting.outputDirectory}</arg>
                                     </arguments>

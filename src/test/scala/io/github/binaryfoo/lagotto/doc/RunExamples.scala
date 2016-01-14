@@ -1,4 +1,4 @@
-package io.github.binaryfoo.lagotto
+package io.github.binaryfoo.lagotto.doc
 
 import java.io.{ByteArrayOutputStream, File, FileWriter, PrintWriter}
 import java.nio.file.{Files, StandardCopyOption}
