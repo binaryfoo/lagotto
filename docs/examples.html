@@ -1214,7 +1214,7 @@ plot csv using 1:2 w lines lt 2 t column(2)</pre>
 <h3 id="_garbage_collection_logs">Garbage Collection logs</h3>
 <div class="literalblock">
 <div class="content">
-<pre>lago log_samples/gc.log.gz --in-format gc-v2 --plot 'datetime vs (pause) as points labelled by (type), (heapBefore,heapAfter,heapMax) as points, (PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax) as points, (ParOldGenBefore,ParOldGenAfter,ParOldGenCapacityBefore)' --sort datetime --gnuplot gc-example-chart</pre>
+<pre>lago log_samples/gc.log.gz --in-format gc --plot 'datetime vs (pause) as points labelled by (type), (heapBefore,heapAfter,heapMax) as points, (PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax) as points, (ParOldGenBefore,ParOldGenAfter,ParOldGenCapacityBefore)' --sort datetime --gnuplot gc-example-chart</pre>
 </div>
 </div>
 <div class="literalblock">
@@ -1240,7 +1240,7 @@ Wrote gc-example-chart.gp</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-01-07 21:16:54 AEDT
+Last updated 2016-01-14 19:53:22 AEDT
 </div>
 </div>
 </body>

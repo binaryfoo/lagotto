@@ -869,12 +869,12 @@ class MainTest extends LagoTest {
   }
 
   "gc log" should "be readable with --in-format=gc option" in {
-    val output = run("--table", "time,pause,before,after,heap", "--in-format", "gc", testFile("gc.log"))
+    val output = run("--table", "time,pause,heapBefore,heapAfter,heapMax", "--in-format", "gc", testFile("gc.log"))
     output shouldBe
-      """time,pause,before,after,heap
-        |10:18:13.300,2.42,2804197,1454927,4170176
-        |15:16:55.969,2.37,2798349,1171035,4166784
-        |19:28:18.722,0.42,4125456,4153958,4153984
+      """time,pause,heapBefore,heapAfter,heapMax
+        |10:18:13.300,2.421151,2871497728,1489845248,4270260224
+        |15:16:55.969,2.36814,2865509376,1199139840,4266786816
+        |19:28:18.722,0.425189,4224466944,4253652992,4253679616
         |""".stripMargin
   }
 
@@ -1216,7 +1216,7 @@ class MainTest extends LagoTest {
   }
 
   "--table *" should "build field list from first output row" in {
-    val output = run("--table", "*", "--in-format", "gc-v2", testFile("gc.log"))
+    val output = run("--table", "*", "--in-format", "gc", testFile("gc.log"))
     output shouldBe
       """datetime,age,type,pause,heapBefore,heapAfter,heapMax,PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax,ParOldGenBefore,ParOldGenAfter,ParOldGenMax,PSPermGenBefore,PSPermGenAfter,PSPermGenMax
         |2015-01-08 10:18:13.300,237468.441,Full GC,2.421151,2871497728,1489845248,4270260224,18934784,0,1406926848,2852561920,1489845248,2863333376,63901696,63813632,139329536

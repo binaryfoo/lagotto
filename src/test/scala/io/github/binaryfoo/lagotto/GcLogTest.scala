@@ -14,19 +14,19 @@ class GcLogTest extends LagoTest {
     val entry = gcLogType.apply(lineIteratorFrom(fullGcLine))
 
     entry.timestamp shouldBe new DateTime(2015, 12, 24, 13, 55, 42, 179, DateTimeZone.forOffsetHours(11))
-    entry("pause") shouldBe "3.24"
-    entry("before") shouldBe "4017403"
-    entry("after") shouldBe "3597213"
-    entry("heap") shouldBe "4089664"
+    entry("pause") shouldBe "3.232489"
+    entry("heapBefore") shouldBe "4113820672"
+    entry("heapAfter") shouldBe "3683546112"
+    entry("heapMax") shouldBe "4187815936"
     entry("type") shouldBe "Full GC"
 
-    entry("youngBefore") shouldBe "1221184"
-    entry("youngAfter") shouldBe "800989"
-    entry("young") shouldBe "1293440"
+    entry("PSYoungGenBefore") shouldBe "1250492416"
+    entry("PSYoungGenAfter") shouldBe "820212736"
+    entry("PSYoungGenMax") shouldBe "1324482560"
 
-    entry("oldBefore") shouldBe "2796219"
-    entry("oldAfter") shouldBe "2796219"
-    entry("old") shouldBe "2796224"
+    entry("ParOldGenBefore") shouldBe "2863328256"
+    entry("ParOldGenAfter") shouldBe "2863328256"
+    entry("ParOldGenMax") shouldBe "2863333376"
   }
 
   it should "parse failed promotion" in {
@@ -34,14 +34,14 @@ class GcLogTest extends LagoTest {
     val entry = gcLogType.apply(lineIteratorFrom(line))
 
     entry.timestamp shouldBe new DateTime(2015, 12, 24, 13, 55, 39, 305, DateTimeZone.forOffsetHours(11))
-    entry("pause") shouldBe "2.87"
-    entry("before") shouldBe "4017395"
-    entry("after") shouldBe "4017403"
-    entry("heap") shouldBe "4089664"
+    entry("pause") shouldBe "2.864691"
+    entry("heapBefore") shouldBe "4113812480"
+    entry("heapAfter") shouldBe "4113820672"
+    entry("heapMax") shouldBe "4187815936"
     entry("type") shouldBe "GC--"
 
-    entry("youngBefore") shouldBe "1221184"
-    entry("youngAfter") shouldBe "1221184"
-    entry("young") shouldBe "1293440"
+    entry("PSYoungGenBefore") shouldBe "1250492416"
+    entry("PSYoungGenAfter") shouldBe "1250492416"
+    entry("PSYoungGenMax") shouldBe "1324482560"
   }
 }

@@ -163,7 +163,7 @@ TODO: Might be a can of worms given the variety of possible input formats...
 
 === Garbage Collection logs
 
-    LAGO: log_samples/gc.log.gz --in-format gc-v2 --plot 'datetime vs (pause) as points labelled by (type), (heapBefore,heapAfter,heapMax) as points, (PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax) as points, (ParOldGenBefore,ParOldGenAfter,ParOldGenCapacityBefore)' --sort datetime --gnuplot gc-example-chart
+    LAGO: log_samples/gc.log.gz --in-format gc --plot 'datetime vs (pause) as points labelled by (type), (heapBefore,heapAfter,heapMax) as points, (PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax) as points, (ParOldGenBefore,ParOldGenAfter,ParOldGenCapacityBefore)' --sort datetime --gnuplot gc-example-chart
 
 Produces a .csv to be plotted, a .gp to do the plotting and a chart
 
