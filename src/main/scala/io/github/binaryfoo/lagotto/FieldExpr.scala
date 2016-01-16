@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 import io.github.binaryfoo.lagotto.ConvertExpr.TimeConversionOp
 import io.github.binaryfoo.lagotto.dictionary.{DataDictionary, RootDataDictionary, ShortNameLookup}
 import io.github.binaryfoo.lagotto.shell.{ContentType, Html, PlainText, RichText}
-import org.joda.time.Period
+import org.joda.time.{DateTime, Period}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -26,6 +26,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
 
     val SubtractOp = """calc\((.+)-(.+)\)""".r
     val DivideOp = """calc\((.+)/(.+)\)""".r
+    val RateOp = """rate\(([^,]+),(.+)\)""".r
     val ConvertOp = """\(([^ ]+) (?:(.+) )?as (.+)\)""".r
     val TranslateOp = """translate\((.+)\)""".r
     val RegexReplacementOp = """([^(]+)\(/(.+)/(.*)/\)""".r
@@ -50,6 +51,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case DivideOp(FieldExpr(left), NumericLiteral(right)) => DivideExpr(expr, left, LiteralExpr(right))
         case DivideOp(NumericLiteral(left), FieldExpr(right)) => DivideExpr(expr, LiteralExpr(left), right)
         case DivideOp(FieldExpr(left), FieldExpr(right)) => DivideExpr(expr, left, right)
+        case RateOp(period, FieldExpr(v)) => RateExpr(period, expr, v)
         case ConvertOp(FieldExpr(child), from, to) => ConvertExpr(expr, child, from, to)
         case "delay" => DelayExpr
         case "elapsed" => ElapsedExpr()
@@ -519,6 +521,34 @@ case class DivideAggregatesExpr(field: String, left: FieldExpr, right: FieldExpr
 
 case class DivideDirectExpr(field: String, left: DirectExpr, right: DirectExpr)
   extends DivideExpr with DirectCalculationExpr {
+}
+
+/**
+  * Things per time period.
+  */
+case class RateExpr(period: String, field: String, value: FieldExpr) extends DirectExpr {
+  private var previous: LogEntry = null
+  private val timeDelta: (DateTime, DateTime) => Long = period match {
+    case "s" => (start, end) =>
+      (end.getMillis - start.getMillis) / 1000
+    case "ms" => (start, end) =>
+      end.getMillis - start.getMillis
+  }
+
+  override def apply(e: LogEntry): String = {
+    val rate = if (previous == null) {
+      0
+    } else {
+      val delta = value(e).toLong - value(previous).toLong
+      val elapsed = timeDelta(previous.timestamp, e.timestamp)
+      if (elapsed == 0)
+        delta
+      else
+        delta / elapsed
+    }
+    previous = e
+    rate.toString
+  }
 }
 
 /**

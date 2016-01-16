@@ -605,4 +605,21 @@ class FieldExprTest extends LagoTest {
     expr(JposEntry("x" -> "foo")) shouldBe "1"
     expr(JposEntry("x" -> "baz")) shouldBe "3"
   }
+
+  "rate per second" should "be calculated" in {
+    val t1 = new DateTime()
+    val expr = expressionFor("rate(s,v)")
+    expr(JposEntry("at" -> t1.asJposAt, "v" -> "42")) shouldBe "0"
+    expr(JposEntry("at" -> t1.asJposAt, "v" -> "42")) shouldBe "0"
+    expr(JposEntry("at" -> t1.plusSeconds(2).asJposAt, "v" -> "48")) shouldBe "3"
+    expr(JposEntry("at" -> t1.plusSeconds(3).asJposAt, "v" -> "49")) shouldBe "1"
+  }
+
+  "rate per millisecond" should "be calculated" in {
+    val t1 = new DateTime()
+    val expr = expressionFor("rate(ms,v)")
+    expr(JposEntry("at" -> t1.asJposAt, "v" -> "42")) shouldBe "0"
+    expr(JposEntry("at" -> t1.plusMillis(2).asJposAt, "v" -> "48")) shouldBe "3"
+    expr(JposEntry("at" -> t1.plusMillis(3).asJposAt, "v" -> "49")) shouldBe "1"
+  }
 }

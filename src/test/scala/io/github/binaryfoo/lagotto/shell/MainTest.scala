@@ -1226,6 +1226,20 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "rate per second" should "be calculated" in {
+    val input = """datetime,v
+                  |2000-01-01 01:01:01.999,100
+                  |2000-01-01 01:01:02.999,101
+                  |""".stripMargin
+
+    val output = run("--in-format", "csv", "--table", "time,rate(s,v)", tempFileContaining(input))
+    output shouldBe
+      """time,rate(s v)
+        |01:01:01.999,0
+        |01:01:02.999,1
+        |""".stripMargin
+  }
+
   private def withTempFileCleanup(testCode: File => Any): Unit = {
     val currentDir = new File(".")
     val file = File.createTempFile("main-test", "", currentDir)
