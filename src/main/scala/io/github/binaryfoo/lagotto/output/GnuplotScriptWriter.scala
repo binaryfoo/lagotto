@@ -94,7 +94,7 @@ object GnuplotScriptWriter {
         s"""csv using 1:$col w $points 0.2 notitle,\\
            |     ''  using 1:(1/0) w $points 1 t column($col)""".stripMargin
       case DiscriminatedPoints(expr, pointTypeCol) =>
-        val types = expr.pairs
+        val types = expr.pairs.sortBy(_._2)
         val points = s"points lc t pt t ps"
         val wordList = types.map(p => s"'${p._1}'").mkString(" ")
         s"""for [t=1:${types.size}] csv using 1:($$$pointTypeCol == t ? $$$col : 1/0) w $points 0.5 notitle,\\

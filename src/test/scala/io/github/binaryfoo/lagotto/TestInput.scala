@@ -18,13 +18,8 @@ trait TestInput {
   def linesFrom(f: String): Seq[String] = sourceFrom(f).getLines().toSeq
 
   def contentsOf(f: String): String = {
-    val source = Source.fromFile(testFile(f))
-    try {
-      source.mkString
-    }
-    finally {
-      source.close()
-    }
+    import io.github.binaryfoo.lagotto.TestInput.RichFile
+    new File(testFile(f)).readToString()
   }
 
   def tempFileContaining(content: String): String = {
@@ -51,4 +46,22 @@ trait TestInput {
   }
 
   def delete(f: String) = Files.deleteIfExists(new File(f).toPath)
+}
+
+object TestInput {
+
+  implicit class RichFile(val file: File) extends AnyVal {
+
+    def readToString(): String = {
+      val source = Source.fromFile(file)
+      try {
+        source.mkString
+      }
+      finally {
+        source.close()
+      }
+    }
+
+    def withSuffix(suffix: String): File = new File(file.getAbsolutePath + "" + suffix)
+  }
 }

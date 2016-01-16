@@ -8,6 +8,7 @@ import io.github.binaryfoo.lagotto.reader.FileIO
 import org.joda.time.DateTimeZone
 
 import scala.collection.mutable.ArrayBuffer
+import io.github.binaryfoo.lagotto.TestInput.RichFile
 
 class MainTest extends LagoTest {
 
@@ -1223,6 +1224,35 @@ class MainTest extends LagoTest {
         |2015-01-08 15:16:55.969,255391.11,Full GC,2.36814,2865509376,1199139840,4266786816,18200576,0,1403453440,2847308800,1199139840,2863333376,63875072,63849472,132513792
         |2015-06-12 19:28:18.722,809846.37,GC--,0.425189,4224466944,4253652992,4253679616,1390322688,1390322688,1390346240,,,,,,
         |""".stripMargin
+  }
+
+  private def withTempFileCleanup(testCode: File => Any): Unit = {
+    val currentDir = new File(".")
+    val file = File.createTempFile("main-test", "", currentDir)
+    try {
+      testCode(file)
+    } finally {
+      for (f <- currentDir.listFiles() if f.getName.startsWith(file.getName)) {
+        f.delete()
+      }
+    }
+  }
+
+  "--plot labelled by" should "produce word list" in {
+    withTempFileCleanup { file =>
+      val output = run("--gnuplot", file.getName, "--plot", "time vs (pause) as points labelled by (type)", "--in-format", "gc", testFile("gc.log"))
+      output should include("Wrote ")
+
+      file.withSuffix(".csv").readToString() shouldBe """time,ordinal(type),pause
+                                                        |10:18:13.300,1,2.421151
+                                                        |15:16:55.969,1,2.36814
+                                                        |19:28:18.722,2,0.425189
+                                                        |""".stripMargin
+
+      file.withSuffix(".gp").readToString() should include("""word("'Full GC' 'GC--'",t)""")
+
+    }
+
   }
 
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
