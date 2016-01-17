@@ -77,7 +77,10 @@ object LogTypes {
       val map = v.unwrapped().asInstanceOf[util.Map[String, ConfigValue]]
       val logType = if (map.containsKey("class")) {
         val clazz = map.get("class").asInstanceOf[String]
-        val args = asScalaBuffer(map.get("args").asInstanceOf[util.List[Object]])
+        val args = if (map.containsKey("args"))
+          asScalaBuffer(map.get("args").asInstanceOf[util.List[Object]])
+        else
+          mutable.Buffer.empty[Object]
         newInstance(clazz, args)
       } else {
         val clazz = map.get("object").asInstanceOf[String]

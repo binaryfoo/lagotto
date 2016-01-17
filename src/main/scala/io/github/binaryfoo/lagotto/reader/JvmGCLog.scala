@@ -1,16 +1,34 @@
 package io.github.binaryfoo.lagotto.reader
 
-import io.github.binaryfoo.gclog.{GcEventParsed, NeedAnotherLine, Parser, SkipLine}
-import io.github.binaryfoo.lagotto.GcLogEntry
+import java.io.File
+
+import io.github.binaryfoo.gclog._
+import io.github.binaryfoo.lagotto.{FileRef, SourceRef, GcLogEntry}
 
 import scala.collection.mutable
 
 /**
  * Garbage collection log (-verbose:gc)
  */
-object JvmGCLog extends LogType[GcLogEntry] {
+class JvmGCLog extends LogType[GcLogEntry] {
 
   type P = PreParsed[GcLogEntry]
+
+  private var calculationFile: File = null
+  private var rateCalculator: RateCalculator = null
+
+  private def calculatorFor(sourceRef: SourceRef): RateCalculator = {
+    sourceRef match {
+      case FileRef(file, _) =>
+        if (file != calculationFile) {
+          rateCalculator = new RateCalculator
+          calculationFile = file
+        }
+      case _ if rateCalculator == null =>
+        rateCalculator = new RateCalculator
+    }
+    rateCalculator
+  }
 
   override def readLinesForNextRecord(lines: LineIterator): PreParsed[GcLogEntry] = {
     var lastAttempt: String = null
@@ -27,7 +45,9 @@ object JvmGCLog extends LogType[GcLogEntry] {
         case SkipLine =>
         case GcEventParsed(event) =>
           val sourceRef = lines.sourceRef.at(firstLine)
-          return PreParsed(GcLogEntry(event.time, mutable.LinkedHashMap(event.toSeq :_*), attempt, sourceRef), sourceRef)
+          val calculator = calculatorFor(sourceRef)
+          val eventWithRates = calculator.addRates(event)
+          return PreParsed(GcLogEntry(event.time, mutable.LinkedHashMap(eventWithRates.toSeq :_*), attempt, sourceRef), sourceRef)
         case NeedAnotherLine =>
           lastAttempt = attempt
       }

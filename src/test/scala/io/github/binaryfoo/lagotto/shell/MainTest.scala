@@ -1219,10 +1219,10 @@ class MainTest extends LagoTest {
   "--table *" should "build field list from first output row" in {
     val output = run("--table", "*", "--in-format", "gc", testFile("gc.log"))
     output shouldBe
-      """datetime,age,type,pause,heapBefore,heapAfter,heapMax,PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax,ParOldGenBefore,ParOldGenAfter,ParOldGenMax,PSPermGenBefore,PSPermGenAfter,PSPermGenMax
-        |2015-01-08 10:18:13.300,237468.441,Full GC,2.421151,2871497728,1489845248,4270260224,18934784,0,1406926848,2852561920,1489845248,2863333376,63901696,63813632,139329536
-        |2015-01-08 15:16:55.969,255391.11,Full GC,2.36814,2865509376,1199139840,4266786816,18200576,0,1403453440,2847308800,1199139840,2863333376,63875072,63849472,132513792
-        |2015-06-12 19:28:18.722,809846.37,GC--,0.425189,4224466944,4253652992,4253679616,1390322688,1390322688,1390346240,,,,,,
+      """datetime,age,type,pause,heapBefore,heapAfter,heapMax,PSYoungGenBefore,PSYoungGenAfter,PSYoungGenMax,ParOldGenBefore,ParOldGenAfter,ParOldGenMax,PSPermGenBefore,PSPermGenAfter,PSPermGenMax,heapAllocated,heapAllocationRate,reclaimed
+        |2015-01-08 10:18:13.300,237468.441,Full GC,2.421151,2871497728,1489845248,4270260224,18934784,0,1406926848,2852561920,1489845248,2863333376,63901696,63813632,139329536,2871497728,12,1381652480
+        |2015-01-08 15:16:55.969,255391.11,Full GC,2.36814,2865509376,1199139840,4266786816,18200576,0,1403453440,2847308800,1199139840,2863333376,63875072,63849472,132513792,1375664128,76,1666369536
+        |2015-06-12 19:28:18.722,809846.37,GC--,0.425189,4224466944,4253652992,4253679616,1390322688,1390322688,1390346240,,,,,,,3025327104,5,-29186048
         |""".stripMargin
   }
 
@@ -1267,6 +1267,20 @@ class MainTest extends LagoTest {
 
     }
 
+  }
+
+  "allocationRate" should "be calculated for gc log" in {
+    val input =
+      """2015-01-08T10:18:13.300+1100: 237468.441: [Full GC [PSYoungGen: 18491K->0K(1373952K)] [ParOldGen: 2785705K->1454927K(2796224K)] 2804197K->1454927K(4170176K) [PSPermGen: 62404K->62318K(136064K)], 2.4211510 secs] [Times: user=6.74 sys=0.00, real=2.42 secs]
+        |2015-01-08T15:16:55.969+1100: 255391.110: [Full GC [PSYoungGen: 17774K->0K(1370560K)] [ParOldGen: 2780575K->1171035K(2796224K)] 2798349K->1171035K(4166784K) [PSPermGen: 62378K->62353K(129408K)], 2.3681400 secs] [Times: user=7.85 sys=0.00, real=2.37 secs]
+      """.stripMargin
+
+    val output = run("--table", "datetime,heapAllocated,heapAllocationRate", "--in-format", "gc", tempFileContaining(input))
+    output shouldBe
+      """datetime,heapAllocated,heapAllocationRate
+        |2015-01-08 10:18:13.300,2871497728,12
+        |2015-01-08 15:16:55.969,1375664128,76
+        |""".stripMargin
   }
 
   private def run(args: String*): String = standardOutFrom { Main.main(args.toArray) }
