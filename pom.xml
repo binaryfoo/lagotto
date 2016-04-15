@@ -312,7 +312,7 @@
         <dependency>
             <groupId>io.github.binaryfoo</groupId>
             <artifactId>gclog-parser</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.lihaoyi</groupId>
