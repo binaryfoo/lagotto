@@ -4,7 +4,7 @@
 
     <groupId>io.github.binaryfoo</groupId>
     <artifactId>lagotto</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>Agricultural Log Analysis</name>
     <description>Another log parsing/data munging tool</description>
     <url>https://github.com/binaryfoo/lagotto</url>
@@ -21,7 +21,7 @@
         <connection>scm:git:git@github.com:binaryfoo/lagotto.git</connection>
         <developerConnection>scm:git:git@github.com:binaryfoo/lagotto.git</developerConnection>
         <url>git@github.com:binaryfoo/lagotto.git</url>
-        <tag>lagotto-0.0.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
