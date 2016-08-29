@@ -33,4 +33,14 @@ class Iso8583Test extends FlatSpec with Matchers {
     isResponseMTI("0210") shouldBe true
     isResponseMTI("0200") shouldBe false
   }
+
+  "2 character HSM MTIs" should "be handled" in {
+    invertMTI("C2") shouldEqual "C3"
+    invertMTI("C3") shouldEqual "C2"
+    invertMTI("BE") shouldEqual "BF"
+    invertMTI("BF") shouldEqual "BE"
+
+    isResponseMTI("BF") shouldBe true
+    isResponseMTI("BE") shouldBe false
+  }
 }
