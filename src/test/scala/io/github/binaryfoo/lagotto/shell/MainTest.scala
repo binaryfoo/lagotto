@@ -32,6 +32,13 @@ class MainTest extends LagoTest {
 """
   }
 
+  it should "have at least a single space in empty cell for jira table" in {
+    val output = run("--table", "time,mti,rubbish", "-o", "jira", testFile("a-bunch.xml"), "-n", "1")
+    output shouldEqual """||time||mti||rubbish||
+|00:00:03.292|0200| |
+"""
+  }
+
   it should "produce a HTML formatted table with --out-format html option" in {
     val output = run("-t", "time,mti,11", "--out-format", "html", testFile("a-bunch.xml"))
     output should include ("<table>")

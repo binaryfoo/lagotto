@@ -129,7 +129,7 @@ object DelimitedTableFormat {
 
 object JiraTableFormat extends TableFormatter {
   override def header(fields: Seq[String]): Option[String] = Some(fields.mkString("||", "||", "||"))
-  override def row(row: Seq[String]): Option[String] = Some(row.mkString("|", "|", "|"))
+  override def row(row: Seq[String]): Option[String] = Some(row.map(v => if (v.isEmpty) " " else v).mkString("|", "|", "|"))
 }
 
 object HtmlTableFormat extends TableFormatter {
