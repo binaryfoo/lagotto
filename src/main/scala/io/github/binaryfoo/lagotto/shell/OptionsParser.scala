@@ -75,7 +75,7 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(table = c.table.copy(contentType = PlainText))
       } text "Don't use Unicode symbol characters that might not render"
 
-      opt[String]("live") action { (fields, c) =>
+      opt[Unit]("live") action { (_, c) =>
         c.copy(incremental = true)
       } text "Output table incrementally. Can be messy."
 
