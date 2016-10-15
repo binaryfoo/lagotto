@@ -876,6 +876,15 @@ class MainTest extends LagoTest {
         |""".stripMargin
   }
 
+  "jetty request log" should "be readable with --in-format=jetty option" in {
+    val output = run("--table", "time,url", "--in-format", "jetty", testFile("jetty-request-log.txt"))
+    output shouldBe
+      """time,url
+        |08:59:15.000,/app/remoteInvocation/aService
+        |09:10:15.000,/app/remoteInvocation/bService
+        |""".stripMargin
+  }
+
   "gc log" should "be readable with --in-format=gc option" in {
     val output = run("--table", "time,pause,heapBefore,heapAfter,heapMax", "--in-format", "gc", testFile("gc.log"))
     output shouldBe

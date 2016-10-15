@@ -1,0 +1,2 @@
+127.0.0.1 -  -  [16/Oct/2016:08:59:15 +1100] "POST /app/remoteInvocation/aService HTTP/1.1" 200 147  43
+127.0.0.1 -  -  [16/Oct/2016:09:10:15 +1100] "POST /app/remoteInvocation/bService HTTP/1.1" 200 147  41
