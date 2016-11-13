@@ -1,17 +1,17 @@
 package io.github.binaryfoo.lagotto.shell
 
 import fastparse.all._
-import fastparse.core.ParseCtx
+import fastparse.core.{Mutable, ParseCtx}
 import io.github.binaryfoo.lagotto.output._
 import io.github.binaryfoo.lagotto.{FieldExpr, FieldExprParser, OrdinalExpr, TimeExpr}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-object PlotField extends Parser[String] {
+object PlotField extends fastparse.all.Parser[String] {
 
   @tailrec
-  private def findFieldEnd(input: String, pos: Int = 0, depth: Int = 0): Int = {
+  private def findFieldEnd(input: ParserInput, pos: Int = 0, depth: Int = 0): Int = {
     if (pos >= input.length) {
       -pos
     } else {
@@ -24,11 +24,11 @@ object PlotField extends Parser[String] {
     }
   }
 
-  def parseRec(cfg: ParseCtx, index: Int) = {
+  def parseRec(cfg: ParseCtx[Char, String], index: Int): Mutable[String, Char, String] = {
     val input = cfg.input
     if (index >= input.length) fail(cfg.failure, index)
     val end = findFieldEnd(input, index)
-    if (end > 0) success(cfg.success, input.substring(index, end), end, Nil, false)
+    if (end > 0) success(cfg.success, input.slice(index, end), end, Set.empty, false)
     else fail(cfg.failure, -end)
   }
 }

@@ -7,7 +7,7 @@ import fastparse.all._
 
 class PlotStatementParserTest extends LagoTest {
 
-  private val fieldExprParser = new FieldExprParser()
+  private val fieldExprParser = FieldExprParser()
   private val parser = new PlotStatementParser(fieldExprParser)
 
   private val A = PrimitiveExpr("A")

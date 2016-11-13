@@ -311,12 +311,12 @@
         <dependency>
             <groupId>io.github.binaryfoo</groupId>
             <artifactId>gclog-parser</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.lihaoyi</groupId>
             <artifactId>fastparse_2.11</artifactId>
-            <version>0.3.4</version>
+            <version>0.4.1</version>
         </dependency>
         <dependency>
             <groupId>org.asciidoctor</groupId>
