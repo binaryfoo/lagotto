@@ -144,17 +144,17 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
     def unapply(expr: String): Option[AggregateOp] = {
       val op: AggregateOp = expr match {
         case "count" => new CountBuilder
-        case CountDistinct(DirectExpr(field)) => new CountDistinctBuilder(field)
-        case CountIf(LogFilter(condition)) => new CountIfBuilder(condition)
-        case MinOp(DirectExpr(field)) => new TryLongOpBuilder(field, minLong, minString)
-        case MaxOp(DirectExpr(field)) => new TryLongOpBuilder(field, maxLong, maxString)
-        case SumOp(DirectExpr(field)) => new LongOpBuilder(field, addLongs)
-        case AvgOp(DirectExpr(field)) => new AverageBuilder(field)
-        case PercentileOp(percentile, DirectExpr(field)) => new PercentileBuilder(percentile.toInt, field)
-        case GroupConcatDistinct(DirectExpr(field)) => new GroupConcatDistinctBuilder(field)
-        case GroupConcat(DirectExpr(field)) => new GroupConcatBuilder(field)
-        case GroupSample(DirectExpr(field), size) => new GroupSampleBuilder(field, size.toInt)
-        case GroupTrace(filePrefix) => new GroupTraceBuilder(filePrefix)
+        case CountDistinct(DirectExpr(field)) => CountDistinctBuilder(field)
+        case CountIf(LogFilter(condition)) => CountIfBuilder(condition)
+        case MinOp(DirectExpr(field)) => TryLongOpBuilder(field, minLong, minString)
+        case MaxOp(DirectExpr(field)) => TryLongOpBuilder(field, maxLong, maxString)
+        case SumOp(DirectExpr(field)) => LongOpBuilder(field, addLongs)
+        case AvgOp(DirectExpr(field)) => AverageBuilder(field)
+        case PercentileOp(percentile, DirectExpr(field)) => PercentileBuilder(percentile.toInt, field)
+        case GroupConcatDistinct(DirectExpr(field)) => GroupConcatDistinctBuilder(field)
+        case GroupConcat(DirectExpr(field)) => GroupConcatBuilder(field)
+        case GroupSample(DirectExpr(field), size) => GroupSampleBuilder(field, size.toInt)
+        case GroupTrace(filePrefix) => GroupTraceBuilder(filePrefix)
         case _ => null
       }
       Option(op)
@@ -293,7 +293,7 @@ case class AggregateExpr(field: String, op: AggregateOp) extends FieldExpr {
     }
   }
 
-  override def contains(other: FieldExpr) = expr.exists(e => e.contains(other))
+  override def contains(other: FieldExpr): Boolean = expr.exists(e => e.contains(other))
 }
 
 object AggregateExpr {
@@ -527,7 +527,7 @@ case class DivideDirectExpr(field: String, left: DirectExpr, right: DirectExpr)
   * Things per time period.
   */
 case class RateExpr(period: String, field: String, value: FieldExpr) extends DirectExpr {
-  private var previous: LogEntry = null
+  private var previous: LogEntry = _
   private val timeDelta: (DateTime, DateTime) => Long = period match {
     case "s" => (start, end) =>
       (end.getMillis - start.getMillis) / 1000
@@ -784,7 +784,7 @@ object SourceHrefExpr extends DirectExpr {
 
   def linkTo(url: String, mouseOver: String): String = s"""<a href="$url" title="$mouseOver">&#9906;</a>"""
 
-  def urlFor(file: File, line: Int, e: LogEntry) = {
+  def urlFor(file: File, line: Int, e: LogEntry): String = {
     val to = (e match {
       case MsgPair(req, resp) => resp.source.line + resp.lines.split('\n').length
       case JoinedEntry(left, right, _, _) => right.source.line + right.lines.split('\n').length

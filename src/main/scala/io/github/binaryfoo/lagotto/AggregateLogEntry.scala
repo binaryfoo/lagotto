@@ -107,53 +107,53 @@ case class CountIfBuilder(condition: LogFilter) extends AggregateOp {
 
   override def toString: String = s"count(if($condition)){count=$count}"
 
-  override def copy() = new CountIfBuilder(condition)
+  override def copy() = CountIfBuilder(condition)
 }
 
 case class CountDistinctBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   
   private val distinctValues = mutable.HashSet[String]()
 
-  override def add(v: String) = distinctValues.add(v)
+  override def add(v: String): Unit = distinctValues.add(v)
 
   override def result(): String = distinctValues.size.toString
 
   override def toString: String = s"count(distinct($field)){count=${distinctValues.size}}"
 
-  override def copy() = new CountDistinctBuilder(expr)
+  override def copy() = CountDistinctBuilder(expr)
 }
 
 case class GroupConcatBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   
   private val values = mutable.ListBuffer[String]()
 
-  override def add(v: String) = values += v
+  override def add(v: String): Unit = values += v
 
   override def result(): String = values.mkString(",")
 
   override def toString: String = s"group_concat($field){values=$values}"
 
-  override def copy() = new GroupConcatBuilder(expr)
+  override def copy() = GroupConcatBuilder(expr)
 }
 
 case class GroupConcatDistinctBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
 
   private val values = mutable.HashSet[String]()
 
-  override def add(v: String) = values += v
+  override def add(v: String): Unit = values += v
 
   override def result(): String = values.toSeq.sorted.mkString(",")
 
   override def toString: String = s"group_concat(distinct($field)){values=$values}"
 
-  override def copy() = new GroupConcatDistinctBuilder(expr)
+  override def copy() = GroupConcatDistinctBuilder(expr)
 }
 
 case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAggregateOp {
 
   private val values = mutable.ListBuffer[String]()
 
-  override def add(v: String) = values += v
+  override def add(v: String): Unit = values += v
 
   override def result(): String = {
     val target = Math.min(size, values.size)
@@ -162,16 +162,16 @@ case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAgg
 
   override def toString: String = s"group_sample($field,$size){values=$values}"
 
-  override def copy() = new GroupSampleBuilder(expr, size)
+  override def copy() = GroupSampleBuilder(expr, size)
 }
 
 case class GroupTraceBuilder(filePrefix: String, sequence: AtomicInteger = new AtomicInteger()) extends AggregateOp {
 
-  private var fileName: String = null
-  private var out: PrintWriter = null
+  private var fileName: String = _
+  private var out: PrintWriter = _
 
   override def copy(): AggregateOp = {
-    new GroupTraceBuilder(filePrefix, sequence)
+    GroupTraceBuilder(filePrefix, sequence)
   }
 
   override def result(): String = {
@@ -201,7 +201,7 @@ case class LongOpBuilder(expr: FieldExpr, op: (Long, Long) => Long) extends Fiel
 
   private var current: Option[Long] = None
 
-  override def add(v: String) = {
+  override def add(v: String): Unit = {
     current = current match {
       case Some(c) => Some(op(v.toLong, c))
       case None => Some(v.toLong)
@@ -212,7 +212,7 @@ case class LongOpBuilder(expr: FieldExpr, op: (Long, Long) => Long) extends Fiel
 
   override def toString: String = s"longOp($field){current=$current}"
 
-  override def copy() = new LongOpBuilder(expr, op)
+  override def copy() = LongOpBuilder(expr, op)
 }
 
 case class TryLongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long, fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
@@ -221,7 +221,7 @@ case class TryLongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long, fallback
   private var current: Option[Long] = None
   private var currentFallback: Option[String] = None
 
-  override def add(v: String) = {
+  override def add(v: String): Unit = {
     if (useStringOp) {
       addWithStringOp(v)
     } else {
@@ -256,7 +256,7 @@ case class TryLongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long, fallback
 
   override def toString: String = s"tryIntegerOp($field){current=$current,currentFallback=$currentFallback}"
 
-  override def copy() = new TryLongOpBuilder(expr, op, fallbackOp)
+  override def copy() = TryLongOpBuilder(expr, op, fallbackOp)
 }
 
 case class AverageBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
@@ -264,7 +264,7 @@ case class AverageBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
   private var sum = 0d
   private var count = 0
 
-  override def add(v: String) = {
+  override def add(v: String): Unit = {
     sum += v.toDouble
     count += 1
   }
@@ -273,14 +273,14 @@ case class AverageBuilder(expr: DirectExpr) extends FieldBasedAggregateOp {
 
   override def toString: String = s"avg($field){sum=$sum,count=$count}"
 
-  override def copy() = new AverageBuilder(expr)
+  override def copy() = AverageBuilder(expr)
 }
 
 case class PercentileBuilder(percentile: Int, expr: DirectExpr) extends FieldBasedAggregateOp {
 
   private var values = mutable.ArrayBuffer[Double]()
 
-  override def add(v: String) = {
+  override def add(v: String): Unit = {
     values += v.toDouble
   }
 
@@ -304,7 +304,7 @@ case class PercentileBuilder(percentile: Int, expr: DirectExpr) extends FieldBas
 
   override def toString: String = s"percentile($percentile,$field){values=${values.mkString(",")}"
 
-  override def copy() = new PercentileBuilder(percentile, expr)
+  override def copy() = PercentileBuilder(percentile, expr)
 }
 
 /**
@@ -334,6 +334,6 @@ object RandomSampler {
     while (indices.size < n)
       indices.add(random.nextInt(m))
 
-    indices.toIterable
+    indices
   }
 }
