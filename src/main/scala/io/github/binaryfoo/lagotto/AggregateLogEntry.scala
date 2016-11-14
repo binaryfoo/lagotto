@@ -57,7 +57,7 @@ object AggregateOps {
   val maxLong = (l: Long, r: Long) => math.max(l, r)
   val minString = (l: String, r: String) => if (l <= r) l else r
   val maxString = (l: String, r: String) => if (l >= r) l else r
-  val addLongs = (l: Long, r: Long) => l + r
+  val addNumbers = (l: Double, r: Double) => l + r
 }
 
 trait FieldBasedAggregateOp extends AggregateOp {
@@ -197,22 +197,22 @@ case class GroupTraceBuilder(filePrefix: String, sequence: AtomicInteger = new A
   }
 }
 
-case class LongOpBuilder(expr: FieldExpr, op: (Long, Long) => Long) extends FieldBasedAggregateOp {
+case class DoubleOpBuilder(expr: FieldExpr, op: (Double, Double) => Double) extends FieldBasedAggregateOp {
 
-  private var current: Option[Long] = None
+  private var current: Option[Double] = None
 
   override def add(v: String): Unit = {
     current = current match {
-      case Some(c) => Some(op(v.toLong, c))
-      case None => Some(v.toLong)
+      case Some(c) => Some(op(v.toDouble, c))
+      case None => Some(v.toDouble)
     }
   }
 
-  override def result(): String = current.getOrElse("").toString
+  override def result(): String = current.map(_.formatted("%f").replace(".000000", "")).getOrElse("")
 
-  override def toString: String = s"longOp($field){current=$current}"
+  override def toString: String = s"doubleOp($field){current=$current}"
 
-  override def copy() = LongOpBuilder(expr, op)
+  override def copy() = DoubleOpBuilder(expr, op)
 }
 
 case class TryLongOpBuilder(expr: DirectExpr, op: (Long, Long) => Long, fallbackOp: (String, String) => String) extends FieldBasedAggregateOp {
