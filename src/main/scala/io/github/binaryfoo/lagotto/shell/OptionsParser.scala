@@ -132,6 +132,10 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(graphiteHost = Some((host, port.toInt)))
       } text "Graphite host:port to write metrics to"
 
+      opt[String]("metric-prefix") action { (prefix, c) =>
+        c.copy(graphitePrefix = Some(prefix))
+      } text "Optional prefix when outputting graphite metrics"
+
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)
       } text "Match requests with responses"

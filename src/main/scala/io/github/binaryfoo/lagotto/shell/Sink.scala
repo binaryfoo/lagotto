@@ -178,7 +178,7 @@ case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
   }
 }
 
-case class GraphiteSink(format: OutputFormat, host: String, port: Int) extends Sink {
+case class GraphiteSink(format: OutputFormat, host: String, port: Int, prefix: String) extends Sink {
 
   private val socket = new Socket(host, port)
   private val out = new PrintWriter(socket.getOutputStream)
@@ -186,7 +186,7 @@ case class GraphiteSink(format: OutputFormat, host: String, port: Int) extends S
   override def entry(e: LogEntry): Unit = {
     val time = e.timestamp.getMillis / 1000
     for ((key, value) <- e.exportAsSeq if key != "datetime") {
-      val cleanKey = key.replace(' ', '.')
+      val cleanKey = prefix + key.replace(' ', '.')
       out.println(s"$cleanKey $value $time")
     }
   }

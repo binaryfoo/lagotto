@@ -62,7 +62,7 @@ object Main extends App {
       InfluxDBSink(format, opts.influxDbUrl.get)
     } else if (opts.graphiteHost.isDefined) {
       val (host, port) = opts.graphiteHost.get
-      GraphiteSink(format, host, port)
+      GraphiteSink(format, host, port, opts.graphitePrefix.getOrElse(""))
     } else {
       new IncrementalSink(format, opts.header)
     }
