@@ -115,7 +115,7 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(format = format)
       } text "Tags for influxdb points"
 
-      opt[String]("fields") action { (fields, c) =>
+      opt[String]("influx-fields") action { (fields, c) =>
         val format = c.format match {
           case f@InfluxDBFormat(_, _, _) => f.copy(fields = parseFields(fields))
           case _ => InfluxDBFormat(fields = parseFields(fields))
@@ -126,6 +126,11 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
       opt[String]("influx-url") action { (url, c) =>
         c.copy(influxDbUrl = Some(url))
       } text "URL to post influx points to"
+
+      opt[String]("graphite") action { (url, c) =>
+        val Array(host, port) = url.split(":")
+        c.copy(graphiteHost = Some((host, port.toInt)))
+      } text "Graphite host:port to write metrics to"
 
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)

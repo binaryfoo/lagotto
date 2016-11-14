@@ -1189,7 +1189,7 @@ class MainTest extends LagoTest {
     val defaultZone = DateTimeZone.getDefault
     try {
       DateTimeZone.setDefault(DateTimeZone.UTC)
-      val output = run("--influx", "stuff", "--tags", "v1", "--fields", "v2", "--in-format", "csv", testFile("timestamped.csv"))
+      val output = run("--influx", "stuff", "--tags", "v1", "--influx-fields", "v2", "--in-format", "csv", testFile("timestamped.csv"))
       output shouldBe
         """stuff,v1=a v2=b 946688461999000000
           |stuff,v1=c v2=d 946688462101000000

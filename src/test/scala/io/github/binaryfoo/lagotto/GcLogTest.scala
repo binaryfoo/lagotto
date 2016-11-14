@@ -44,4 +44,10 @@ class GcLogTest extends LagoTest {
     entry("PSYoungGenAfter") shouldBe "1250492416"
     entry("PSYoungGenMax") shouldBe "1324482560"
   }
+
+  it should "parse total times" in {
+    val lines = lineIteratorFrom(contentsOf("gc-with-total-times.txt"))
+    val entry = gcLogType.apply(lines)
+    println(entry)
+  }
 }

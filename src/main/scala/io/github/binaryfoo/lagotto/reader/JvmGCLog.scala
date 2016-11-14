@@ -14,8 +14,8 @@ class JvmGCLog extends LogType[GcLogEntry] {
 
   type P = PreParsed[GcLogEntry]
 
-  private var calculationFile: File = null
-  private var rateCalculator: RateCalculator = null
+  private var calculationFile: File = _
+  private var rateCalculator: RateCalculator = _
 
   private def calculatorFor(sourceRef: SourceRef): RateCalculator = {
     sourceRef match {

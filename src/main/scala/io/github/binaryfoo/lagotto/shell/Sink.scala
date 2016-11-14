@@ -1,7 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{File, FileOutputStream, FileWriter, PrintStream}
-import java.net.{HttpURLConnection, URL}
+import java.io.{BufferedWriter, File, FileOutputStream, FileWriter, PrintStream, PrintWriter}
+import java.net.{HttpURLConnection, Socket, URL}
 
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.output.{GnuplotOptions, GnuplotScriptWriter}
@@ -175,5 +175,24 @@ case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
     connection.disconnect()
 
     buffer.clear()
+  }
+}
+
+case class GraphiteSink(format: OutputFormat, host: String, port: Int) extends Sink {
+
+  private val socket = new Socket(host, port)
+  private val out = new PrintWriter(socket.getOutputStream)
+
+  override def entry(e: LogEntry): Unit = {
+    val time = e.timestamp.getMillis / 1000
+    for ((key, value) <- e.exportAsSeq if key != "datetime") {
+      val cleanKey = key.replace(' ', '.')
+      out.println(s"$cleanKey $value $time")
+    }
+  }
+
+  override def finish(): Unit = {
+    out.close()
+    socket.close()
   }
 }

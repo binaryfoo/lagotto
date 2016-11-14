@@ -1,0 +1,24 @@
+2016-11-08T13:19:58.677+1100: 2.078: Total time for which application threads were stopped: 0.0017517 seconds, Stopping threads took: 0.0015713 seconds
+{Heap before GC invocations=1 (full 0):
+ PSYoungGen      total 1835008K, used 1572864K [0x0000000740000000, 0x00000007c0000000, 0x00000007c0000000)
+  eden space 1572864K, 100% used [0x0000000740000000,0x00000007a0000000,0x00000007a0000000)
+  from space 262144K, 0% used [0x00000007b0000000,0x00000007b0000000,0x00000007c0000000)
+  to   space 262144K, 0% used [0x00000007a0000000,0x00000007a0000000,0x00000007b0000000)
+ ParOldGen       total 4194304K, used 0K [0x0000000640000000, 0x0000000740000000, 0x0000000740000000)
+  object space 4194304K, 0% used [0x0000000640000000,0x0000000640000000,0x0000000740000000)
+ Metaspace       used 18858K, capacity 19366K, committed 19712K, reserved 1067008K
+  class space    used 2143K, capacity 2263K, committed 2304K, reserved 1048576K
+2016-11-08T13:19:58.812+1100: 2.213: [GC (Allocation Failure)
+Desired survivor size 268435456 bytes, new threshold 7 (max 15)
+[PSYoungGen: 1572864K->15865K(1835008K)] 1572864K->15889K(6029312K), 0.0441517 secs] [Times: user=0.12 sys=0.01, real=0.04 secs]
+Heap after GC invocations=1 (full 0):
+ PSYoungGen      total 1835008K, used 15865K [0x0000000740000000, 0x00000007c0000000, 0x00000007c0000000)
+  eden space 1572864K, 0% used [0x0000000740000000,0x0000000740000000,0x00000007a0000000)
+  from space 262144K, 6% used [0x00000007a0000000,0x00000007a0f7e660,0x00000007b0000000)
+  to   space 262144K, 0% used [0x00000007b0000000,0x00000007b0000000,0x00000007c0000000)
+ ParOldGen       total 4194304K, used 24K [0x0000000640000000, 0x0000000740000000, 0x0000000740000000)
+  object space 4194304K, 0% used [0x0000000640000000,0x0000000640006000,0x0000000740000000)
+ Metaspace       used 18858K, capacity 19366K, committed 19712K, reserved 1067008K
+  class space    used 2143K, capacity 2263K, committed 2304K, reserved 1048576K
+}
+2016-11-08T13:19:58.856+1100: 2.257: Total time for which application threads were stopped: 0.0444513 seconds, Stopping threads took: 0.0000382 seconds
