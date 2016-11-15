@@ -56,6 +56,7 @@
  - web sequence diagram output...
 * Full SQL like query: and, or - parser combinator
 * Warn if pivot on field is not sorted. Pivot assumes entries to be pivoted are consecutive
+* --out-format should apply for json,graphite,influx - consistently, not just for tables?
 
 group_trace() should bound number of files kept open to stay under ulimit. Reopen if required.
 dictionary should have 43.1 as "merchant name" for 0200,0100,0400

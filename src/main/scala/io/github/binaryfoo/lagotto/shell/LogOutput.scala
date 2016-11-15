@@ -22,7 +22,7 @@ object OutputFormat {
   }
 
   implicit class PipeToOutputFormatIterator(val it: Iterator[LogEntry]) extends AnyVal {
-    def pipeTo(f: OutputFormat, out: PrintWriter) = {
+    def pipeTo(f: OutputFormat, out: PrintWriter): Unit = {
       f.header().foreach(out.println)
       it.flatMap(f.apply).foreach(out.println)
       f.footer().foreach(out.println)

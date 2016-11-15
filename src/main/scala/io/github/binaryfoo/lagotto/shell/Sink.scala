@@ -1,6 +1,6 @@
 package io.github.binaryfoo.lagotto.shell
 
-import java.io.{BufferedWriter, File, FileOutputStream, FileWriter, PrintStream, PrintWriter}
+import java.io.{File, FileOutputStream, FileWriter, PrintStream, PrintWriter}
 import java.net.{HttpURLConnection, Socket, URL}
 
 import io.github.binaryfoo.lagotto._
@@ -23,7 +23,7 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean, val 
 
   private var headerWritten = false
 
-  override def entry(e: LogEntry) = {
+  override def entry(e: LogEntry): Unit = {
     val output = format(e)
     if (!headerWritten) {
       if (includeHeader) {
@@ -34,7 +34,7 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean, val 
     output.foreach(out.println)
   }
 
-  override def finish() = format.footer().foreach(out.println)
+  override def finish(): Unit = format.footer().foreach(out.println)
 
 }
 
@@ -43,7 +43,7 @@ class IncrementalSink(val format: OutputFormat, val includeHeader: Boolean, val 
  */
 class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: String) extends IncrementalSink(format, includeHeader, new PrintStream(new FileOutputStream(fileName))) {
 
-  override def finish() = {
+  override def finish(): Unit = {
     super.finish()
     out.close()
     println(s"Wrote $fileName")
@@ -56,9 +56,9 @@ class FileSink(format: OutputFormat, includeHeader: Boolean, val fileName: Strin
  */
 class GnuplotSink(val csvFileName: String, val gpFileName: String, val plotOptions: GnuplotOptions) extends Sink {
 
-  var xRange = ("", "")
+  private var xRange = ("", "")
 
-  override def entry(e: LogEntry) = {
+  override def entry(e: LogEntry): Unit = {
     val time = plotOptions.timeField(e)
     if (time != null) {
       xRange = xRange match {
@@ -68,7 +68,7 @@ class GnuplotSink(val csvFileName: String, val gpFileName: String, val plotOptio
     }
   }
 
-  override def finish() = {
+  override def finish(): Unit = {
     val file = new File(gpFileName)
     val writer = new FileWriter(file)
     writer.write(GnuplotScriptWriter.write(csvFileName, xRange, plotOptions))
@@ -82,9 +82,9 @@ class GnuplotSink(val csvFileName: String, val gpFileName: String, val plotOptio
 
 class CompositeSink(val sinks: Seq[Sink]) extends Sink {
 
-  override def entry(e: LogEntry) = sinks.foreach(_.entry(e))
+  override def entry(e: LogEntry): Unit = sinks.foreach(_.entry(e))
 
-  override def finish() = sinks.foreach(_.finish())
+  override def finish(): Unit = sinks.foreach(_.finish())
 
 }
 
@@ -96,13 +96,13 @@ class SingleHistogramSink(val field: FieldExpr) extends Sink {
 
   private val histogram = new Histogram(3600000000000L, 3)
 
-  override def entry(e: LogEntry) = {
+  override def entry(e: LogEntry): Unit = {
     val v = field(e)
     if (v != null) {
       histogram.recordValue(v.toLong)
     }
   }
-  override def finish() = {
+  override def finish(): Unit = {
     histogram.outputPercentileDistribution(Console.out, 1.0)
   }
 
@@ -116,7 +116,7 @@ class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr)
 
   private val histograms = mutable.Map[String, Histogram]()
 
-  override def entry(e: LogEntry) = {
+  override def entry(e: LogEntry): Unit = {
     val v = field(e)
     if (v != null) {
       val key = e.exprToSeq(keyFields).mkString("-").replace(' ', '-')
@@ -125,7 +125,7 @@ class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr)
     }
   }
 
-  override def finish() = {
+  override def finish(): Unit = {
     for ((key, histogram) <- histograms) {
       val name = s"$key.hgrm"
       val out = new PrintStream(new FileOutputStream(name))
@@ -139,7 +139,7 @@ class MultipleHistogramSink(val keyFields: Seq[FieldExpr], val field: FieldExpr)
 
 case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
 
-  val buffer = mutable.ArrayBuffer[String]()
+  private val buffer = mutable.ArrayBuffer[String]()
 
   override def entry(e: LogEntry): Unit = {
     buffer ++= format(e)
@@ -178,21 +178,52 @@ case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
   }
 }
 
-case class GraphiteSink(format: OutputFormat, host: String, port: Int, prefix: String) extends Sink {
+// Needs attention
+case class GraphiteSink(format: OutputFormat, url: String, prefix: String) extends Sink {
 
-  private val socket = new Socket(host, port)
-  private val out = new PrintWriter(socket.getOutputStream)
+  private val IgnoredKeys = Set("datetime", "at")
+  private var socket: Option[Socket] = None
+  private val out = {
+    url match {
+      case "-" =>
+        new PrintWriter(Console.out)
+      case _ =>
+        val Array(host, port) = url.split(":")
+        socket = Some(new Socket(host, port.toInt))
+        new PrintWriter(socket.get.getOutputStream)
+    }
+  }
+  private val exporter: (LogEntry) => Seq[(String, String)] = {
+    format match {
+      case Tabular(fields, _) =>
+        // exclude any time fields, assume they're in the metric's timestamp
+        val reducedFields = fields.filterNot(_.isInstanceOf[TimeExpr])
+        e: LogEntry => e.exportAsSeq(reducedFields)
+      case _ =>
+        e: LogEntry => e.exportAsSeq
+    }
+  }
+  private val timeExporter: (LogEntry) => Long = {
+    format match {
+      case Tabular(fields, _) =>
+        // rebuild the time... yikes
+        val timeField = fields.find(_.isInstanceOf[TimeExpr]).get.asInstanceOf[TimeExpr]
+        e: LogEntry => timeField.formatter.parseDateTime(timeField(e)).getMillis / 1000
+      case _ =>
+        e: LogEntry => e.timestamp.getMillis / 1000
+    }
+  }
 
   override def entry(e: LogEntry): Unit = {
-    val time = e.timestamp.getMillis / 1000
-    for ((key, value) <- e.exportAsSeq if key != "datetime") {
-      val cleanKey = prefix + key.replace(' ', '.')
+    val time = timeExporter(e)
+    for ((key, value) <- exporter(e) if !IgnoredKeys.contains(key)) {
+      val cleanKey = prefix + key.replace(' ', '.').replaceAll("[)(]", "_")
       out.println(s"$cleanKey $value $time")
     }
   }
 
   override def finish(): Unit = {
     out.close()
-    socket.close()
+    socket.foreach(_.close())
   }
 }

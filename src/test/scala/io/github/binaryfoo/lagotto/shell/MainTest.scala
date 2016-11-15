@@ -1,6 +1,7 @@
 package io.github.binaryfoo.lagotto.shell
 
 import java.io._
+import java.net.ServerSocket
 
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.LagoTest
@@ -1193,6 +1194,53 @@ class MainTest extends LagoTest {
       output shouldBe
         """stuff,v1=a v2=b 946688461999000000
           |stuff,v1=c v2=d 946688462101000000
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
+  "--graphite" should "should output fields as metrics" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite", "-", "--in-format", "csv", testFile("timestamped.csv"))
+      output shouldBe
+        """v1 a 946688461
+          |v2 b 946688461
+          |v1 c 946688462
+          |v2 d 946688462
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
+  "--graphite" should "should find timestamp from --table" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite", "-", "--metric-prefix", "foo", "--table", "time(yyyy-MM-dd HH:mm),lifespan", testFile("one.xml"))
+      output shouldBe
+        """foo.lifespan 10005 1416787200
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
+  "--graphite" should "should find timestamp from --table for gc log" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite", "-", "--in-format", "gc", "--table", "time(yyyy-MM-dd HH:mm),sum(pause)", testFile("gc.log"))
+      output shouldBe
+        """sum_pause_ 2.421151 1420712280
+          |sum_pause_ 2.368140 1420730160
+          |sum_pause_ 0.425189 1434137280
           |""".stripMargin
     } finally {
       DateTimeZone.setDefault(defaultZone)

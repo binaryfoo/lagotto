@@ -128,12 +128,12 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
       } text "URL to post influx points to"
 
       opt[String]("graphite") action { (url, c) =>
-        val Array(host, port) = url.split(":")
-        c.copy(graphiteHost = Some((host, port.toInt)))
-      } text "Graphite host:port to write metrics to"
+        c.copy(graphiteUrl = Some(url))
+      } text "Graphite host:port to write metrics to. Use - for stdout."
 
       opt[String]("metric-prefix") action { (prefix, c) =>
-        c.copy(graphitePrefix = Some(prefix))
+        val politePrefix = if (prefix.endsWith(".")) prefix else prefix + "."
+        c.copy(graphitePrefix = Some(politePrefix))
       } text "Optional prefix when outputting graphite metrics"
 
       opt[Unit]("pair") action {(_, c) =>

@@ -22,7 +22,7 @@ trait LogEntry {
 
   def get(id: String): Option[String] = Option(apply(id))
 
-  def contains(id: String) = apply(id) != null
+  def contains(id: String): Boolean = apply(id) != null
 
   /**
    * The record as text (XML)
@@ -66,6 +66,13 @@ trait LogEntry {
   def toXsv(separator: String, ids: Iterable[String]): String = Xsv.toXsv(separator, toSeq(ids))
 
   def exportAsSeq: Seq[(String, String)]
+
+  def exportAsSeq(ids: Iterable[FieldExpr]): Seq[(String, String)] = {
+    ids.map { id =>
+      val value = id(this)
+      (id.field, if (value == null) "" else value)
+    }.toSeq
+  }
 }
 
 object LogEntry {

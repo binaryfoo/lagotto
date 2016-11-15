@@ -60,9 +60,8 @@ object Main extends App {
       new LiveWebServerSink(format)
     } else if (opts.influxDbUrl.isDefined) {
       InfluxDBSink(format, opts.influxDbUrl.get)
-    } else if (opts.graphiteHost.isDefined) {
-      val (host, port) = opts.graphiteHost.get
-      GraphiteSink(format, host, port, opts.graphitePrefix.getOrElse(""))
+    } else if (opts.graphiteUrl.isDefined) {
+      GraphiteSink(format, opts.graphiteUrl.get, opts.graphitePrefix.getOrElse(""))
     } else {
       new IncrementalSink(format, opts.header)
     }

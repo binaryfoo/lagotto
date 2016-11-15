@@ -22,12 +22,12 @@ case class HumanTimeFormatter(pattern: String) extends TimeFormatter {
     case "yyyy-MM-dd H0"       => ("yyyy-MM-dd HH",       (timestamp, f) => f.print(timestamp).substring(0, 12) + "0")
     case _                     => (pattern,               (timestamp, f) => f.print(timestamp))
   }
-  val jodaFormatter = DateTimeFormat.forPattern(jodaPattern)
+  private val jodaFormatter = DateTimeFormat.forPattern(jodaPattern)
   private lazy val periodFormatter = PeriodFormatTranslator.translate(jodaPattern)
 
   override def print(timestamp: DateTime): String = printer(timestamp, jodaFormatter)
   override def print(period: Period): String = periodFormatter.print(period)
-  override def parseDateTime(s: String) = jodaFormatter.parseDateTime(s)
+  override def parseDateTime(s: String): DateTime = jodaFormatter.parseDateTime(s)
 }
 
 case class BasicJodaFormatter(pattern: DateTimeFormatter) extends TimeFormatter {
@@ -72,7 +72,7 @@ object TimeFormatter {
     case "time(millis)" => Some(EpochTimeFormatter)
     case "time(s)" => Some(EpochSecondsFormatter)
     case "time(seconds)" => Some(EpochSecondsFormatter)
-    case TimeExpression(pattern) => Some(new HumanTimeFormatter(pattern))
+    case TimeExpression(pattern) => Some(HumanTimeFormatter(pattern))
     case MsgPairFieldAccess(_, TimeFormatter(formatter)) => Some(formatter)
     case _ => None
   }
@@ -80,7 +80,7 @@ object TimeFormatter {
   /**
    * Unapply or die.
    */
-  def formatterFor(expr: String) = unapply(expr).get
+  def formatterFor(expr: String): TimeFormatter = unapply(expr).get
 }
 
 object PeriodFormatTranslator {
