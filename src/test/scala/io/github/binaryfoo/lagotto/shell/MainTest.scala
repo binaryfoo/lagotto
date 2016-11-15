@@ -1231,6 +1231,23 @@ class MainTest extends LagoTest {
     }
   }
 
+  "--graphite" should "should respect alias in --table" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite", "-", "--metric-prefix", "bar", "--table", "time(yyyy-MM-dd HH:mm),lifespan as \"magic\"", testFile("a-bunch.xml"))
+      output shouldBe
+        """bar.magic  1416787200
+          |bar.magic  1416787200
+          |bar.magic 10 1416787200
+          |bar.magic 100 1416787200
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
   "--graphite" should "should find timestamp from --table for gc log" in {
     // codeship builds run with a different timezone
     val defaultZone = DateTimeZone.getDefault

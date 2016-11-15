@@ -70,7 +70,7 @@ trait LogEntry {
   def exportAsSeq(ids: Iterable[FieldExpr]): Seq[(String, String)] = {
     ids.map { id =>
       val value = id(this)
-      (id.field, if (value == null) "" else value)
+      (id.toString(), if (value == null) "" else value)
     }.toSeq
   }
 }
