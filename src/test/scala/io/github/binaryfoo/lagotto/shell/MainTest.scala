@@ -1248,6 +1248,23 @@ class MainTest extends LagoTest {
     }
   }
 
+  "--graphite" should "allow variables in --metric-prefix" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite", "-", "--metric-prefix", "bar.${mti}", "--table", "time(yyyy-MM-dd HH:mm),lifespan", testFile("a-bunch.xml"))
+      output shouldBe
+        """bar.0200.lifespan  1416787200
+          |bar.0200.lifespan  1416787200
+          |bar.0210.lifespan 10 1416787200
+          |bar.0210.lifespan 100 1416787200
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
   "--graphite" should "should find timestamp from --table for gc log" in {
     // codeship builds run with a different timezone
     val defaultZone = DateTimeZone.getDefault

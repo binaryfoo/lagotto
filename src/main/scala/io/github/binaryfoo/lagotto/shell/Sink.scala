@@ -181,7 +181,6 @@ case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
 // Needs attention
 case class GraphiteSink(format: OutputFormat, url: String, prefix: String) extends Sink {
 
-  private val IgnoredKeys = Set("datetime", "at")
   private var socket: Option[Socket] = None
   private val out = {
     url match {
@@ -213,11 +212,18 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
         e: LogEntry => e.timestamp.getMillis / 1000
     }
   }
+  private val variable = "\\$\\{([^}]+)\\}".r.unanchored
+  private val keysToSubstitute = variable.findAllMatchIn(prefix).map(_.group(1))
+  private val KeysToIgnore = Set("datetime", "at") ++ keysToSubstitute
 
   override def entry(e: LogEntry): Unit = {
     val time = timeExporter(e)
-    for ((key, value) <- exporter(e) if !IgnoredKeys.contains(key)) {
-      val cleanKey = prefix + key.replace(' ', '.').replaceAll("[)(]", "_")
+    for ((key, value) <- exporter(e) if !KeysToIgnore.contains(key)) {
+      val prefixWithSubstitutions = variable.replaceAllIn(prefix, m => {
+        val expr = m.group(1)
+        e(expr)
+      })
+      val cleanKey = prefixWithSubstitutions + key.replace(' ', '.').replaceAll("[)(]", "_")
       out.println(s"$cleanKey $value $time")
     }
   }
