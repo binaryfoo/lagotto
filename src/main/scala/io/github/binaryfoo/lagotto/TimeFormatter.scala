@@ -77,6 +77,14 @@ object TimeFormatter {
     case _ => None
   }
 
+  def isAbsoluteAsEpochSeconds(formatter: TimeFormatter): Boolean = {
+    formatter match {
+      case HumanTimeFormatter(pattern) => pattern.startsWith("yyyy-MM-dd")
+      case EpochTimeFormatter => true
+      case _ => false
+    }
+  }
+
   /**
    * Unapply or die.
    */

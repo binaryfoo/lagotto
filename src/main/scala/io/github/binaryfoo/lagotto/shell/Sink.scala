@@ -207,6 +207,9 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
       case Tabular(fields, _) =>
         // rebuild the time... yikes
         val timeField = fields.find(_.isInstanceOf[TimeExpr]).get.asInstanceOf[TimeExpr]
+        if (!TimeFormatter.isAbsoluteAsEpochSeconds(timeField.formatter)) {
+          throw new IllegalArgumentException(s"Time field '${timeField.formatter}' must include year, month and day to produce a sensible graphite timestamp (epoch seconds)")
+        }
         e: LogEntry => timeField.formatter.parseDateTime(timeField(e)).getMillis / 1000
       case _ =>
         e: LogEntry => e.timestamp.getMillis / 1000
@@ -216,10 +219,14 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
   private val keysToSubstitute = variable.findAllMatchIn(prefix).map(_.group(1))
   private val KeysToIgnore = Set("datetime", "at") ++ keysToSubstitute
 
+  /**
+    * Convert a log entry into a set of graphite plaintext protocol lines
+    */
   override def entry(e: LogEntry): Unit = {
     val time = timeExporter(e)
     for ((key, value) <- exporter(e) if !KeysToIgnore.contains(key)) {
       val prefixWithSubstitutions = variable.replaceAllIn(prefix, m => {
+        // probably should parse to a FieldExpr for consistency
         val expr = m.group(1)
         e(expr)
       })

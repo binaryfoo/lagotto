@@ -1231,6 +1231,20 @@ class MainTest extends LagoTest {
     }
   }
 
+  "--graphite" should "should complain when time in --table lacks year,month,day components" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val error = standardErrorFrom(Main.main(Array("--graphite", "-", "--metric-prefix", "foo", "--table", "time(HH:mm),lifespan", testFile("one.xml"))))
+      error shouldBe
+        """Time field 'HumanTimeFormatter(HH:mm)' must include year, month and day to produce a sensible graphite timestamp (epoch seconds)
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
   "--graphite" should "should respect alias in --table" in {
     // codeship builds run with a different timezone
     val defaultZone = DateTimeZone.getDefault
