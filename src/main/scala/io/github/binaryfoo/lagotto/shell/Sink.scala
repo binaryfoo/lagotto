@@ -228,7 +228,8 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
       val prefixWithSubstitutions = variable.replaceAllIn(prefix, m => {
         // probably should parse to a FieldExpr for consistency
         val expr = m.group(1)
-        e(expr)
+        val v = e(expr)
+        if (v == null) "unknown" else v
       })
       val cleanKey = prefixWithSubstitutions + key.replace(' ', '.').replaceAll("[)(]", "_")
       out.println(s"$cleanKey $value $time")

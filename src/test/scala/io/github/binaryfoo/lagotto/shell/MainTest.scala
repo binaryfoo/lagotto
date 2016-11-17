@@ -1279,6 +1279,20 @@ class MainTest extends LagoTest {
     }
   }
 
+  "--graphite" should "allow default to unknown for missing variable in --metric-prefix" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite", "-", "--metric-prefix", "bar.${missing}", "--table", "time(yyyy-MM-dd HH:mm),lifespan", testFile("one.xml"))
+      output shouldBe
+        """bar.unknown.lifespan 10005 1416787200
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
   "--graphite" should "should find timestamp from --table for gc log" in {
     // codeship builds run with a different timezone
     val defaultZone = DateTimeZone.getDefault
