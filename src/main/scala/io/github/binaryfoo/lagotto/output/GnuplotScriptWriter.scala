@@ -25,13 +25,26 @@ trait NumberedField {
   def columnNumber: Int
 }
 
+sealed trait GnuplotFormat
+case object Svg extends GnuplotFormat
+case object Png extends GnuplotFormat
+case object Html extends GnuplotFormat
+object GnuplotFormat {
+  val formats: Set[GnuplotFormat] = Set(Svg, Png, Html)
+
+  def from(s: String): Option[GnuplotFormat] = {
+    formats.find(_.toString.toLowerCase == s)
+  }
+}
+
 case class Chart(series: Seq[Series])
 
 case class GnuplotOptions(enabled: Boolean = false,
                           scriptName: String = "",
                           timeField: FieldExpr = null,
                           charts: Seq[Chart] = Seq.empty,
-                          timeFormat: Option[String] = None) {
+                          timeFormat: Option[String] = None,
+                          outputFormat: GnuplotFormat = Svg) {
   def fields: Seq[FieldExpr] = {
     val plotFields = for (chart <- charts; s <- chart.series) yield s
     val discriminatorFields = for (chart <- charts; Series(_, _, plotType: DiscriminatedPoints) <- chart.series) yield plotType
@@ -41,10 +54,10 @@ case class GnuplotOptions(enabled: Boolean = false,
 
 object GnuplotScriptWriter {
 
-  val ToSecondPrecision = """time\(HH:[m0]{2}:[s0]{2}\)""".r
-  val ToMinutePrecision = """time\(HH:[m0]{2}\)""".r
-  val DateTimeToSecondPrecision = """time\(yyyy-MM-dd HH:[m0]{2}:[s0]{2}\)""".r
-  val DateTimeToMinutePrecision = """time\(yyyy-MM-dd HH:[m0]{2}\)""".r
+  private val ToSecondPrecision = """time\(HH:[m0]{2}:[s0]{2}\)""".r
+  private val ToMinutePrecision = """time\(HH:[m0]{2}\)""".r
+  private val DateTimeToSecondPrecision = """time\(yyyy-MM-dd HH:[m0]{2}:[s0]{2}\)""".r
+  private val DateTimeToMinutePrecision = """time\(yyyy-MM-dd HH:[m0]{2}\)""".r
 
   def write(csvFileName: String, xRange: (String, String), plotOptions: GnuplotOptions): String = {
     val gnuplotTimeFormat = toGnuPlotTimeFormat(plotOptions.timeField.field)
@@ -63,8 +76,8 @@ object GnuplotScriptWriter {
                      |name = '$plotFileName'
                      |csv = name.'.csv'
                      |set datafile separator ','
-                     |set terminal svg enhanced mouse standalone size 1280,$height; set output name.'.svg'
-                     |#set terminal pngcairo size 1280,$height; set output name.'.png'
+                     |${outputFormat(plotOptions.outputFormat, height)}
+                     |${alternativeFormats(plotOptions.outputFormat, height)}
                      |set xdata time
                      |set timefmt '$gnuplotTimeFormat'
                      |set format x '$displayTimeFormat'
@@ -78,9 +91,24 @@ object GnuplotScriptWriter {
     header + body
   }
 
+  private def outputFormat(format: GnuplotFormat, height: Int): String = {
+    format match {
+      case Svg =>  s"set terminal svg enhanced mouse standalone size 1280,$height; set output name.'.svg'"
+      case Png =>  s"set terminal pngcairo size 1280,$height; set output name.'.png'"
+      case Html => s"set terminal canvas size 1280,$height enhanced standalone; set output name.'.html'"
+    }
+  }
+
+  private def alternativeFormats(format: GnuplotFormat, height: Int): String = {
+    (for {
+      format <- GnuplotFormat.formats.filterNot(_ == format)
+      formatLine = outputFormat(format, height)
+    } yield s"#$formatLine").mkString("\n")
+  }
+
   private def plot(chart: Chart): String = {
     val plotsInChart = for {
-      Series(field, col, plotType) <- chart.series
+      Series(_, col, plotType) <- chart.series
     } yield plotSeries(col, plotType)
     plotsInChart.mkString("plot ", ",\\\n", "\n")
   }

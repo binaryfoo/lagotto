@@ -7,6 +7,7 @@ import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.dictionary.NameType.NameType
 import io.github.binaryfoo.lagotto.dictionary.{NameType, RootDataDictionary}
 import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, NotMarkedUp}
+import io.github.binaryfoo.lagotto.output.GnuplotFormat
 import io.github.binaryfoo.lagotto.reader.{JposLog, LogType, LogTypes}
 import io.github.binaryfoo.lagotto.shell.DelimitedTableFormat.{Csv, Tsv}
 import io.github.binaryfoo.lagotto.shell.output._
@@ -181,6 +182,10 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(gnuplot = c.gnuplot.copy(timeFormat = Some(timeFormat)))
       } text "Time format for gnuplot"
 
+      opt[GnuplotFormat]("plot-output-format") action {(format,c) =>
+        c.copy(gnuplot = c.gnuplot.copy(outputFormat = format))
+      } text "Output format for gnuplot"
+
       opt[Unit]("strict") action {(_,c) =>
         c.copy(strict = true)
       } text "Fail on rubbish input instead the default of continuing to read"
@@ -282,6 +287,13 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
     override def arity: Int = 1
     override def reads = { (s: String) =>
       logTypes.getOrElse(s, throw new IllegalArgumentException(s"Unknown input format '$s'. Known formats are ${logTypes.keys.mkString(", ")}"))
+    }
+  }
+
+  implicit def gnuplotFormatRead: Read[GnuplotFormat] = new Read[GnuplotFormat] {
+    override def arity: Int = 1
+    override def reads = { (s: String) =>
+      GnuplotFormat.from(s).getOrElse(throw new IllegalArgumentException(s"Unknown format '$s'. Known formats are ${GnuplotFormat.formats.mkString(", ")}"))
     }
   }
 
