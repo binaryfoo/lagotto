@@ -154,6 +154,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case GroupConcatDistinct(DirectExpr(field)) => GroupConcatDistinctBuilder(field)
         case GroupConcat(DirectExpr(field)) => GroupConcatBuilder(field)
         case GroupSample(DirectExpr(field), size) => GroupSampleBuilder(field, size.toInt)
+        case GroupIndex(DirectExpr(field), index) => GroupIndexBuilder(field, index.toInt)
         case GroupTrace(filePrefix) => GroupTraceBuilder(filePrefix)
         case _ => null
       }

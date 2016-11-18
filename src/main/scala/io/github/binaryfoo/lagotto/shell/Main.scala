@@ -100,9 +100,9 @@ class Pipeline(val opts: CmdLineOptions, val config: Config, val stdin: InputStr
 
   def partitionSortKey(): SortOrder = {
     val (afterGrouping, beforeGrouping) = opts.sortBy.partition {
-      case SortKey(key@HasAggregateExpressions(_),_,_) => true
+      case SortKey(HasAggregateExpressions(_),_,_) => true
       case SortKey(DelayExpr,_,_) => true
-      case k => false
+      case _ => false
     }
     SortOrder(afterGrouping, beforeGrouping)
   }

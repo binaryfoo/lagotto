@@ -50,6 +50,7 @@ object AggregateOps {
   val GroupConcat = """group_concat\((.*)\)""".r
   val GroupConcatDistinct = """group_concat\(distinct\((.*)\)\)""".r
   val GroupSample = """group_sample\((.*) (\d+)\)""".r
+  val GroupIndex = """group_index\((.*) (-?\d+)\)""".r
   val GroupTrace = """group_trace\((.+)\)""".r
 
   // these need to be vals for equality to work between two AggregateOp instances
@@ -63,7 +64,7 @@ object AggregateOps {
 trait FieldBasedAggregateOp extends AggregateOp {
 
   def expr: FieldExpr
-  def field = expr.field
+  def field: String = expr.field
   def add(v: String)
 
   final override def +=(elem: LogEntry) = {
@@ -163,6 +164,30 @@ case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAgg
   override def toString: String = s"group_sample($field,$size){values=$values}"
 
   override def copy() = GroupSampleBuilder(expr, size)
+}
+
+case class GroupIndexBuilder(expr: DirectExpr, index: Int) extends FieldBasedAggregateOp {
+
+  private val values = mutable.ListBuffer[String]()
+
+  override def add(v: String): Unit = values += v
+
+  override def result(): String = {
+    val i = if (index < 0) {
+      values.size + index
+    } else {
+      index
+    }
+    if (i < 0 || i > values.size -1)
+      ""
+    else {
+      values(i)
+    }
+  }
+
+  override def toString: String = s"group_index($field,$index)"
+
+  override def copy() = GroupIndexBuilder(expr, index)
 }
 
 case class GroupTraceBuilder(filePrefix: String, sequence: AtomicInteger = new AtomicInteger()) extends AggregateOp {

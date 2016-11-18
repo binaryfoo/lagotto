@@ -135,7 +135,7 @@ class AggregateLogEntryTest extends LagoTest {
   }
 
   "group_sample" should "parse" in {
-    val expr = new FieldExprParser().FieldExpr.expressionFor("group_sample(line 3)")
+    val expr = FieldExprParser().FieldExpr.expressionFor("group_sample(line 3)")
     expr.toString() shouldBe "group_sample(line 3)"
     val op = expr.asInstanceOf[AggregateExpr].op.asInstanceOf[GroupSampleBuilder]
     op.size shouldEqual 3
@@ -157,13 +157,13 @@ class AggregateLogEntryTest extends LagoTest {
   }
 
   private def aggregateToCsv(raw: Iterator[LogEntry], fields: String*): List[String] = {
-    aggregateToCsv(new FieldExprParser(), raw, fields :_*)
+    aggregateToCsv(FieldExprParser(), raw, fields :_*)
   }
 
   private def aggregateToCsv(parser: FieldExprParser, raw: Iterator[LogEntry], fields: String*): List[String] = {
     val fieldExprs = parser.FieldExpr.expressionsFor(fields)
     val aggregationConfig = AggregationSpec.fromExpressions(fieldExprs)
-    val aggregated = AggregateExpr.aggregate(raw.toIterator, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
+    val aggregated = AggregateExpr.aggregate(raw, aggregationConfig.keys, aggregationConfig.aggregates.toSeq)
     aggregated.map(_.exprToSeq(fieldExprs).toCsv).toList
   }
 }

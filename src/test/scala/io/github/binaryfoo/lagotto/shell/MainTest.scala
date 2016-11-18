@@ -1,15 +1,14 @@
 package io.github.binaryfoo.lagotto.shell
 
 import java.io._
-import java.net.ServerSocket
 
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import io.github.binaryfoo.lagotto.LagoTest
+import io.github.binaryfoo.lagotto.TestInput.RichFile
 import io.github.binaryfoo.lagotto.reader.FileIO
 import org.joda.time.DateTimeZone
 
 import scala.collection.mutable.ArrayBuffer
-import io.github.binaryfoo.lagotto.TestInput.RichFile
 
 class MainTest extends LagoTest {
 
@@ -183,6 +182,13 @@ class MainTest extends LagoTest {
                           |00:03,0,0
                           |00:04,1,1
                           |""".stripMargin
+  }
+
+  it should "allow access field of entry in group" in {
+    val output = run("--table", "socket,group_index(mti -1),group_index(11 0),count(grep(peer-disconnect))", "-f", "count(grep(peer-disconnect))>1", testFile("peer-disconnect-with-previous.xml"))
+    output shouldEqual """socket,group_index(mti -1),group_index(11 0),count(grep(peer-disconnect))
+                         |172.0.1.1:49481,0800,28928,1
+                         |""".stripMargin
   }
 
   it should "support mysql like group_concat() in --table option" in {
