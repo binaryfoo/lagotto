@@ -79,6 +79,7 @@ case class FieldExprParser(dictionary: Option[RootDataDictionary] = None, conten
         case Lines(count) => LinesExpr(expr, count.toInt)
         case "lines" => AllLinesExpr
         case "summary" => SummaryExpr(expressionFor("icon"), dictionary)
+        case "msgSize" => MsgSizeExpr
         case LengthOf(FieldExpr(field)) => LengthExpr(expr, field)
         case FieldPathWithOp(path, op) => PathExpr(expr, path, op)
         case QuotedLiteral(value) => LiteralExpr(value)
@@ -910,6 +911,14 @@ case class LengthExpr(field: String, of: FieldExpr) extends DirectExpr {
     val value = of(e)
     if (value != null) value.length.toString else null
   }
+}
+
+case object MsgSizeExpr extends DirectExpr {
+  override def apply(e: LogEntry): String = {
+    val lines = e.lines
+    if (lines != null) lines.length.toString else null
+  }
+  override def field: String = "msgSize"
 }
 
 /**

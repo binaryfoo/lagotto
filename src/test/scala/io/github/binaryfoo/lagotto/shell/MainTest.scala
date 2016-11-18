@@ -1051,6 +1051,11 @@ class MainTest extends LagoTest {
     output should include("1124000003,10")
   }
 
+  "msgSize" should "show size of whole message in bytes" in {
+    val output = run("--table", "datetime,msgSize", testFile("basic.xml"))
+    output should include("2014-11-24 00:00:03.292,374")
+  }
+
   "elapsed" should "show time since the first entry" in {
     val output = run("--table", "time,elapsed", testFile("a-bunch.xml"))
     output shouldBe
