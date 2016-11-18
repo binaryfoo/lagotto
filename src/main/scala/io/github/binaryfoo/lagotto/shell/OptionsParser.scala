@@ -137,6 +137,14 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
         c.copy(graphitePrefix = Some(politePrefix))
       } text "Optional prefix when outputting graphite metrics"
 
+      opt[String]("graphite-events") action { (url, c) =>
+        c.copy(graphiteEventUrl = Some(url))
+      } text "Graphite host:port to write events to. Use - for stdout."
+
+      opt[String]("event") action { (template, c) =>
+        c.copy(graphiteEvent = Some(template))
+      } text "Template to render in graphite event 'what' field."
+
       opt[Unit]("pair") action {(_, c) =>
         c.copy(pair = true)
       } text "Match requests with responses"

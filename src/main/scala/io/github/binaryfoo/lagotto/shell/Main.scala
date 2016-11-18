@@ -62,6 +62,8 @@ object Main extends App {
       InfluxDBSink(format, opts.influxDbUrl.get)
     } else if (opts.graphiteUrl.isDefined) {
       GraphiteSink(format, opts.graphiteUrl.get, opts.graphitePrefix.getOrElse(""))
+    } else if (opts.graphiteEventUrl.isDefined) {
+      GraphiteEventSink(opts.graphiteEventUrl.get, opts.graphiteEvent.getOrElse(""))
     } else {
       new IncrementalSink(format, opts.header)
     }

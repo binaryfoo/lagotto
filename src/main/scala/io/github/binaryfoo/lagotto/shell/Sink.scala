@@ -10,6 +10,7 @@ import org.HdrHistogram.Histogram
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.sys.process._
+import scala.util.matching.UnanchoredRegex
 
 trait Sink {
   def entry(e: LogEntry)
@@ -178,6 +179,35 @@ case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
   }
 }
 
+object GraphiteSink {
+
+  def timeExporter(format: OutputFormat): (LogEntry) => Long = {
+    format match {
+      case Tabular(fields, _) =>
+        // rebuild the time... yikes
+        val timeField = fields.find(_.isInstanceOf[TimeExpr]).get.asInstanceOf[TimeExpr]
+        if (!TimeFormatter.isAbsoluteAsEpochSeconds(timeField.formatter)) {
+          throw new IllegalArgumentException(s"Time field '${timeField.formatter}' must include year, month and day to produce a sensible graphite timestamp (epoch seconds)")
+        }
+        e: LogEntry => timeField.formatter.parseDateTime(timeField(e)).getMillis / 1000
+      case _ =>
+        e: LogEntry => e.timestamp.getMillis / 1000
+    }
+  }
+
+  val Variable: UnanchoredRegex = "\\$\\{([^}]+)\\}".r.unanchored
+
+  def render(template: String, e: LogEntry, defaultValue: String): String = {
+    // probably should do this in OptionsParser
+    val parser = FieldExprParser()
+    Variable.replaceAllIn(template, m => {
+      val expr = parser.stringAsFieldExpr(m.group(1))
+      val v = expr(e)
+      if (v == null) defaultValue else v
+    })
+  }
+}
+
 // Needs attention
 case class GraphiteSink(format: OutputFormat, url: String, prefix: String) extends Sink {
 
@@ -202,21 +232,8 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
         e: LogEntry => e.exportAsSeq
     }
   }
-  private val timeExporter: (LogEntry) => Long = {
-    format match {
-      case Tabular(fields, _) =>
-        // rebuild the time... yikes
-        val timeField = fields.find(_.isInstanceOf[TimeExpr]).get.asInstanceOf[TimeExpr]
-        if (!TimeFormatter.isAbsoluteAsEpochSeconds(timeField.formatter)) {
-          throw new IllegalArgumentException(s"Time field '${timeField.formatter}' must include year, month and day to produce a sensible graphite timestamp (epoch seconds)")
-        }
-        e: LogEntry => timeField.formatter.parseDateTime(timeField(e)).getMillis / 1000
-      case _ =>
-        e: LogEntry => e.timestamp.getMillis / 1000
-    }
-  }
-  private val variable = "\\$\\{([^}]+)\\}".r.unanchored
-  private val keysToSubstitute = variable.findAllMatchIn(prefix).map(_.group(1))
+  private val timeExporter = GraphiteSink.timeExporter(format)
+  private val keysToSubstitute = GraphiteSink.Variable.findAllMatchIn(prefix).map(_.group(1))
   private val KeysToIgnore = Set("datetime", "at") ++ keysToSubstitute
 
   /**
@@ -225,12 +242,7 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
   override def entry(e: LogEntry): Unit = {
     val time = timeExporter(e)
     for ((key, value) <- exporter(e) if !KeysToIgnore.contains(key)) {
-      val prefixWithSubstitutions = variable.replaceAllIn(prefix, m => {
-        // probably should parse to a FieldExpr for consistency
-        val expr = m.group(1)
-        val v = e(expr)
-        if (v == null) "unknown" else v
-      })
+      val prefixWithSubstitutions = GraphiteSink.render(prefix, e, "unknown")
       val cleanKey = prefixWithSubstitutions + key.replace(' ', '.').replaceAll("[)(]", "_")
       out.println(s"$cleanKey $value $time")
     }
@@ -239,5 +251,46 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
   override def finish(): Unit = {
     out.close()
     socket.foreach(_.close())
+  }
+}
+
+case class GraphiteEventSink(url: String, event: String) extends Sink {
+
+  private val out: (String) => Unit = {
+    url match {
+      case "-" =>
+        (payload: String) => Console.println(payload)
+      case _ =>
+        (payload: String) => {
+          val bytes = (payload + "\n").getBytes()
+          val connection = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+          connection.setRequestMethod("POST")
+          connection.setDoOutput(true)
+          connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+          connection.setRequestProperty("Content-Length", bytes.size.toString)
+          connection.setRequestProperty("Accept", "*/*")
+          connection.connect()
+
+          val out = connection.getOutputStream
+          out.write(bytes)
+          out.flush()
+
+          val code = connection.getResponseCode
+          if (code != 200) {
+            stderr.println(s"Failed to POST to $url: $code ${connection.getResponseMessage}")
+          }
+          connection.disconnect()
+        }
+    }
+  }
+
+  override def entry(e: LogEntry): Unit = {
+    val timestamp = e.timestamp.getMillis / 1000
+    val what = GraphiteSink.render(event, e, "")
+    val json = s"""{ "what": "$what", "when": $timestamp, "tags": "", "data": "" }""".stripMargin
+    out(json)
+  }
+
+  override def finish(): Unit = {
   }
 }

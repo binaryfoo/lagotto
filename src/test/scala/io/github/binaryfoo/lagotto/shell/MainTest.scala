@@ -1228,6 +1228,20 @@ class MainTest extends LagoTest {
     }
   }
 
+  "--graphite-events" should "should output graphite event" in {
+    // codeship builds run with a different timezone
+    val defaultZone = DateTimeZone.getDefault
+    try {
+      DateTimeZone.setDefault(DateTimeZone.UTC)
+      val output = run("--graphite-events", "-", "--event", "${realm} in ${file}", "-f", "realm=rotate-log-listener", testFile("basic.xml"))
+      output shouldBe
+        """{ "what": "rotate-log-listener in basic.xml", "when": 1416852655, "tags": "", "data": "" }
+          |""".stripMargin
+    } finally {
+      DateTimeZone.setDefault(defaultZone)
+    }
+  }
+
   "--graphite" should "should find timestamp from --table" in {
     // codeship builds run with a different timezone
     val defaultZone = DateTimeZone.getDefault
