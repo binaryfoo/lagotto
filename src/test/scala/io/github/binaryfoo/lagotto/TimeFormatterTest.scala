@@ -36,6 +36,13 @@ class TimeFormatterTest extends FlatSpec with Matchers {
     format.parseDateTime("61") shouldBe new DateTime(61000)
   }
 
+  "time(SSS)" should "print milliseconds of second (a value between 0 and 999)" in {
+    val format = formatterFor("time(SSS)")
+    format.print(new DateTime(61000)) shouldBe "000"
+    format.print(new DateTime(61999)) shouldBe "999"
+    format.print(new DateTime(61321)) shouldBe "321"
+  }
+
   "time(seconds)" should "print seconds since epoch" in {
     val format = formatterFor("time(seconds)")
     format.print(new DateTime(61000)) shouldBe "61"
