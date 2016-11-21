@@ -466,13 +466,14 @@ trait SubtractMillisFromTimeExpr {
 
   def calculate(e: LogEntry): String = {
     val leftValue = left(e)
-    val rightValue = right(e)
-    if (leftValue == null || rightValue == null) {
+    if (leftValue == null) {
       null
     }
     else {
+      val rightValue = right(e)
       val leftTime = leftFormat.parseDateTime(leftValue)
-      leftFormat.print(leftTime.minusMillis(rightValue.toInt))
+      val rightMillis = if (rightValue == null) 0 else rightValue.toInt
+      leftFormat.print(leftTime.minusMillis(rightMillis))
     }
   }
 
@@ -588,6 +589,7 @@ object ConvertExpr {
       case (_, TimeFormatter(inputFormat), "millis") => TimeConversion(timeToMillisOfDay, inputFormat, null)
       case (_, TimeFormatter(inputFormat), "ms") => TimeConversion(timeToMillisOfDay, inputFormat, null)
       case (_, TimeFormatter(inputFormat), "s") => TimeConversion(timeToSecondsOfDay, inputFormat, null)
+      case (_, TimeFormatter(inputFormat), "epoch") => TimeConversion(timeToUnixSeconds, inputFormat, null)
       case (_, "micro", "seconds") => microToSeconds
       case (_, "us", "s") => microToSeconds
       case (_, "micro", "millis") => microToMillis
@@ -612,6 +614,7 @@ object ConvertExpr {
   val millisToPeriod     = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(new Period(v.toLong))
   val timeToMillisOfDay  = (v: String, input: TimeFormatter, output: TimeFormatter) => input.parseDateTime(v).getMillisOfDay.toString
   val timeToSecondsOfDay = (v: String, input: TimeFormatter, output: TimeFormatter) => input.parseDateTime(v).getSecondOfDay.toString
+  val timeToUnixSeconds  = (v: String, input: TimeFormatter, output: TimeFormatter) => (input.parseDateTime(v).getMillis / 1000).toString
   val timeToPeriod       = (v: String, input: TimeFormatter, output: TimeFormatter) => output.print(input.parseDateTime(v))
   val microToSeconds     = (v: String) => oneDpFormat.format(v.toDouble / 1000000)
   val microToMillis      = (v: String) => (v.toLong / 1000).toString
