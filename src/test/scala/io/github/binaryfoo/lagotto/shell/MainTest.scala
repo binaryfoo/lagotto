@@ -150,8 +150,8 @@ class MainTest extends LagoTest {
   it should "group rows on reformatted calc() expression" in {
     val output = run("--table", "(calc(time-lifespan) time as time(HH:mm:ss)),count", testFile("a-bunch.xml"))
     output shouldEqual """(calc(time-lifespan) time as time(HH:mm:ss)),count
-                          |,2
-                          |00:00:04,2
+                          |00:00:03,1
+                          |00:00:04,3
                           |""".stripMargin
   }
 
@@ -188,6 +188,13 @@ class MainTest extends LagoTest {
     val output = run("--table", "socket,group_index(mti -1),group_index(11 0),count(grep(peer-disconnect))", "-f", "count(grep(peer-disconnect))>1", testFile("peer-disconnect-with-previous.xml"))
     output shouldEqual """socket,group_index(mti -1),group_index(11 0),count(grep(peer-disconnect))
                          |172.0.1.1:49481,0800,28928,1
+                         |""".stripMargin
+  }
+
+  it should "allow access field of last N entries in group" in {
+    val output = run("--table", "socket,group_index(msgType -1 2),group_index(11 0),count(grep(peer-disconnect))", "-f", "count(grep(peer-disconnect))>1", testFile("peer-disconnect-with-previous.xml"))
+    output shouldEqual """socket,group_index(msgType -1 2),group_index(11 0),count(grep(peer-disconnect))
+                         |172.0.1.1:49481,peer-disconnect send,28928,1
                          |""".stripMargin
   }
 
@@ -299,8 +306,8 @@ class MainTest extends LagoTest {
   it should "output difference between a direct timestamp and a direct millis value" in {
     val output = run("--table", "48.1,calc(time-lifespan)", testFile("a-bunch.xml"))
     output shouldEqual """48.1,calc(time-lifespan)
-                          |a-bunch.xml #1,
-                          |a-bunch.xml #2,
+                          |a-bunch.xml #1,00:00:03.292
+                          |a-bunch.xml #2,00:00:04.292
                           |a-bunch.xml #3,00:00:04.882
                           |a-bunch.xml #4,00:00:04.892
                           |""".stripMargin

@@ -50,7 +50,7 @@ object AggregateOps {
   val GroupConcat = """group_concat\((.*)\)""".r
   val GroupConcatDistinct = """group_concat\(distinct\((.*)\)\)""".r
   val GroupSample = """group_sample\((.*) (\d+)\)""".r
-  val GroupIndex = """group_index\((.*) (-?\d+)\)""".r
+  val GroupIndex = """group_index\(([^ ]+) (-?\d+)( -?\d+)?\)""".r
   val GroupTrace = """group_trace\((.+)\)""".r
 
   // these need to be vals for equality to work between two AggregateOp instances
@@ -166,28 +166,26 @@ case class GroupSampleBuilder(expr: DirectExpr, size: Int) extends FieldBasedAgg
   override def copy() = GroupSampleBuilder(expr, size)
 }
 
-case class GroupIndexBuilder(expr: DirectExpr, index: Int) extends FieldBasedAggregateOp {
+case class GroupIndexBuilder(expr: DirectExpr, index: Int, count: Option[Int] = None) extends FieldBasedAggregateOp {
 
   private val values = mutable.ListBuffer[String]()
 
   override def add(v: String): Unit = values += v
 
   override def result(): String = {
-    val i = if (index < 0) {
-      values.size + index
+    val range = if (index < 0) {
+      val i = values.size + index
+      i to i - count.getOrElse(0) by -1
     } else {
-      index
+      index to index + count.getOrElse(0) by 1
     }
-    if (i < 0 || i > values.size -1)
-      ""
-    else {
-      values(i)
-    }
+    val subList = for (i <- range if i >= 0 && i < values.size) yield values(i)
+    subList.mkString(" ")
   }
 
-  override def toString: String = s"group_index($field,$index)"
+  override def toString: String = s"group_index($field,$index,$count)"
 
-  override def copy() = GroupIndexBuilder(expr, index)
+  override def copy() = GroupIndexBuilder(expr, index, count)
 }
 
 case class GroupTraceBuilder(filePrefix: String, sequence: AtomicInteger = new AtomicInteger()) extends AggregateOp {
