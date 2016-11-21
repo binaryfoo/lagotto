@@ -185,11 +185,16 @@ object GraphiteSink {
     format match {
       case Tabular(fields, _) =>
         // rebuild the time... yikes
-        val timeField = fields.find(_.isInstanceOf[TimeExpr]).get.asInstanceOf[TimeExpr]
-        if (!TimeFormatter.isAbsoluteAsEpochSeconds(timeField.formatter)) {
-          throw new IllegalArgumentException(s"Time field '${timeField.formatter}' must include year, month and day to produce a sensible graphite timestamp (epoch seconds)")
+        fields.find(_.isInstanceOf[TimeExpr]) match {
+          case Some(timeField: TimeExpr) =>
+            if (!TimeFormatter.isAbsoluteAsEpochSeconds(timeField.formatter)) {
+              throw new IllegalArgumentException(s"Time field '${timeField.formatter}' must include year, month and day to produce a sensible graphite timestamp (epoch seconds)")
+            }
+            e: LogEntry => timeField.formatter.parseDateTime(timeField(e)).getMillis / 1000
+          case _ =>
+            // assume first field is epoch seconds
+            e: LogEntry => fields.head(e).toLong
         }
-        e: LogEntry => timeField.formatter.parseDateTime(timeField(e)).getMillis / 1000
       case _ =>
         e: LogEntry => e.timestamp.getMillis / 1000
     }
@@ -226,7 +231,12 @@ case class GraphiteSink(format: OutputFormat, url: String, prefix: String) exten
     format match {
       case Tabular(fields, _) =>
         // exclude any time fields, assume they're in the metric's timestamp
-        val reducedFields = fields.filterNot(_.isInstanceOf[TimeExpr])
+        val timelessFields = fields.filterNot(_.isInstanceOf[TimeExpr])
+        val reducedFields = if (timelessFields == fields) {
+          fields.tail
+        } else {
+          timelessFields
+        }
         e: LogEntry => e.exportAsSeq(reducedFields)
       case _ =>
         e: LogEntry => e.exportAsSeq
