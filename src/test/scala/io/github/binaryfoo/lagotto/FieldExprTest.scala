@@ -86,8 +86,8 @@ class FieldExprTest extends LagoTest {
   }
 
   it should "return null if one side is missing" in {
-    val expr = expressionFor("calc(lifespan-rtt)")
-    expr(JposEntry("lifespan" -> "1000")) shouldBe null
+    val expr = expressionFor("calc(missing-rtt)")
+    expr(JposEntry("missing" -> "1000")) shouldBe null
     expr(JposEntry("rtt" -> "300")) shouldBe null
     expr.get(JposEntry("rtt" -> "300")) shouldBe None
   }
@@ -110,7 +110,7 @@ class FieldExprTest extends LagoTest {
   }
 
   it should "handle missing value" in {
-    val expr = expressionFor("(lifespan millis as period)")
+    val expr = expressionFor("(missing millis as period)")
     expr(JposEntry()) shouldBe null
   }
 

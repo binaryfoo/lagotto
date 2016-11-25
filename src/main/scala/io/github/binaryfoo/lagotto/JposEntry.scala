@@ -25,13 +25,14 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
     case None => null
   }
 
-  val fields = _fields.withDefault {
+  val fields: mutable.Map[String, String] = _fields.withDefault {
     case "mti" => mti
     case "icon" => icon
     case "link" => realm.link
     case "socket" => realm.socket
     case "ipAddress" => realm.ipAddress
     case "port" => realm.port
+    case "lifespan" => "0"
     case _ => null
   }
 
@@ -40,7 +41,7 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
    * @param pattern Joda DateTimeFormat
    * @return Timestamp as string
    */
-  def timestampAs(pattern: String): String = timestampAs(new HumanTimeFormatter(pattern))
+  def timestampAs(pattern: String): String = timestampAs(HumanTimeFormatter(pattern))
 
   def timestampAs(format: TimeFormatter): String = format.print(timestamp)
 
@@ -84,9 +85,7 @@ case class JposEntry(private val _fields: mutable.LinkedHashMap[String, String],
 
   def millisSince(e: JposEntry): Long = timestamp.getMillis - e.timestamp.getMillis
 
-  def lifespan: Option[Int] = fields.get("lifespan").map {
-    case s: String => s.toInt
-  }
+  def lifespan: Option[Int] = fields.get("lifespan").map(_.toInt)
 
   override def exportAsSeq: Seq[(String, String)] = _fields.toSeq
 }

@@ -240,14 +240,14 @@ class MainTest extends LagoTest {
   }
 
   it should "group rows when max(lifespan) field included in --table option" in {
-    val output = run("--table", "ipAddress,max(lifespan)", testFile("a-pair.xml"))
+    val output = run("--table", "ipAddress,max(lifespan)", "-f", "ipAddress!=", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,max(lifespan)
                           |10.0.0.1,10005
                           |""".stripMargin
   }
 
   it should "group rows when max(lifespan) is aliased" in {
-    val output = run("--table", "ipAddress,max(lifespan) as \"slowest\"", testFile("a-pair.xml"))
+    val output = run("--table", "ipAddress,max(lifespan) as \"slowest\"", "-f", "ipAddress!=", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,slowest
                           |10.0.0.1,10005
                           |""".stripMargin
@@ -261,21 +261,21 @@ class MainTest extends LagoTest {
   }
 
   it should "group rows when max(lifespan) field included in --jira-table option" in {
-    val output = run("--table", "ipAddress,max(lifespan)", "-o", "jira", testFile("a-pair.xml"))
+    val output = run("--table", "ipAddress,max(lifespan)", "-f", "ipAddress!=", "-o", "jira", testFile("a-pair.xml"))
     output shouldEqual """||ipAddress||max(lifespan)||
 |10.0.0.1|10005|
 """
   }
 
   it should "group rows when min(lifespan) field included in --table option" in {
-    val output = run("--table", "ipAddress,min(lifespan)", testFile("a-pair.xml"))
+    val output = run("--table", "ipAddress,min(lifespan)", "-f", "ipAddress!=", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,min(lifespan)
                           |10.0.0.1,1000
                           |""".stripMargin
   }
 
   it should "group rows when sum(lifespan) field included in --table option" in {
-    val output = run("--table", "ipAddress,sum(lifespan)", testFile("a-pair.xml"))
+    val output = run("--table", "ipAddress,sum(lifespan)", "-f", "ipAddress!=", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,sum(lifespan)
                           |10.0.0.1,11005
                           |""".stripMargin
@@ -321,7 +321,7 @@ class MainTest extends LagoTest {
   }
 
   "Conversion (min(lifespan) as time(ss)" should "show minimum lifespan in seconds" in {
-    val output = run("--table", "ipAddress,(min(lifespan) as time(s))", testFile("a-pair.xml"))
+    val output = run("--table", "ipAddress,(min(lifespan) as time(s))", "-f", "ipAddress!=", testFile("a-pair.xml"))
     output shouldEqual """ipAddress,(min(lifespan) as time(s))
                          |10.0.0.1,1
                          |""".stripMargin
@@ -708,7 +708,7 @@ class MainTest extends LagoTest {
   }
 
   it should "filter on lifespan less than a number" in {
-    val output = run("--field", "lifespan<1000", "--table", "mti,lifespan", testFile("a-pair.xml"))
+    val output = run("--field", "lifespan<1000", "--table", "mti,lifespan", "-f", "ipAddress!=", testFile("a-pair.xml"))
     output shouldBe
       """mti,lifespan
         |0810,1000
@@ -1284,8 +1284,8 @@ class MainTest extends LagoTest {
       DateTimeZone.setDefault(DateTimeZone.UTC)
       val output = run("--graphite", "-", "--metric-prefix", "bar", "--table", "time(yyyy-MM-dd HH:mm),lifespan as \"magic\"", testFile("a-bunch.xml"))
       output shouldBe
-        """bar.magic  1416787200
-          |bar.magic  1416787200
+        """bar.magic 0 1416787200
+          |bar.magic 0 1416787200
           |bar.magic 10 1416787200
           |bar.magic 100 1416787200
           |""".stripMargin
@@ -1301,8 +1301,8 @@ class MainTest extends LagoTest {
       DateTimeZone.setDefault(DateTimeZone.UTC)
       val output = run("--graphite", "-", "--metric-prefix", "bar.${mti}", "--table", "time(yyyy-MM-dd HH:mm),lifespan", testFile("a-bunch.xml"))
       output shouldBe
-        """bar.0200.lifespan  1416787200
-          |bar.0200.lifespan  1416787200
+        """bar.0200.lifespan 0 1416787200
+          |bar.0200.lifespan 0 1416787200
           |bar.0210.lifespan 10 1416787200
           |bar.0210.lifespan 100 1416787200
           |""".stripMargin

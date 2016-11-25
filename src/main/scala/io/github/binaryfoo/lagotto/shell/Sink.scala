@@ -5,6 +5,7 @@ import java.net.{HttpURLConnection, Socket, URL}
 
 import io.github.binaryfoo.lagotto._
 import io.github.binaryfoo.lagotto.output.{GnuplotOptions, GnuplotScriptWriter}
+import io.github.binaryfoo.lagotto.reader.FileIO
 import org.HdrHistogram.Histogram
 
 import scala.collection.mutable
@@ -171,7 +172,7 @@ case class InfluxDBSink(format: OutputFormat, url: String) extends Sink {
 
     val code = connection.getResponseCode
     if (code != 204) {
-      stderr.println(s"Failed to POST to $url: $code ${connection.getResponseMessage}")
+      stderr.println(s"Failed to POST to $url: $code ${connection.getResponseMessage}:\n${FileIO.readToString(connection.getErrorStream)}")
     }
     connection.disconnect()
 
