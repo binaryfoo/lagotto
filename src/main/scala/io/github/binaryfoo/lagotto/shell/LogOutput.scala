@@ -4,6 +4,10 @@ import java.io.PrintWriter
 
 import io.github.binaryfoo.lagotto.highlight.{AnsiMarkup, XmlHighlighter}
 import io.github.binaryfoo.lagotto._
+import io.github.binaryfoo.lagotto.output.DeadSimpleJsonWriter
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 trait OutputFormat {
   def contentType: ContentType
@@ -88,7 +92,7 @@ case class Tabular(fields: Seq[FieldExpr], tableFormatter: TableFormatter = Deli
 }
 
 case class WildcardTable(tableFormatter: TableFormatter = DelimitedTableFormat(",")) extends OutputFormat with FieldList {
-  var fields: Seq[FieldExpr] = null
+  var fields: Seq[FieldExpr] = _
   override def header(): Option[String] = {
     if (fields == null) {
       throw new IAmSorryDave("Need at least one output row before printing header")
@@ -167,5 +171,64 @@ case class InfluxDBFormat(measurement: String = "", tags: Seq[FieldExpr] = Seq.e
     val fieldsAndValues = fields.map(f => f.field + "=" + escape(f(e))).mkString(",")
     val nanoTimestamp = e.timestamp.getMillis * 1000 * 1000
     Some(s"$measurement,$tagsAndValues $fieldsAndValues $nanoTimestamp")
+  }
+}
+
+case class JposTimeline(summaryExpr: FieldExpr) extends OutputFormat {
+
+  private val sessions = mutable.Map[String, ArrayBuffer[String]]()
+
+  override def contentType: ContentType = PlainText
+  override def header(): Option[String] = Some("[")
+  override def footer(): Option[String] = {
+    val b = new StringBuilder()
+    for ((socket, session) <- sessions) {
+      b.append(sessionToJson(socket, session)).append(",\n")
+    }
+    b.delete(b.length - 2, b.length)
+    Some(b.append("]").toString())
+  }
+
+  override def apply(e: LogEntry): Option[String] = {
+    e match {
+      case jposEntry: JposEntry if jposEntry.realm.socket != "" && jposEntry.msgType != null =>
+        val socket = jposEntry.realm.socket
+        val entriesForSession = sessions.getOrElseUpdate(socket, new ArrayBuffer[String]())
+        entriesForSession += entryToJson(jposEntry)
+        if (jposEntry.msgType == "session-end") {
+          sessions.remove(socket)
+          Some(sessionToJson(socket, entriesForSession) + ",")
+        } else {
+          None
+        }
+      case _ =>
+        None
+    }
+  }
+
+  private def sessionToJson(socket: String, entries: Seq[String]): String = {
+    val w = new DeadSimpleJsonWriter()
+    w.add("socket", socket)
+    w.add("times", entries)
+    w.done()
+    w.toString
+  }
+
+  private def entryToJson(e: JposEntry) = {
+    val w = new DeadSimpleJsonWriter()
+    w.add("starting_time", e.timestamp.getMillis - e.lifespan.getOrElse(0))
+    w.add("ending_time", e.timestamp.getMillis)
+    w.add("msgType", e.msgType)
+    w.add("summary", summary(e))
+    w.add("src", e.source.toString)
+    w.done()
+    w.toString
+  }
+
+  private def summary(e: JposEntry): String = {
+    val mti = e.get("mti").getOrElse("")
+    val nmic = e.get("70").getOrElse("")
+    val stan = e.get("1").getOrElse("")
+    s"$mti $nmic $stan"
   }
 }

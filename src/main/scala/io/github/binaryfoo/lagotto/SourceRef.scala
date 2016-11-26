@@ -19,7 +19,7 @@ trait SourceRef {
  * @param line Line number within the file.
  */
 case class FileRef(file: File, line: Int = 0) extends SourceRef {
-  def name = file.getName
+  def name: String = file.getName
   override def at(line: Int): SourceRef = this.copy(line = line)
 }
 

@@ -15,10 +15,10 @@ import scopt.Read
 
 class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
 
-  val dictionary = RootDataDictionary(config)
-  val logTypes = LogTypes.load(config)
-  val fieldParser = new FieldExprParser(Some(dictionary))
-  val filterParser = new LogFilterParser(fieldParser)
+  private val dictionary = RootDataDictionary(config)
+  private val logTypes = LogTypes.load(config)
+  private val fieldParser = FieldExprParser(Some(dictionary))
+  private val filterParser = new LogFilterParser(fieldParser)
   import fieldParser.FieldExpr
   import filterParser.LogFilter
 
@@ -219,6 +219,10 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
       opt[Unit]("merge") action {(_,c) =>
         c.copy(merge = true)
       } text "Remove duplicates records on input. Uses SHA-256 of record."
+
+      opt[Unit]("timeline") action {(_,c) =>
+        c.copy(format = JposTimeline(fieldParser.FieldExpr.expressionFor("summary")))
+      } text "Show jpos event timeline"
 
       opt[Unit]("debug") action {(_,c) =>
         Debug.enabled = true

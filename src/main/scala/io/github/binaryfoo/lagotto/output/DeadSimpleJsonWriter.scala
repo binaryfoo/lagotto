@@ -22,15 +22,17 @@ class DeadSimpleJsonWriter() {
   private val b = new StringBuilder("{")
   private var first = true
   
-  type ValueAppender = (String) => Unit
+  type ValueAppender = (Any) => Unit
   
-  val stringAppender: ValueAppender = b.append('"').append(_).append('"')
-  val integerAppender: ValueAppender = b.append(_)
+  private val stringAppender: ValueAppender = b.append('"').append(_).append('"')
+  private val rawAppender: ValueAppender = b.append(_)
 
-  def addAsInt(key: String, value: String): DeadSimpleJsonWriter = add(key, value.toLong.toString, integerAppender)
+  def addAsInt(key: String, value: String): DeadSimpleJsonWriter = add(key, value.toLong.toString, rawAppender)
   def add(key: String, value: String): DeadSimpleJsonWriter = add(key, value, stringAppender)
+  def add(key: String, value: Long): DeadSimpleJsonWriter = add(key, value, rawAppender)
+  def add(key: String, value: Seq[String]): DeadSimpleJsonWriter = add(key, value.mkString("[", ",", "]"), rawAppender)
 
-  def add(key: String, value: String, appender: ValueAppender): DeadSimpleJsonWriter = {
+  private def add(key: String, value: Any, appender: ValueAppender): DeadSimpleJsonWriter = {
     if (!first) b.append(',')
     else first = false
     b.append('"').append(key).append("\":")
