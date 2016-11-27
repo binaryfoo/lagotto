@@ -49,15 +49,24 @@
       });
       const byDisconnect = data.sort((a, b) => a.disconnect_time > b.disconnect_time);
 
-      const colors = d3.scale.category20();
       const msgTypeToColor = new Map();
+      msgTypeToColor.set('receive', '#aec7e8');
+      msgTypeToColor.set('send', '#1f77b4');
+      msgTypeToColor.set('peer-disconnect', '#ff7f0e');
+      msgTypeToColor.set('session-error', '#d62728');
+      msgTypeToColor.set('session-start', '#2ca02c');
+      msgTypeToColor.set('connect', '#98df8a');
+      msgTypeToColor.set('session-end', '#8c564b');
+      msgTypeToColor.set('tcp-overflow', '#e377c2');
+      msgTypeToColor.set('io-timeout', '#9467bd');
+      msgTypeToColor.set('warn', '#ffbb78');
+
       const slice = byDisconnect.slice(byDisconnect.length-2000, byDisconnect.length-1000);
       slice.forEach((series) => {
         series.times.forEach((event) => {
           let color = msgTypeToColor.get(event.msgType);
           if (!color) {
-            color = colors(msgTypeToColor.size);
-            msgTypeToColor.set(event.msgType, color)
+            color = '#bcbd22';
           }
           event.color = color;
           if (event.ending_time == event.starting_time) {
