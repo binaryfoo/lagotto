@@ -40,7 +40,24 @@
   </style>
   <script type="text/javascript">
 
-    let timeFmt = d3.time.format("%H:%M:%S.%L");
+    const timeFmt = d3.time.format("%H:%M:%S.%L");
+
+    const msgTypeToColor = new Map();
+    msgTypeToColor.set('receive', '#aec7e8');
+    msgTypeToColor.set('send', '#1f77b4');
+    msgTypeToColor.set('peer-disconnect', '#ff7f0e');
+    msgTypeToColor.set('session-error', '#d62728');
+    msgTypeToColor.set('session-start', '#2ca02c');
+    msgTypeToColor.set('connect', '#98df8a');
+    msgTypeToColor.set('session-end', '#8c564b');
+    msgTypeToColor.set('tcp-overflow', '#e377c2');
+    msgTypeToColor.set('io-timeout', '#9467bd');
+    msgTypeToColor.set('warn', '#ffbb78');
+
+    function colorForMsg(msgType) {
+      let color = msgTypeToColor.get(msgType);
+      return color ? color : '#bcbd22';
+    }
 
     function prepare(data) {
       data.forEach((d) => {
@@ -49,26 +66,10 @@
       });
       const byDisconnect = data.sort((a, b) => a.disconnect_time > b.disconnect_time);
 
-      const msgTypeToColor = new Map();
-      msgTypeToColor.set('receive', '#aec7e8');
-      msgTypeToColor.set('send', '#1f77b4');
-      msgTypeToColor.set('peer-disconnect', '#ff7f0e');
-      msgTypeToColor.set('session-error', '#d62728');
-      msgTypeToColor.set('session-start', '#2ca02c');
-      msgTypeToColor.set('connect', '#98df8a');
-      msgTypeToColor.set('session-end', '#8c564b');
-      msgTypeToColor.set('tcp-overflow', '#e377c2');
-      msgTypeToColor.set('io-timeout', '#9467bd');
-      msgTypeToColor.set('warn', '#ffbb78');
-
       const slice = byDisconnect.slice(byDisconnect.length-2000, byDisconnect.length-1000);
       slice.forEach((series) => {
         series.times.forEach((event) => {
-          let color = msgTypeToColor.get(event.msgType);
-          if (!color) {
-            color = '#bcbd22';
-          }
-          event.color = color;
+          event.color = colorForMsg(event.msgType);
           if (event.ending_time == event.starting_time) {
             event.ending_time += 1;
           }
@@ -79,7 +80,7 @@
 
     function formatEvent(d) {
       const lifespan = d.ending_time - d.starting_time;
-      return timeFmt(new Date(d.starting_time)) + " " + d.msgType + " (" + lifespan + "ms) " + d.summary
+      return timeFmt(new Date(d.starting_time)) + " <span style=\"color: " + colorForMsg(d.msgType) + "\">" + d.msgType + "</span> (" + lifespan + "ms) " + d.summary
     }
 
     function reqListener() {
@@ -104,14 +105,15 @@
           // i is the index during d3 rendering
           // datum is the id object
           const div = $('#hoverRes');
-          div.find('#name').text(datum.socket + ": " + formatEvent(d));
+          div.find('#socket').text(datum.socket);
+          div.find('#event').html(formatEvent(d));
           d3.selectAll("#eventList li").remove();
           d3.select("#eventList")
             .selectAll()
             .data(datum.times)
             .enter()
             .append("li")
-            .text(formatEvent);
+            .html(formatEvent);
           const scrollBox = $('#eventListBox')[0];
           scrollBox.scrollTop = scrollBox.scrollHeight;
         })
@@ -142,8 +144,8 @@
   <div id="rightBox">
     <div id="hoverRes">
       <div class="coloredDiv"></div>
-      <div id="name"></div>
-      <div id="scrolled_date"></div>
+      <div id="socket"></div>
+      <div id="event"></div>
     </div>
     <div id="eventListBox">
       <ol id="eventList"></ol>
