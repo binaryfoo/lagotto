@@ -57,7 +57,12 @@ object Main extends App {
         Seq(dataFile, gnuplotScript)
       new CompositeSink(sinks)
     } else if (opts.liveUi) {
-      new LiveWebServerSink(format)
+      opts.format match {
+        case timeline: JposTimeline =>
+          new CompositeSink(Seq(new FileSink(timeline, true, "timeline.json"), new OnFinishWebServerSink("/timeline/timeline.html", PlainText)))
+        case _ =>
+          new LiveWebServerSink(format)
+      }
     } else if (opts.influxDbUrl.isDefined) {
       InfluxDBSink(format, opts.influxDbUrl.get)
     } else if (opts.graphiteUrl.isDefined) {

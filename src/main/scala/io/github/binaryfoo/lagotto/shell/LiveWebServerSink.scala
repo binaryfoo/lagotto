@@ -42,7 +42,7 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
     case _ => ""
   }
 
-  override def entry(e: LogEntry) = {
+  override def entry(e: LogEntry): Unit = {
     delegate.entry(e)
     if (!launched) {
       server.browseIndex(launchFormat)
@@ -50,7 +50,7 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
     }
   }
 
-  override def finish() = {
+  override def finish(): Unit = {
     delegate.finish()
     out.close()
     result.done = true
@@ -64,10 +64,10 @@ class LiveWebServerSink(format: OutputFormat) extends Sink {
  * Show only the final file once it's baked.
  */
 class OnFinishWebServerSink(index: String, contentType: ContentType) extends Sink {
-  override def entry(e: LogEntry) = {}
+  override def entry(e: LogEntry): Unit = {}
 
-  override def finish() = {
-    val server = new SillyServer(index = new FileInProgress(new File(index), true, contentType))
+  override def finish(): Unit = {
+    val server = new SillyServer(index = FileInProgress(new File(index), true, contentType))
     server.start()
   }
 }
@@ -88,12 +88,16 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
           val writer = formatted(request, response, StdInRef())
           FileIO.copy(new InputStreamReader(index.open()), writer)
           writer.close()
+        case resource if resource.startsWith("/timeline/") =>
+          loadEmbeddedResource(response, resource)
         case OpenFileReq(file) =>
           val from = request.getParameter("from").maybeToInt()
           val to = request.getParameter("to").maybeToInt()
           val foundFile = find(file)
           val writer = formatted(request, response, FileRef(new File(foundFile)))
           FileIO.copyLines(foundFile, from, to, writer)
+        case _ if index.file.getAbsolutePath.startsWith("/timeline/") =>
+          response.sendRedirect(index.file.getAbsolutePath)
         case _ =>
           response.setContentType(index.contentType.mimeType)
           FileIO.copy(index.open(), response.getOutputStream)
@@ -101,6 +105,12 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
       baseRequest.setHandled(true)
     }
   })
+
+  private def loadEmbeddedResource(response: HttpServletResponse, resource: String) = {
+    val in = classOf[SillyServer].getClassLoader.getResourceAsStream(resource.substring(1))
+    response.setContentType(guessContentType(resource))
+    FileIO.copy(in, response.getOutputStream)
+  }
 
   private def formatted(request: HttpServletRequest, response: HttpServletResponse, sourceRef: SourceRef): PrintWriter = {
     val responseWriter = new PrintWriter(response.getOutputStream)
@@ -120,7 +130,7 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
     })
   }
 
-  def browseIndex(format: String = "") = {
+  def browseIndex(format: String = ""): Unit = {
     val url = if (format != "") {
       s"http://localhost:$port?format=$format"
     } else {
@@ -138,7 +148,7 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
       writer.flush()
     }
     new PrintWriter(out) {
-      override def close() = {
+      override def close(): Unit = {
         super.close()
         Await.ready(pipeJob, 1.minute)
       }
@@ -152,7 +162,15 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
     case _ => throw new IAmSorryDave(s"Unknown format '$s'")
   }
 
-  def find(file: String) = {
+  private def guessContentType(fileName: String): String = {
+    fileName match {
+      case s if s.endsWith(".js") => "text/javascript"
+      case s if s.endsWith(".html") => "text/html"
+      case s if s.endsWith(".json") => "application/json"
+    }
+  }
+
+  def find(file: String): String = {
     if (new File(file).exists()) {
       file
     } else {
@@ -160,5 +178,11 @@ class SillyServer(index: FileInProgress, port: Int = 1984, browseOnStart: Boolea
     }
   }
 
-  def start() = server.start()
+  def start(): Unit = server.start()
+}
+
+object SillyServer {
+  def main(args: Array[String]): Unit = {
+    new SillyServer(FileInProgress(new File("/timeline/timeline.html"))).start()
+  }
 }

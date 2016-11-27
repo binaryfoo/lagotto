@@ -174,7 +174,7 @@ case class InfluxDBFormat(measurement: String = "", tags: Seq[FieldExpr] = Seq.e
   }
 }
 
-case class JposTimeline(summaryExpr: FieldExpr) extends OutputFormat {
+case class JposTimeline() extends OutputFormat {
 
   private val sessions = mutable.Map[String, ArrayBuffer[String]]()
 

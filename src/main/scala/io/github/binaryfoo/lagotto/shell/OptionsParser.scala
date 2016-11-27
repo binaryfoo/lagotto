@@ -221,7 +221,7 @@ class OptionsParser(val config: Config, val canHandleAnsi: Boolean = IsATty()) {
       } text "Remove duplicates records on input. Uses SHA-256 of record."
 
       opt[Unit]("timeline") action {(_,c) =>
-        c.copy(format = JposTimeline(fieldParser.FieldExpr.expressionFor("summary")))
+        c.copy(format = JposTimeline())
       } text "Show jpos event timeline"
 
       opt[Unit]("debug") action {(_,c) =>

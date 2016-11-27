@@ -57,10 +57,10 @@ class TailInputStream(val file: FileInProgress) extends InputStream {
 
 object TailInputStream {
   def apply(file: String): TailInputStream = apply(new File(file))
-  def apply(file: File): TailInputStream = new TailInputStream(new FileInProgress(file))
+  def apply(file: File): TailInputStream = new TailInputStream(FileInProgress(file))
 }
 
-class FileInProgress(val file: File, var done: Boolean = false, val contentType: ContentType = PlainText) {
+case class FileInProgress(file: File, var done: Boolean = false, contentType: ContentType = PlainText) {
   def open(): InputStream = {
     if (done)
       new FileInputStream(file)

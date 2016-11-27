@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <script src="jquery-latest.min.js"></script>
+  <script src="d3.v3.min.js" charset="utf-8"></script>
+  <script src="d3-timeline.js"></script>
+
+  <style type="text/css">
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: black;
+      shape-rendering: crispEdges;
+    }
+
+    .axis text {
+      font-family: sans-serif;
+      font-size: 10px;
+    }
+
+    .timeline-label {
+      font-family: sans-serif;
+      font-size: 12px;
+    }
+
+    #rightBox {
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
+
+    #eventListBox {
+      height: 400px;
+      overflow-y: scroll;
+    }
+
+    .coloredDiv {
+      height:20px; width:20px; float:left;
+    }
+  </style>
+  <script type="text/javascript">
+
+    let timeFmt = d3.time.format("%H:%M:%S.%L");
+
+    function prepare(data) {
+      data.forEach((d) => {
+        let dropTime = d.times.find((e) => e.msgType == "peer-disconnect");
+        d.disconnect_time = dropTime == null ? 0 : dropTime.starting_time;
+      });
+      const byDisconnect = data.sort((a, b) => a.disconnect_time > b.disconnect_time);
+
+      const colors = d3.scale.category20();
+      const msgTypeToColor = new Map();
+      const slice = byDisconnect.slice(byDisconnect.length-2000, byDisconnect.length-1000);
+      slice.forEach((series) => {
+        series.times.forEach((event) => {
+          let color = msgTypeToColor.get(event.msgType);
+          if (!color) {
+            color = colors(msgTypeToColor.size);
+            msgTypeToColor.set(event.msgType, color)
+          }
+          event.color = color;
+          if (event.ending_time == event.starting_time) {
+            event.ending_time += 1;
+          }
+        });
+      });
+      return slice;
+    }
+
+    function formatEvent(d) {
+      const lifespan = d.ending_time - d.starting_time;
+      return timeFmt(new Date(d.starting_time)) + " " + d.msgType + " (" + lifespan + "ms) " + d.summary
+    }
+
+    function reqListener() {
+      const data = JSON.parse(this.responseText);
+      const width = 1000;
+      const chart = d3.timeline()
+        .width(width * 4)
+        .stack()
+        .tickFormat({
+          format: d3.time.format("%H:%M"),
+          tickTime: d3.time.minutes,
+          tickInterval: 1,
+          tickSize: 6
+        })
+        .itemHeight(5)
+        .itemMargin(2)
+        .showAxisTop()
+        .showTimeAxisTick()
+        .margin({left: 70, right: 30, top: 0, bottom: 0})
+        .hover(function (d, i, datum) {
+          // d is the current rendering object
+          // i is the index during d3 rendering
+          // datum is the id object
+          const div = $('#hoverRes');
+          div.find('#name').text(datum.socket + ": " + formatEvent(d));
+          d3.selectAll("#eventList li").remove();
+          d3.select("#eventList")
+            .selectAll()
+            .data(datum.times)
+            .enter()
+            .append("li")
+            .text(formatEvent);
+          const scrollBox = $('#eventListBox')[0];
+          scrollBox.scrollTop = scrollBox.scrollHeight;
+        })
+        .click(function (d, i, datum) {
+          console.log(arguments);
+        });
+
+      const svg = d3.select("#timeline3").append("svg").attr("width", width)
+        .datum(prepare(data)).call(chart);
+    }
+
+    function reqError(err) {
+      console.log('Fetch Error :-S', err);
+    }
+
+    const oReq = new XMLHttpRequest();
+    oReq.onload = reqListener;
+    oReq.onerror = reqError;
+    oReq.open('get', '/timeline.json', true);
+    oReq.send();
+
+  </script>
+</head>
+<body>
+  <div>
+    <div id="timeline3"></div>
+  </div>
+  <div id="rightBox">
+    <div id="hoverRes">
+      <div class="coloredDiv"></div>
+      <div id="name"></div>
+      <div id="scrolled_date"></div>
+    </div>
+    <div id="eventListBox">
+      <ol id="eventList"></ol>
+    </div>
+  </div>
+</body>
+</html>
