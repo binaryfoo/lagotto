@@ -27,6 +27,7 @@
       position: fixed;
       top: 0;
       right: 0;
+      width: 350px;
     }
 
     #eventListBox {
@@ -36,6 +37,15 @@
 
     .coloredDiv {
       height:20px; width:20px; float:left;
+    }
+
+    #eventList {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    rect.moused-over {
+      fill: lightgrey !important;
     }
   </style>
   <script type="text/javascript">
@@ -104,18 +114,26 @@
           // d is the current rendering object
           // i is the index during d3 rendering
           // datum is the id object
+          let hoverIndex = datum.times.indexOf(d);
+          let firstIndex = Math.max(0, hoverIndex - 3);
+          let lastIndex = Math.min(datum.times.length, hoverIndex + 3);
+          let closeTimes = datum.times.slice(firstIndex, lastIndex);
+
+          event.currentTarget.classList.add("moused-over");
+
           const div = $('#hoverRes');
           div.find('#socket').text(datum.socket);
-          div.find('#event').html(formatEvent(d));
           d3.selectAll("#eventList li").remove();
           d3.select("#eventList")
             .selectAll()
-            .data(datum.times)
+            .data(closeTimes)
             .enter()
             .append("li")
-            .html(formatEvent);
-          const scrollBox = $('#eventListBox')[0];
-          scrollBox.scrollTop = scrollBox.scrollHeight;
+            .html(formatEvent)
+            .style('font-weight', (dd) => dd == d ? 'bold' : 'normal');
+        })
+        .mouseout(function (d) {
+          event.currentTarget.classList.remove("moused-over");
         })
         .click(function (d, i, datum) {
           console.log(arguments);
@@ -145,7 +163,6 @@
     <div id="hoverRes">
       <div class="coloredDiv"></div>
       <div id="socket"></div>
-      <div id="event"></div>
     </div>
     <div id="eventListBox">
       <ol id="eventList"></ol>
