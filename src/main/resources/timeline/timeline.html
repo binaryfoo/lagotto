@@ -71,21 +71,16 @@
 
     function prepare(data) {
       data.forEach((d) => {
-        let dropTime = d.times.find((e) => e.msgType == "peer-disconnect");
+        let dropTime = d.times.find((e) => e.msgType == "peer-disconnect" || e.msgType == "session-end");
         d.disconnect_time = dropTime == null ? 0 : dropTime.starting_time;
-      });
-      const byDisconnect = data.sort((a, b) => a.disconnect_time > b.disconnect_time);
-
-      const slice = byDisconnect.slice(byDisconnect.length-2000, byDisconnect.length-1000);
-      slice.forEach((series) => {
-        series.times.forEach((event) => {
+        d.times.forEach((event) => {
           event.color = colorForMsg(event.msgType);
           if (event.ending_time == event.starting_time) {
             event.ending_time += 1;
           }
         });
       });
-      return slice;
+      return data.sort((a, b) => a.disconnect_time > b.disconnect_time);
     }
 
     function formatEvent(d) {
@@ -93,8 +88,7 @@
       return timeFmt(new Date(d.starting_time)) + " <span style=\"color: " + colorForMsg(d.msgType) + "\">" + d.msgType + "</span> (" + lifespan + "ms) " + d.summary
     }
 
-    function reqListener() {
-      const data = JSON.parse(this.responseText);
+    function plot(data, offset) {
       const width = 1000;
       const chart = d3.timeline()
         .width(width * 4)
@@ -139,8 +133,25 @@
           console.log(arguments);
         });
 
+      const slice = data.slice(offset, offset+1000);
+      console.log(slice.length, offset);
+      d3.select("#timeline3").selectAll("svg").remove();
       const svg = d3.select("#timeline3").append("svg").attr("width", width)
-        .datum(prepare(data)).call(chart);
+        .datum(slice).call(chart);
+    }
+
+    var preparedData;
+    var offset;
+    function reqListener() {
+      const data = JSON.parse(this.responseText);
+      preparedData = prepare(data);
+      offset = 0;
+      plot(preparedData, offset);
+    }
+
+    function navigateBy(increment) {
+      offset = Math.max(0, offset + increment);
+      plot(preparedData, offset);
     }
 
     function reqError(err) {
@@ -160,6 +171,12 @@
     <div id="timeline3"></div>
   </div>
   <div id="rightBox">
+    <div>
+      <a href="#" onclick="navigateBy(-preparedData.length)">|&lt;&lt;</a>
+      <a href="#" onclick="navigateBy(-1000)">&lt;</a>
+      <a href="#" onclick="navigateBy(1000)">&gt;</a>
+      <a href="#" onclick="navigateBy(preparedData.length-1000)">&gt;&gt;|</a>
+    </div>
     <div id="hoverRes">
       <div class="coloredDiv"></div>
       <div id="socket"></div>
