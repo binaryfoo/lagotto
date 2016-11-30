@@ -260,7 +260,7 @@
             .attr("x", getXPos)
             .attr("y", getStackPosition)
             .attr("width", function (d, i) {
-              return Math.max((d.ending_time - d.starting_time) * scaleFactor, 3);
+              return Math.max((d.ending_time - d.starting_time) * scaleFactor, 2);
             })
             .attr("cy", function(d, i) {
                 return getStackPosition(d, i) + itemHeight/2;

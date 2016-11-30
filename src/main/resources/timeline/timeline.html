@@ -69,6 +69,10 @@
       return color ? color : '#bcbd22';
     }
 
+    function msgTypeSortIndex(msgType) {
+      return msgType == "receive" ? 0 : 1;
+    }
+
     function prepare(data) {
       data.forEach((d) => {
         let dropTime = d.times.find((e) => e.msgType == "peer-disconnect" || e.msgType == "session-end");
@@ -79,6 +83,8 @@
             event.ending_time += 1;
           }
         });
+        d.timesByStartTime = d.times.slice();
+        d.times.sort((a, b) => msgTypeSortIndex(a.msgType) - msgTypeSortIndex(b.msgType))
       });
       return data.sort((a, b) => a.disconnect_time > b.disconnect_time);
     }
@@ -108,10 +114,10 @@
           // d is the current rendering object
           // i is the index during d3 rendering
           // datum is the id object
-          let hoverIndex = datum.times.indexOf(d);
+          let hoverIndex = datum.timesByStartTime.indexOf(d);
           let firstIndex = Math.max(0, hoverIndex - 3);
-          let lastIndex = Math.min(datum.times.length, hoverIndex + 3);
-          let closeTimes = datum.times.slice(firstIndex, lastIndex);
+          let lastIndex = Math.min(datum.timesByStartTime.length, hoverIndex + 3);
+          let closeTimes = datum.timesByStartTime.slice(firstIndex, lastIndex);
 
           event.currentTarget.classList.add("moused-over");
 
@@ -136,7 +142,7 @@
       const slice = data.slice(offset, offset+1000);
       console.log(slice.length, offset);
       d3.select("#timeline3").selectAll("svg").remove();
-      const svg = d3.select("#timeline3").append("svg").attr("width", width)
+      const svg = d3.select("#timeline3").append("svg").attr("width", width * 4)
         .datum(slice).call(chart);
     }
 
