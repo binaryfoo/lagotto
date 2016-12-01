@@ -65,6 +65,8 @@
     msgTypeToColor.set('io-timeout', '#9467bd');
     msgTypeToColor.set('warn', '#ffbb78');
 
+    const sessionsPerIpAddress = new Map();
+
     function colorForMsg(msgType) {
       let color = msgTypeToColor.get(msgType);
       return color ? color : '#bcbd22';
@@ -85,7 +87,10 @@
           }
         });
         d.timesByStartTime = d.times.slice();
-        d.times.sort((a, b) => msgTypeSortIndex(a.msgType) - msgTypeSortIndex(b.msgType))
+        d.times.sort((a, b) => msgTypeSortIndex(a.msgType) - msgTypeSortIndex(b.msgType));
+        let ipAddress = d.socket.split(':')[0];
+        let sessionCount = sessionsPerIpAddress.get(ipAddress);
+        sessionsPerIpAddress.set(ipAddress, sessionCount ? sessionCount + 1 : 1);
       });
       return data.sort((a, b) => a.disconnect_time > b.disconnect_time);
     }
@@ -95,7 +100,7 @@
       return timeFmt(new Date(d.starting_time)) + " <span style=\"color: " + colorForMsg(d.msgType) + "\">" + d.msgType + "</span> (" + lifespan + "ms) " + d.summary
     }
 
-    function plot(data, offset) {
+    function plot(data, offset, count = 1000) {
       const width = 1000;
       const chart = d3.timeline()
         .width(width * 4)
@@ -122,8 +127,9 @@
 
           event.currentTarget.classList.add("moused-over");
 
+          const ipAddress = datum.socket.split(':')[0];
           const div = $('#hoverRes');
-          div.find('#socket').text(datum.socket);
+          div.find('#socket').html(datum.socket + " (<a href=\"#\" onclick=\"showSessionsForIp('" + ipAddress + "')\">" + sessionsPerIpAddress.get(ipAddress) + "</a> sessions)");
           d3.selectAll("#eventList li").remove();
           d3.select("#eventList")
             .selectAll()
@@ -140,11 +146,17 @@
           console.log(arguments);
         });
 
-      const slice = data.slice(offset, offset+1000);
+      const slice = data.slice(offset, offset + count);
       console.log(slice.length, offset);
       d3.select("#timeline3").selectAll("svg").remove();
       const svg = d3.select("#timeline3").append("svg").attr("width", width * 4)
         .datum(slice).call(chart);
+    }
+
+    function showSessionsForIp(ipAddress) {
+      let ipPrefix = ipAddress + ":";
+      let sessionsForIp = preparedData.filter((d) => d.socket.startsWith(ipPrefix));
+      plot(sessionsForIp, 0);
     }
 
     var preparedData;
