@@ -220,7 +220,7 @@ case class JposTimeline() extends OutputFormat {
     w.add("ending_time", e.timestamp.getMillis)
     w.add("msgType", e.msgType)
     w.add("summary", summary(e))
-    w.add("src", e.source.toString)
+    w.add("src", linkTo(e))
     w.done()
     w.toString
   }
@@ -230,5 +230,12 @@ case class JposTimeline() extends OutputFormat {
     val nmic = e.get("70").getOrElse("")
     val stan = e.get("1").getOrElse("")
     s"$mti $nmic $stan"
+  }
+
+  private def linkTo(e: LogEntry): String = {
+    e.source match {
+      case FileRef(file, line) => SourceHrefExpr.urlFor(file, line, e)
+      case r => r.toString
+    }
   }
 }

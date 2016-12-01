@@ -45,6 +45,11 @@
       padding-left: 0;
     }
 
+    #mousedMessage {
+      height: 100%;
+      overflow-y: visible;
+    }
+
     rect.moused-over {
       fill: lightgrey !important;
     }
@@ -126,6 +131,7 @@
           let closeTimes = datum.timesByStartTime.slice(firstIndex, lastIndex);
 
           event.currentTarget.classList.add("moused-over");
+          document.getElementById('mousedMessage').src = window.location.origin + d.src;
 
           const ipAddress = datum.socket.split(':')[0];
           const div = $('#hoverRes');
@@ -141,9 +147,6 @@
         })
         .mouseout(function (d) {
           event.currentTarget.classList.remove("moused-over");
-        })
-        .click(function (d, i, datum) {
-          console.log(arguments);
         });
 
       const slice = data.slice(offset, offset + count);
@@ -202,6 +205,7 @@
     </div>
     <div id="eventListBox">
       <ol id="eventList"></ol>
+      <iframe id="mousedMessage" src="" frameborder="0"></iframe>
     </div>
   </div>
 </body>
