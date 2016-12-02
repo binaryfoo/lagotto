@@ -57,6 +57,10 @@
   <script type="text/javascript">
 
     const timeFmt = d3.time.format("%H:%M:%S.%L");
+    var preparedData;
+    var offset;
+    var pinnedSession;
+    var mousedElement;
 
     const msgTypeToColor = new Map();
     msgTypeToColor.set('receive', '#aec7e8');
@@ -85,11 +89,22 @@
       data.forEach((d) => {
         let dropTime = d.times.find((e) => e.msgType == "peer-disconnect" || e.msgType == "session-end");
         d.disconnect_time = dropTime == null ? 0 : dropTime.starting_time;
+        let last_ending_time = 0;
+        d.max_gap = 0;
+        d.last_gap_time = 0;
+        d.total_gap_time = 0;
+        d.times.sort((a, b) => a.starting_time - b.starting_time);
         d.times.forEach((event) => {
           event.color = colorForMsg(event.msgType);
-          if (event.ending_time == event.starting_time) {
-            event.ending_time += 1;
+          if (last_ending_time) {
+            let gap = event.starting_time - last_ending_time;
+            d.max_gap = Math.max(d.max_gap, gap);
+            if (gap > 100) {
+              d.last_gap_time = last_ending_time;
+            }
+            d.total_gap_time += gap;
           }
+          last_ending_time = event.ending_time;
         });
         d.timesByStartTime = d.times.slice();
         d.times.sort((a, b) => msgTypeSortIndex(a.msgType) - msgTypeSortIndex(b.msgType));
@@ -97,7 +112,9 @@
         let sessionCount = sessionsPerIpAddress.get(ipAddress);
         sessionsPerIpAddress.set(ipAddress, sessionCount ? sessionCount + 1 : 1);
       });
-      return data.sort((a, b) => a.disconnect_time > b.disconnect_time);
+      data = data.filter((d) => d.max_gap > 10);
+//      return data.sort((a, b) => a.disconnect_time > b.disconnect_time);
+      return data.sort((a, b) => a.last_gap_time - b.last_gap_time);
     }
 
     function formatEvent(d) {
@@ -105,7 +122,8 @@
       return timeFmt(new Date(d.starting_time)) + " <span style=\"color: " + colorForMsg(d.msgType) + "\">" + d.msgType + "</span> (" + lifespan + "ms) " + d.summary
     }
 
-    function plot(data, offset, count = 1000) {
+    function plot(data, startIndex, count = 1000) {
+      offset = startIndex;
       const width = 1000;
       const chart = d3.timeline()
         .width(width * 4)
@@ -122,6 +140,9 @@
         .showTimeAxisTick()
         .margin({left: 70, right: 30, top: 0, bottom: 0})
         .hover(function (d, i, datum) {
+          if (pinnedSession) {
+            return;
+          }
           // d is the current rendering object
           // i is the index during d3 rendering
           // datum is the id object
@@ -130,8 +151,10 @@
           let lastIndex = Math.min(datum.timesByStartTime.length, hoverIndex + 3);
           let closeTimes = datum.timesByStartTime.slice(firstIndex, lastIndex);
 
-          event.currentTarget.classList.add("moused-over");
+          mousedElement = event.currentTarget;
+          mousedElement.classList.add("moused-over");
           document.getElementById('mousedMessage').src = window.location.origin + d.src;
+          document.getElementById('lastGapTime').textContent = timeFmt(new Date(datum.last_gap_time)) + " (" + datum.total_gap_time + ")";
 
           const ipAddress = datum.socket.split(':')[0];
           const div = $('#hoverRes');
@@ -146,11 +169,17 @@
             .style('font-weight', (dd) => dd == d ? 'bold' : 'normal');
         })
         .mouseout(function (d) {
-          event.currentTarget.classList.remove("moused-over");
+          if (!pinnedSession) {
+            mousedElement.classList.remove("moused-over");
+            mousedElement = null;
+          }
+        })
+        .click(function (d, i, datum) {
+          pinnedSession = datum.socket;
+          document.getElementById("sessionPin").style.visibility = 'visible';
         });
 
       const slice = data.slice(offset, offset + count);
-      console.log(slice.length, offset);
       d3.select("#timeline3").selectAll("svg").remove();
       const svg = d3.select("#timeline3").append("svg").attr("width", width * 4)
         .datum(slice).call(chart);
@@ -162,18 +191,21 @@
       plot(sessionsForIp, 0);
     }
 
-    var preparedData;
-    var offset;
+    function unPinSession() {
+      pinnedSession = null;
+      document.getElementById("sessionPin").style.visibility = 'hidden';
+      mousedElement.classList.remove("moused-over");
+      mousedElement = null;
+    }
+
     function reqListener() {
       const data = JSON.parse(this.responseText);
       preparedData = prepare(data);
-      offset = 0;
-      plot(preparedData, offset);
+      plot(preparedData, 0);
     }
 
     function navigateBy(increment) {
-      offset = Math.max(0, offset + increment);
-      plot(preparedData, offset);
+      plot(preparedData, Math.max(0, offset + increment));
     }
 
     function reqError(err) {
@@ -201,10 +233,14 @@
     </div>
     <div id="hoverRes">
       <div class="coloredDiv"></div>
-      <div id="socket"></div>
+      <div>
+        <span id="socket"></span>
+        <span id="sessionPin" onclick="unPinSession()" style="visibility: hidden">X</span>
+      </div>
     </div>
     <div id="eventListBox">
       <ol id="eventList"></ol>
+      <div id="lastGapTime"></div>
       <iframe id="mousedMessage" src="" frameborder="0"></iframe>
     </div>
   </div>
