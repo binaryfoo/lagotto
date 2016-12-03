@@ -148,9 +148,9 @@
             d.max_gap = Math.max(d.max_gap, gap);
             if (gap > 100) {
               d.last_gap_time = last_ending_time;
-              if (gap > 1000) {
-                stall_calculator.addEvent(d, event);
-              }
+            }
+            if (gap > 1000 || (event.msgType == 'send' && (event.ending_time - event.starting_time) > 1000)) {
+              stall_calculator.addEvent(d, event);
             }
             d.total_gap_time += gap;
           }
