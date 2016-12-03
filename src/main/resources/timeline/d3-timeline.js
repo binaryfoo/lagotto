@@ -355,8 +355,7 @@
       });
 
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
-      var aboveFirstItem = margin.top;
-      var timeAxisYPosition = showAxisTop ? aboveFirstItem : belowLastItem;
+      var timeAxisYPosition = showAxisTop ? 0 : belowLastItem;
       if (showTimeAxis) { appendTimeAxis(g, xAxis, timeAxisYPosition); }
       if (timeAxisTick) { appendTimeAxisTick(g, xAxis, maxStack); }
 
